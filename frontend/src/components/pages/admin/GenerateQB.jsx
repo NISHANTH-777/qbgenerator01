@@ -1,112 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNavbar from '../../navbar/AdminNavbar';
 import Profile from '../../images/profile.png';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
 import { useNavigate } from 'react-router-dom';
-
-const bankRows = [
-  { id: 1, adminId: "ADM001", code: "22CH007", name: "Engineering Chemistry 01", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 2, adminId: "ADM002", code: "22CH007", name: "Engineering Chemistry 02", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 3, adminId: "ADM004", code: "22CH007", name: "Engineering Chemistry 03", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 4, adminId: "ADM005", code: "22CH007", name: "Engineering Chemistry 04", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 5, adminId: "ADM006", code: "22CH007", name: "Engineering Chemistry 05", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 6, adminId: "ADM007", code: "22CH007", name: "Engineering Chemistry 06", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 7, adminId: "ADM008", code: "22CH007", name: "Engineering Chemistry 07", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 8, adminId: "ADM009", code: "22CH007", name: "Engineering Chemistry 08", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 9, adminId: "ADM003", code: "22CH007", name: "Engineering Chemistry 09", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  { id: 10, adminId: "ADM010", code: "22CH007", name: "Engineering Chemistry 10", exam: "PT-1", datetime: "2025-03-01 10:30 AM" },
-  
-];
-
-const bankColumns = [
-  { field: 'adminId', headerName: 'Admin ID', width: 185 },
-  { field: 'code', headerName: 'Course Code', width: 200 },
-  { field: 'name', headerName: 'Subject Name', width: 350 },
-  { field: 'exam', headerName: 'Exam Name', width: 200 },
-  { field: 'datetime', headerName: 'Date & Time', width: 225 },
-];
+import axios from 'axios';
+import { Imagecomp } from '../../images/Imagecomp';
 
 const GenerateQB = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
-  const [formData, setFormData] = useState({
-    examName: '',
-    subjectCode: '',
-    subjectName: ''
-  });
+  const [formData, setFormData] = useState({ examName: '', subjectCode: '', subjectName: '' });
   const [clicked, setClicked] = useState(false);
+  const [showGenerated, setShowGenerated] = useState(false);
+  const [paper, setPaper] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [courseCode, setCourseCode] = useState('');
   const navigate = useNavigate();
+  const [subjectOptions, setSubjectOptions] = useState([]);
+  const [bankRows, setBankRows] = useState([]);
+
+  useEffect(() => {
+    axios.get('http://localhost:7000/get-faculty-subjects')
+      .then((res) => setSubjectOptions(res.data))
+      .catch((err) => console.error("Error fetching subject options:", err));
+  }, []);
 
   const handlechangeclick = () => {
     setClicked(!clicked);
     navigate('/');
-    };
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
     setOpenModal(false);
+    await handleGenerateHistory();
+    await generatePaper();
+    await GenerateHistory();
+    setShowGenerated(true);
   };
 
+  const handleGenerateHistory = async () => {
+    try {
+      await axios.post("http://localhost:7000/question-history", {
+        course_code: formData.subjectCode,
+        subject_name: formData.subjectName,
+        exam_name: formData.examName,
+        date_time: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error generating paper history:", error);
+    }
+  };
+
+  const GenerateHistory = async () => {
+    try {
+      const res = await axios.get("http://localhost:7000/qb-history");
+      const formattedRows = res.data.map((row, index) => ({
+        id: index + 1,
+        course_code: row.course_code,
+        subject_name: row.subject_name,
+        exam_name: row.exam_name,
+        date_time: new Date(row.date_time).toLocaleString()
+      }));
+      setBankRows(formattedRows);
+    } catch (error) {
+      console.error("Error fetching paper history:", error);
+    }
+  };
+
+  useEffect(() => {
+    GenerateHistory();
+  }, []);
+
+  const generatePaper = async () => {
+    setLoading(true);
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user?.email) throw new Error("User not logged in");
+      const courseRes = await axios.get(`http://localhost:7000/get-course-code?email=${user.email}`);
+      const course = courseRes.data.course_code;
+      setCourseCode(course);
+      const paperRes = await axios.get(`http://localhost:7000/generate-qb?course_code=${course}`);
+      setPaper(paperRes.data);
+    } catch (err) {
+      console.error("Error generating paper:", err);
+      alert("Failed to generate paper. Check console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportToPDF = async () => {
+    const jsPDF = (await import('jspdf')).default;
+    const html2canvas = (await import('html2canvas')).default;
+    const input = document.getElementById('question-paper');
+    html2canvas(input).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('question-paper.pdf');
+    });
+  };
+
+  const sections = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
+  const bankColumns = [
+    { field: 'id', headerName: 'ID', width: 125 },
+    { field: 'course_code', headerName: 'Course Code', width: 250 },
+    { field: 'subject_name', headerName: 'Subject', width: 325 },
+    { field: 'exam_name', headerName: 'Exam Name', width: 225 },
+    { field: 'date_time', headerName: 'Generated At', width: 315 },
+  ];
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-auto min-h-screen bg-gray-50">
       <div className="w-56 bg-white shadow-md">
         <AdminNavbar />
       </div>
-
-      <div className="flex-1 pl-16 pr-4 bg-gray-50 overflow-y-auto mt-5">
+      <div className="flex-1 pl-16 pr-4 bg-gray-50 overflow-y-auto mt-5 pb-10">
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
-          <h2 className="text-2xl font-bold text-gray-800">QUESTION BANK HISTORY</h2>
-          <img src={Profile} alt="ADMIN"className="w-14 h-14 rounded-full cursor-pointer"onClick={() => setOpenProfileModal(true)} />
-          {openProfileModal && (
-          <div className="fixed inset-0 bg-black backdrop-blur-sm bg-opacity-40 z-50 flex items-center justify-end ">
-          <div className="bg-white w-[360px] p-8 rounded-2xl relative shadow-xl text-center mr-10 ">
-            <button
-              className="absolute top-4 right-5 text-2xl text-gray-500 hover:text-black"
-              onClick={() => setOpenProfileModal(false)}
-            >
-              ×
-            </button>
-            <img
-              src={Profile}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mx-auto mb-6 border-2 border-gray-300"
-            />
-            <div className="text-left text-base font-medium text-gray-800 space-y-3 leading-relaxed">
-              <p><span className="font-semibold">Name:</span> Daniel M</p>
-              <p><span className="font-semibold">Faculty ID:</span> 12345</p>
-              <p><span className="font-semibold">Subject:</span> F.O.C</p>
-              <p><span className="font-semibold">Department:</span> C.S.E</p>
-              <p><span className="font-semibold">Email ID:</span> danielm7708@bitsathy.ac.in</p>
-              <p><span className="font-semibold">Phone No:</span> 0123456789</p>
-            </div>
-            <button
-              className="mt-8 w-full bg-blue-500 text-white font-semibold py-3 rounded-md hover:bg-blue-600 transition"
-              onClick={handlechangeclick}
-            >
-              LOGOUT
-            </button>
-          </div>
-        </div>
-        
-)}
 
+          <h2 className="text-2xl font-bold text-gray-800">QUESTION BANK HISTORY</h2>
+           <Imagecomp />
         </div>
 
         <div className="flex justify-end mb-4">
           <Tooltip title="CLICK TO GENERATE NEW QB" enterDelay={500} leaveDelay={300}>
-            <button
-              className="bg-blue-500 px-6 py-2 rounded-lg text-white font-medium hover:bg-blue-700"
-              onClick={() => setOpenModal(true)}
-            >
-              GENERATE
-            </button>
+            <button className="bg-blue-500 px-6 py-2 rounded-lg text-white font-medium hover:bg-blue-700" onClick={() => setOpenModal(true)}>GENERATE</button>
           </Tooltip>
         </div>
 
@@ -117,75 +145,53 @@ const GenerateQB = () => {
               <form onSubmit={handleSubmit} className="space-y-7">
                 <div>
                   <label className="block font-semibold mb-1">Exam Name :</label>
-                  <select
-                    name="examName"
-                    value={formData.examName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-200 rounded-md px-4 py-2 pr-10"
-                    required
-                  >
+                  <select name="examName" value={formData.examName} onChange={handleChange} className="w-full bg-gray-200 rounded-md px-4 py-2 pr-10" required>
                     <option value="">-- Select Exam --</option>
                     <option value="PT-1">PT-1</option>
                     <option value="PT-2">PT-2</option>
-                    <option value="Semester">Semester</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Subject Code :</label>
+                  <label className="block font-semibold mb-1">Subject :</label>
                   <select
                     name="subjectCode"
                     value={formData.subjectCode}
-                    onChange={handleChange}
-                    className="w-full bg-gray-200 rounded-md px-4 py-2"
-                    required
-                  >
-                    <option value="">-- Select Code --</option>
-                    <option value="22CH007">22CH007</option>
-                    <option value="22CS101">22CS101</option>
-                    <option value="22EE202">22EE202</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-1">Subject Name :</label>
-                  <select
-                    name="subjectName"
-                    value={formData.subjectName}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const selected = subjectOptions.find(s => s.course_code === e.target.value);
+                      setFormData({
+                        ...formData,
+                        subjectCode: e.target.value,
+                        subjectName: selected?.subject_name || ''
+                      });
+                    }}
                     className="w-full bg-gray-200 rounded-md px-4 py-2"
                     required
                   >
                     <option value="">-- Select Subject --</option>
-                    <option value="Engineering Chemistry">Engineering Chemistry</option>
-                    <option value="Data Structures">Data Structures</option>
-                    <option value="Circuit Theory">Circuit Theory</option>
+                    {subjectOptions.map((subject, idx) => (
+                      <option key={idx} value={subject.course_code}>
+                        {subject.course_code} - {subject.subject_name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="pt-4 flex justify-center">
-                  <button
-                    type="submit"
-                    className="bg-blue-500 px-10 py-3 text-white font-semibold rounded-lg hover:bg-blue-600"
-                  >
+                  <button type="submit" className="bg-blue-500 px-10 py-3 text-white font-semibold rounded-lg hover:bg-blue-600">
                     GENERATE
                   </button>
                 </div>
+
                 <div className="pt-2 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setOpenModal(false)}
-                    className="text-lg px-10 py-2 rounded-md text-white  bg-slate-700  hover:underline"
-                  >
-                    Cancel
-                  </button>
+                  <button type="button" onClick={() => setOpenModal(false)} className="text-lg px-10 py-2 rounded-md text-white bg-slate-700 hover:underline">Cancel</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        <Paper sx={{ height: 550, width: '100%', p: 2 }}>
+        <Paper sx={{ height: 550, width: '100%', p: 2, mb: 6 }}>
           <DataGrid
             rows={bankRows}
             columns={bankColumns}
@@ -194,28 +200,46 @@ const GenerateQB = () => {
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
             rowHeight={60}
-            sx={{
-              border: 0,
-              '& .MuiDataGrid-row:nth-of-type(odd)': {
-                backgroundColor: '#F7F6FE',
-              },
-              '& .MuiDataGrid-row:nth-of-type(even)': {
-                backgroundColor: '#ffffff',
-              },
-              '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: '#ffffff',
-                fontWeight: 'bold',
-                fontSize: 16,
-              },
-              '& .MuiDataGrid-cell': {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                padding: '16px',
-              },
-            }}
           />
         </Paper>
+
+        {showGenerated && paper && (
+          <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif' }}>
+            <h1 style={{ marginBottom: '20px' }}>📄 Generated Question Paper</h1>
+            <p><strong>Course Code:</strong> {courseCode}</p>
+
+            <div className="mb-4">
+              <button onClick={exportToPDF} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                Export to PDF
+              </button>
+            </div>
+
+            <div id="question-paper">
+              {sections.map(section => (
+                <div key={section} style={{ marginBottom: '30px' }}>
+                  <h2>Section {section}</h2>
+                  {paper[section] && paper[section].length > 0 ? (
+                    paper[section].sort((a, b) => a.mark - b.mark).map((q, idx) => (
+                      <div key={q.id || idx} style={{ marginLeft: '20px', marginBottom: '15px' }}>
+                        <p><strong>Q{idx + 1}:</strong> {q.question} <em>({q.mark} mark{q.mark > 1 ? 's' : ''})</em></p>
+                        {q.mark === 1 && (
+                          <ul style={{ listStyleType: 'none', paddingLeft: '20px' }}>
+                            <li><strong>A)</strong> {q.option_a}</li>
+                            <li><strong>B)</strong> {q.option_b}</li>
+                            <li><strong>C)</strong> {q.option_c}</li>
+                            <li><strong>D)</strong> {q.option_d}</li>
+                          </ul>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{ marginLeft: '20px' }}>No questions selected for this section.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

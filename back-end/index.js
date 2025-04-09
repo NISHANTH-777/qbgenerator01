@@ -157,15 +157,25 @@ app.delete("/question-delete/:id", (req, res) => {
 
 app.get("/question-history", (req, res) => {
   const query = `
-    SELECT fl.course_code, fl.faculty_id, q.unit, q.created_at 
-    FROM qb.faculty_list AS fl 
-    JOIN qb.questions AS q ON fl.course_code = q.course_code
+    SELECT 
+      q.id AS id,
+      fl.faculty_id,
+      fl.course_code,
+      q.unit,
+      q.created_at 
+    FROM 
+      qb.faculty_list AS fl 
+    JOIN 
+      qb.questions AS q 
+    ON 
+      fl.course_code = q.course_code
   `;
   db.query(query, (err, results) => {
     if (!err) res.status(200).send(results);
     else return res.status(400).send(err);
   });
 });
+
 
 app.get("/recently-added", (req, res) => {
   const query = `
@@ -173,7 +183,7 @@ app.get("/recently-added", (req, res) => {
     FROM qb.faculty_list AS fl 
     JOIN qb.questions AS q ON fl.course_code = q.course_code 
     ORDER BY q.created_at DESC 
-    LIMIT 3
+    LIMIT 5
   `;
   db.query(query, (err, results) => {
     if (!err) res.status(200).send(results);
@@ -181,7 +191,7 @@ app.get("/recently-added", (req, res) => {
   });
 });
 
-app.get("/question-stats", (req, res) => {
+app.get("/question-stats", (req, res) => { 
   const weeklyQuery = `
     SELECT fl.faculty_id, YEARWEEK(q.created_at) AS week, COUNT(*) AS total_papers 
     FROM qb.questions AS q
@@ -208,6 +218,7 @@ app.get("/question-stats", (req, res) => {
     });
   });
 });
+
 
 app.post("/upload", upload.single("file"), (req, res) => {
   const filePath = path.join(__dirname, "uploads", req.file.filename);
@@ -325,6 +336,48 @@ app.get("/generate-qb", (req, res) => {
     res.json(paper);
   });
 });
+
+app.post('/question-history', (req, res) => {
+  const { course_code, subject_name, exam_name } = req.body;
+
+const query = `
+  INSERT INTO generated_papers (course_code, subject_name, exam_name, date_time)
+  VALUES (?, ?, ?, NOW())
+`;
+
+db.query(query, [course_code, subject_name, exam_name], (err, result) => {
+  if (err) {
+    console.error("Error inserting history:", err);
+    return res.status(500).json({ error: "Database error" });
+  }
+  res.status(200).json({ message: "History saved successfully" });
+});
+});
+
+app.get('/get-faculty-subjects', (req, res) => {
+  const query = `SELECT course_code, subject_name FROM faculty_list`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching faculty subjects:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.get('/qb-history', (req, res) => {
+  const query = `SELECT course_code, subject_name,exam_name,date_time FROM generated_papers`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching faculty subjects:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json(results);
+  });
+});
+
 
 app.listen(7000, () => {
   console.log("🚀 Server running on http://localhost:7000");
