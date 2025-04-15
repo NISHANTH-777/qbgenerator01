@@ -115,9 +115,9 @@ const GenerateQB = () => {
   const bankColumns = [
     { field: 'id', headerName: 'ID', width: 125 },
     { field: 'course_code', headerName: 'Course Code', width: 250 },
-    { field: 'subject_name', headerName: 'Subject', width: 325 },
-    { field: 'exam_name', headerName: 'Exam Name', width: 225 },
-    { field: 'date_time', headerName: 'Generated At', width: 315 },
+    { field: 'subject_name', headerName: 'Subject', width: 300 },
+    { field: 'exam_name', headerName: 'Exam Name', width: 200 },
+    { field: 'date_time', headerName: 'Generated At', width: 300 },
   ];
 
   return (
