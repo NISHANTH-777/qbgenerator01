@@ -1,6 +1,7 @@
 import React from "react";
 import { MdUpload } from "react-icons/md";
 import FacultyNavbar from "../../navbar/FacultyNavbar";
+import { Imagecomp } from "../../images/Imagecomp";
 
 const AddQuestionCard = () => {
   return (
@@ -12,6 +13,7 @@ const AddQuestionCard = () => {
       <div className="flex-1 pl-11 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
           <h2 className="text-3xl font-bold text-gray-800">Add Question Bank</h2>
+          <Imagecomp />
         </div>
 
         <div className="bg-white p-10 rounded-2xl shadow-xl mb-6 w-full max-w-xl mx-auto">
