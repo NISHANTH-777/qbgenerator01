@@ -100,14 +100,14 @@ const ManageQB = () => {
   };
 
   const questionColumns = [
-    { field: 'facultyId', headerName: 'Faculty ID', width: 285 },
-    { field: 'code', headerName: 'Course Code', width: 275 },
-    { field: 'unit', headerName: 'Unit', width: 275 },
-    { field: 'datetime', headerName: 'Date & Time', width: 350 },
+    { field: 'facultyId', headerName: 'Faculty ID', width: 200 },
+    { field: 'code', headerName: 'Course Code', width: 250 },
+    { field: 'unit', headerName: 'Unit', width: 250 },
+    { field: 'datetime', headerName: 'Date & Time', width: 275 },
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 250,
+      width: 200,
       renderCell: (params) => (
         <div className="flex gap-4 items-center">
           <button onClick={() => handleView(params.row.id)} title="View">
