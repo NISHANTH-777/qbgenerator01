@@ -8,6 +8,7 @@ import QuestionDetails from './components/pages/admin/QuestionDetails';
 import FacultyDashboard from './components/pages/faculty/FacultyDashboard';
 import ManageQB from './components/pages/faculty/ManageQB';
 import QBDetails from './components/pages/faculty/QBDetails';
+import AddQuestions from './components/pages/faculty/AddQuestions';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
       <Route path='/facultydashboard' element={<FacultyDashboard />}/>
       <Route path='/manageqb' element={<ManageQB />} />
       <Route path="/qbdetailsf" element={<QBDetails />} />
+      <Route path='/addquestions' element={<AddQuestions />} />
     </Routes>
    </Router>
   )

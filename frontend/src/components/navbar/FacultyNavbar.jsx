@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks } from 'react-icons/md';
+import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks,MdLibraryAdd  } from 'react-icons/md';
 import Logo from '../images/bitlogo.png';
 
 const FacultyNavbar = () => {
@@ -8,6 +8,8 @@ const FacultyNavbar = () => {
     { to: '/facultydashboard', label: 'Dashboard', icon: <MdDashboard size={20} /> },
     { to: '/qbdetailsf', label: 'QB Details', icon: <MdDescription size={20} /> },
     { to: '/manageqb', label: 'Manage QB', icon: <MdLibraryBooks size={20} /> },
+    { to: '/addquestions', label: 'Add Questions', icon: <MdLibraryAdd  size={20} /> },
+
   ];
 
   return (
