@@ -4,7 +4,6 @@ import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { Imagecomp } from '../../images/Imagecomp';
 
 const FacultyList = () => {
@@ -15,7 +14,7 @@ const FacultyList = () => {
     axios.get("http://localhost:7000/faculty-list")
       .then((response) => {
         const formatted = response.data.map((item, index) => ({
-          id: index + 1, // for DataGrid row id
+          id: index + 1,
           facultyId: item.faculty_id,
           name: item.faculty_name,
           photo: item.photo,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '../../navbar/AdminNavbar';
-import Profile from '../../images/profile.png';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +8,6 @@ import { Imagecomp } from '../../images/Imagecomp';
 
 const QuestionDetails = () => {
   const [rows, setRows] = useState([]);
-  const [openProfileModal, setOpenProfileModal] = useState(false);
   const [clicked, setClicked] = useState(false);
   const navigate = useNavigate();
 
@@ -22,11 +20,11 @@ const QuestionDetails = () => {
     axios.get("http://localhost:7000/question-history")
       .then((res) => {
         const formatted = res.data.map((item, index) => ({
-          id: index + 1, // give unique ID
+          id: index + 1,
           facultyId: item.faculty_id,
           code: item.course_code,
           unit: item.unit,
-          datetime: new Date(item.created_at).toLocaleString(), // fix date format
+          datetime: new Date(item.created_at).toLocaleString(), 
         }));
         setRows(formatted);
       })

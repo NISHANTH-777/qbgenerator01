@@ -36,10 +36,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-app.get("/test", (req, res) => {
-  res.send("check");
-});
-
 app.post('/check-user', (req, res) => {
   const { email } = req.body;
 
@@ -51,6 +47,9 @@ app.post('/check-user', (req, res) => {
       const user = results[0];
       return res.json({
         exists: true,
+        id: user.id,
+        username: user.username,
+        email: user.email,
         role: user.role,
         course_code: user.course_code
       });
@@ -63,12 +62,12 @@ app.post('/check-user', (req, res) => {
 app.post('/manual-login', (req, res) => {
   const { email, password } = req.body;
 
-  console.log("Login request:", email, password); // Debug log
+  console.log("Login request:", email, password); 
 
   const query = 'SELECT * FROM user WHERE email = ? AND password = ?';
   db.query(query, [email, password], (err, results) => {
     if (err) {
-      console.error("MySQL error:", err); // 🔥 This is important
+      console.error("MySQL error:", err); 
       return res.status(500).json({ success: false, message: 'Database error' });
     }
 
@@ -108,6 +107,14 @@ app.get("/faculty-list", (req, res) => {
     else return res.status(400).send(err);
   });
 });
+app.get("/faculty-data", (req, res) => {
+  const {email} = req.query
+  const query = "SELECT * FROM faculty_list WHERE email=?";
+  db.query(query,[email], (err, results) => {
+    if (!err) res.status(200).send(results);
+    else return res.status(400).send(err);
+  });
+});
 
 app.get("/question-list", (req, res) => {
   const query = "SELECT id, unit, topic, mark, question FROM questions";
@@ -116,6 +123,19 @@ app.get("/question-list", (req, res) => {
     else return res.status(400).send(err);
   });
 });
+
+app.get("/faculty-question-list", (req, res) => {
+  const { course_code } = req.query;
+  if (!course_code) return res.status(400).json({ error: "Course code is required" });
+
+  const query = "SELECT id, course_code,unit, updated_at FROM questions WHERE course_code = ?";
+  db.query(query, [course_code], (err, results) => {
+    if (!err) res.status(200).json(results);
+    else res.status(400).json({ error: err.message });
+  });
+});
+
+
 
 app.get("/question-view/:id", (req, res) => {
   const { id } = req.params;
@@ -191,6 +211,33 @@ app.get("/recently-added", (req, res) => {
   });
 });
 
+app.get('/faculty-recently-added', (req, res) => {
+  const courseCode = req.query.course_code;
+  
+  if (!courseCode) {
+    return res.status(400).json({ error: 'Course code is required' });
+  }
+
+  const query = `
+    SELECT course_code, unit, created_at
+    FROM questions
+    WHERE course_code = ?
+    ORDER BY created_at DESC
+    LIMIT 5
+  `;
+
+  db.query(query, [courseCode], (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    res.json(results);
+  });
+});
+
+
+
 app.get("/question-stats", (req, res) => { 
   const weeklyQuery = `
     SELECT fl.faculty_id, YEARWEEK(q.created_at) AS week, COUNT(*) AS total_papers 
@@ -218,6 +265,48 @@ app.get("/question-stats", (req, res) => {
     });
   });
 });
+
+app.get("/faculty-question-stats", (req, res) => {
+  const courseCode = req.query.course_code;
+
+  if (!courseCode) {
+    return res.status(400).json({ error: "Course code is required" });
+  }
+
+  // Weekly stats: last 7 weeks
+  const weeklyQuery = `
+    SELECT fl.faculty_id, YEARWEEK(q.created_at, 1) AS week, COUNT(*) AS total_papers
+    FROM qb.questions AS q
+    JOIN qb.faculty_list AS fl ON q.course_code = fl.course_code
+    WHERE q.course_code = ?
+    AND q.created_at >= NOW() - INTERVAL 7 WEEK
+    GROUP BY fl.faculty_id, YEARWEEK(q.created_at, 1)
+    ORDER BY week ASC
+  `;
+
+  // Monthly stats: last 6 months
+  const monthlyQuery = `
+    SELECT fl.faculty_id, DATE_FORMAT(q.created_at, '%Y-%m') AS month, COUNT(*) AS total_papers
+    FROM qb.questions AS q
+    JOIN qb.faculty_list AS fl ON q.course_code = fl.course_code
+    WHERE q.course_code = ?
+    AND q.created_at >= NOW() - INTERVAL 6 MONTH
+    GROUP BY fl.faculty_id, DATE_FORMAT(q.created_at, '%Y-%m')
+    ORDER BY month ASC
+  `;
+
+  db.query(weeklyQuery, [courseCode], (err, weeklyResults) => {
+    if (err) return res.status(400).json({ error: err.message });
+
+    db.query(monthlyQuery, [courseCode], (err, monthlyResults) => {
+      if (err) return res.status(400).json({ error: err.message });
+
+      res.status(200).json({ weekly: weeklyResults, monthly: monthlyResults });
+    });
+  });
+});
+
+
 
 
 app.post("/upload", upload.single("file"), (req, res) => {
@@ -354,17 +443,7 @@ db.query(query, [course_code, subject_name, exam_name], (err, result) => {
 });
 });
 
-app.get('/get-faculty-subjects', (req, res) => {
-  const query = `SELECT course_code, subject_name FROM faculty_list`;
 
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("Error fetching faculty subjects:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
-    res.status(200).json(results);
-  });
-});
 
 app.get('/qb-history', (req, res) => {
   const query = `SELECT course_code, subject_name,exam_name,date_time FROM generated_papers`;
@@ -377,6 +456,23 @@ app.get('/qb-history', (req, res) => {
     res.status(200).json(results);
   });
 });
+
+app.get("/get-faculty-subjects", (req, res) => {
+  const query = `SELECT course_code, subject_name FROM faculty_list`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching faculty subjects:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json(results);
+  });
+});
+
+app.get("/test", (req, res) => {
+  res.send("Hello from test route");
+});
+
 
 
 app.listen(7000, () => {

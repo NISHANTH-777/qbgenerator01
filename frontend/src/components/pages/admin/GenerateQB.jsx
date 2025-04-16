@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import AdminNavbar from '../../navbar/AdminNavbar';
-import Profile from '../../images/profile.png';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import Tooltip from '@mui/material/Tooltip';
@@ -10,7 +9,6 @@ import { Imagecomp } from '../../images/Imagecomp';
 
 const GenerateQB = () => {
   const [openModal, setOpenModal] = useState(false);
-  const [openProfileModal, setOpenProfileModal] = useState(false);
   const [formData, setFormData] = useState({ examName: '', subjectCode: '', subjectName: '' });
   const [clicked, setClicked] = useState(false);
   const [showGenerated, setShowGenerated] = useState(false);
@@ -83,14 +81,14 @@ const GenerateQB = () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user?.email) throw new Error("User not logged in");
-      const courseRes = await axios.get(`http://localhost:7000/get-course-code?email=${user.email}`);
-      const course = courseRes.data.course_code;
+      // const courseRes = await axios.get(`http://localhost:7000/get-course-code?email=${user.email}`);
+      const course = formData.subjectCode;
       setCourseCode(course);
       const paperRes = await axios.get(`http://localhost:7000/generate-qb?course_code=${course}`);
       setPaper(paperRes.data);
     } catch (err) {
       console.error("Error generating paper:", err);
-      alert("Failed to generate paper. Check console for details.");
+      // alert("Failed to generate paper. Check console for details.");
     } finally {
       setLoading(false);
     }

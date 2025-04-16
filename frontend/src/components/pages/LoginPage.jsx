@@ -18,7 +18,6 @@ const LoginPage = () => {
     setShowPassword((prev) => !prev);
   };
 
-  // 🔐 Manual Login
   const handleManualLogin = async (e) => {
     e.preventDefault();
 
@@ -27,9 +26,15 @@ const LoginPage = () => {
         email,
         password
       });
+      localStorage.setItem("test", "hello");
+      console.log("test localStorage:", localStorage.getItem("test"));
+      console.log("Login response:", res.data);
 
       if (res.data.success) {
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('user', JSON.stringify({
+          email: res.data.user.email,
+          role: res.data.user.role,
+        }));        
         navigate('/admindashboard');
       } else {
         alert(res.data.message || 'Invalid credentials');

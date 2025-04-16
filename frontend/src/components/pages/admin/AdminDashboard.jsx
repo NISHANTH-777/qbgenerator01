@@ -2,15 +2,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
 import AdminNavbar from "../../navbar/AdminNavbar";
-import Profile from "../../images/profile.png";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProfileFunction from "../ProfileFunction";
+import { Imagecomp } from "../../images/Imagecomp";
 
 const Admindashboard = () => {
   const [view, setView] = useState("Monthly");
   const [monthRange, setMonthRange] = useState("first");
-  const [openProfileModal, setOpenProfileModal] = useState(false);
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
@@ -21,7 +19,9 @@ const Admindashboard = () => {
   useEffect(() => {
     axios
       .get("http://localhost:7000/recently-added")
-      .then((res) => setRecentQuestions(res.data))
+      .then((res) =>{ setRecentQuestions(res.data)
+      console.log(res.data)
+      })
       .catch((err) =>
         console.error("Failed to fetch recent questions:", err)
       );
@@ -47,11 +47,7 @@ const Admindashboard = () => {
         setWeeklyData(weeklyFormatted);
       })
       .catch((err) => console.error("Failed to fetch stats:", err));
-  }, []);
-
-  const handleLogout = () => {
-    navigate("/");
-  };
+  }, []);  
 
   const filteredMonthlyData =
     monthRange === "first"
@@ -65,22 +61,10 @@ const Admindashboard = () => {
       </div>
 
       <div className="flex-1 pl-11 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
-        {/* Topbar */}
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
           <h2 className="text-2xl font-bold text-gray-800">DASHBOARD</h2>
-          <img
-            src={user?.photoURL || Profile}
-            alt="ADMIN"
-            className="w-14 h-14 rounded-full cursor-pointer"
-            onClick={() => setOpenProfileModal(true)}
-          />
+          <Imagecomp />
         </div>
-
-        <ProfileFunction
-          isOpen={openProfileModal}
-          onClose={() => setOpenProfileModal(false)}
-          onLogout={handleLogout}
-        />
 
         <div className="bg-white p-4 rounded-lg shadow-xl mb-5">
           <h3 className="text-lg font-semibold mb-4">

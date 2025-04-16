@@ -1,60 +1,70 @@
-import React, { useState } from "react";
-import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import FacultyNavbar from "../../navbar/FacultyNavbar";
-import Profile from "../../images/profile.png";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProfileFunction from '../ProfileFunction';
-
-const recentQuestions = [
-  { code: "CS101", unit: "1.1", datetime: "10-02-89 10:35AM" },
-  { code: "CS102", unit: "1.2", datetime: "10-02-89 10:35AM" },
-  { code: "CS103", unit: "1.3", datetime: "10-02-89 10:35AM" },
-  { code: "CS104", unit: "1.4", datetime: "10-02-89 10:35AM" },
-  { code: "CS105", unit: "1.5", datetime: "10-02-89 10:35AM" },
-];
-
-const fullMonthlyData = [
-  { name: "Jan", QB_Added: 10 },
-  { name: "Feb", QB_Added: 14 },
-  { name: "Mar", QB_Added: 18 },
-  { name: "Apr", QB_Added: 25 },
-  { name: "May", QB_Added: 19 },
-  { name: "Jun", QB_Added: 15 },
-  { name: "Jul", QB_Added: 12 },
-  { name: "Aug", QB_Added: 17 },
-  { name: "Sep", QB_Added: 22 },
-  { name: "Oct", QB_Added: 28 },
-  { name: "Nov", QB_Added: 24 },
-  { name: "Dec", QB_Added: 30 },
-];
-
-const weeklyData = [
-  { name: "Mon", QB_Added: 4 },
-  { name: "Tue", QB_Added: 6 },
-  { name: "Wed", QB_Added: 7 },
-  { name: "Thu", QB_Added: 10 },
-  { name: "Fri", QB_Added: 5 },
-  { name: "Sat", QB_Added: 3 },
-  { name: "Sun", QB_Added: 2 },
-];
+import { Imagecomp } from "../../images/Imagecomp";
 
 const Facultydashboard = () => {
   const [view, setView] = useState("Monthly");
   const [monthlyPeriod, setMonthlyPeriod] = useState("first");
-  const [openProfileModal, setOpenProfileModal] = useState(false);
-  const [clicked, setClicked] = useState(false);
-  const navigate = useNavigate();
+  const [courseCode, setCourseCode] = useState(false);
+  const [recentQuestions, setRecentQuestions] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState([]);
 
-  const handleLogout = () => {
-    setClicked(!clicked);
-    navigate("/");
-  };
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.email) {
+      axios
+        .get("http://localhost:7000/get-course-code", {
+          params: { email: user.email },
+        })
+        .then((res) => {
+          setCourseCode(res.data.course_code);
+        })
+        .catch((err) => console.error("Error fetching course code:", err));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (courseCode) {
+      
+      axios
+        .get("http://localhost:7000/faculty-recently-added", {
+          params: { course_code: courseCode },
+        })
+        .then((res) => setRecentQuestions(res.data))
+        .catch((err) => console.error("Failed to fetch recent questions:", err));
+
+    
+      axios
+        .get("http://localhost:7000/faculty-question-stats", {
+          params: { course_code: courseCode },
+        })
+        .then((res) => {
+          const formattedWeekly = res.data.weekly.map(item => ({
+            name: `W${item.week % 100}`, 
+            QB_Added: item.total_papers
+          }));
+
+          const formattedMonthly = res.data.monthly.map(item => ({
+            name: item.month,
+            QB_Added: item.total_papers
+          }));
+
+          setWeeklyStats(formattedWeekly);
+          setMonthlyStats(formattedMonthly);
+        })
+        .catch((err) => console.error("Failed to fetch stats:", err));
+    }
+  }, [courseCode]);
 
   const filteredMonthlyData =
     monthlyPeriod === "first"
-      ? fullMonthlyData.slice(0, 6)
-      : fullMonthlyData.slice(6);
+      ? monthlyStats.slice(0, 6)
+      : monthlyStats.slice(6);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -65,20 +75,10 @@ const Facultydashboard = () => {
       <div className="flex-1 pl-11 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
           <h2 className="text-2xl font-bold text-gray-800">DASHBOARD</h2>
-          <img
-            src={Profile}
-            alt="ADMIN"
-            className="w-14 h-14 rounded-full cursor-pointer"
-            onClick={() => setOpenProfileModal(true)}
-          />
+           <Imagecomp />
         </div>
 
-        <ProfileFunction
-          isOpen={openProfileModal}
-          onClose={() => setOpenProfileModal(false)}
-          onLogout={handleLogout}
-        />
-
+         
         <div className="bg-white p-4 rounded-lg shadow-xl mb-5">
           <h3 className="text-lg font-semibold mb-4">Recently Added Questions</h3>
           <table className="min-w-full text-left text-sm border">
@@ -95,9 +95,11 @@ const Facultydashboard = () => {
                   key={index}
                   className={index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}
                 >
-                  <td className="py-4 px-4">{q.code}</td>
+                  <td className="py-4 px-4">{q.course_code}</td>
                   <td className="py-4 px-4">{q.unit}</td>
-                  <td className="py-4 px-4">{q.datetime}</td>
+                  <td className="py-4 px-4">
+                    {new Date(q.created_at).toLocaleString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -108,9 +110,7 @@ const Facultydashboard = () => {
           <div className="flex items-center gap-5 mb-5">
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Monthly"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
+                view === "Monthly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Monthly")}
             >
@@ -118,15 +118,14 @@ const Facultydashboard = () => {
             </button>
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Weekly"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
+                view === "Weekly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Weekly")}
             >
               Weekly
             </button>
           </div>
+
           {view === "Monthly" && (
             <div className="flex justify-between items-center mb-4 px-2">
               <button
@@ -154,7 +153,7 @@ const Facultydashboard = () => {
           )}
 
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={view === "Monthly" ? filteredMonthlyData : weeklyData}>
+            <BarChart data={view === "Monthly" ? filteredMonthlyData : weeklyStats}>
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />

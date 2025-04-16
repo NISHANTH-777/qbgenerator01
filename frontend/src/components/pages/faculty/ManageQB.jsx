@@ -1,50 +1,109 @@
-import React, { useState } from 'react';
-import FacultyNavbar from '../../navbar/FacultyNavbar';
-import Profile from '../../images/profile.png';
+import { Eye, Pencil, Trash } from 'lucide-react'; 
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Pencil, Trash } from 'lucide-react'; 
-import ProfileFunction from '../ProfileFunction';
-
-const questionRows = [
-  { id: 1, facultyId: "FAC001", code: "22CH007", unit: "1.1", datetime: "2025-03-01 10:30 AM" },
-  { id: 2, facultyId: "FAC002", code: "22CH008", unit: "1.2", datetime: "2025-03-02 11:00 AM" },
-  { id: 3, facultyId: "FAC003", code: "22CH009", unit: "1.3", datetime: "2025-03-03 09:45 AM" },
-  { id: 4, facultyId: "FAC004", code: "22CH001", unit: "1.4", datetime: "2025-03-04 02:15 PM" },
-  { id: 5, facultyId: "FAC005", code: "22CH002", unit: "1.5", datetime: "2025-03-05 12:00 PM" },
-  { id: 6, facultyId: "FAC006", code: "22CH003", unit: "1.6", datetime: "2025-03-06 03:30 PM" },
-  { id: 7, facultyId: "FAC007", code: "22CH004", unit: "1.7", datetime: "2025-03-07 04:00 PM" },
-  { id: 8, facultyId: "FAC008", code: "22CH005", unit: "1.8", datetime: "2025-03-08 08:20 AM" },
-  { id: 9, facultyId: "FAC009", code: "22CH006", unit: "1.9", datetime: "2025-03-09 06:10 PM" },
-  { id: 10, facultyId: "FAC010", code: "22CH017", unit: "2.1", datetime: "2025-03-10 05:45 PM" },
-];
+import FacultyNavbar from '../../navbar/FacultyNavbar';
+import { Imagecomp } from '../../images/Imagecomp';
 
 const ManageQB = () => {
-  const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [questionRows, setQuestionRows] = useState([]);
+  const [courseCode, setCourseCode] = useState(null);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.email) {
+      axios
+        .get("http://localhost:7000/get-course-code", {
+          params: { email: user.email },
+        })
+        .then((res) => {
+          setCourseCode(res.data.course_code);
+        })
+        .catch((err) => console.error("Error fetching course code:", err));
+    }
+  }, []);
 
-  const handleLogout = () => {
-    navigate('/');
+  useEffect(() => {
+    if (courseCode) {
+      axios
+        .get(`http://localhost:7000/faculty-question-list?course_code=${courseCode}`)
+        .then((res) => {
+          const formattedRows = res.data.map((item, index) => ({
+            id: index + 1,
+            facultyId: item.id,
+            code: item.courseCode || courseCode,
+            unit: item.unit,
+            datetime: new Date(item.updated_at).toLocaleString(),
+          }));
+          setQuestionRows(formattedRows);
+        })
+        .catch((err) => {
+          console.error("Error fetching question data:", err);
+        });
+    }
+  }, [courseCode]);
+
+  const handleView = (rowId) => {
+    const selected = questionRows.find(row => row.id === rowId);
+    axios
+      .get(`http://localhost:7000/question-view/${selected.facultyId}`)
+      .then((res) => {
+        setSelectedQuestion(res.data[0]);
+        setViewModalOpen(true);
+      })
+      .catch((err) => console.error("Error viewing question:", err));
   };
 
-  const handleView = (id) => {
-    alert(`View clicked for ID: ${id}`);
+  const handleEdit = (rowId) => {
+    const selected = questionRows.find(row => row.id === rowId);
+    axios
+      .get(`http://localhost:7000/question-view/${selected.facultyId}`)
+      .then((res) => {
+        setSelectedQuestion(res.data[0]);
+        setEditModalOpen(true);
+      })
+      .catch((err) => console.error("Error fetching for edit:", err));
   };
 
-  const handleEdit = (id) => {
-    alert(`Edit clicked for ID: ${id}`);
+  const handleSaveEdit = () => {
+    const { id, exam_name, unit, topic, mark, question, answer } = selectedQuestion;
+
+    axios
+      .put(`http://localhost:7000/question-edit/${id}`, {
+        exam_name, unit, topic, mark, question, answer,
+      })
+      .then(() => {
+        setEditModalOpen(false);
+        setSelectedQuestion(null);
+        window.location.reload(); // Refresh to update table
+      })
+      .catch((err) => console.error("Error updating question:", err));
   };
 
-  const handleDelete = (id) => {
-    alert(`Delete clicked for ID: ${id}`);
+  const handleDelete = (rowId) => {
+    const selected = questionRows.find(row => row.id === rowId);
+    if (window.confirm("Are you sure you want to delete this question?")) {
+      axios
+        .delete(`http://localhost:7000/question-delete/${selected.facultyId}`)
+        .then(() => {
+          setQuestionRows(prev => prev.filter(row => row.id !== rowId));
+        })
+        .catch((err) => console.error("Error deleting question:", err));
+    }
   };
 
   const questionColumns = [
-    { field: 'facultyId', headerName: 'Faculty ID', width: 200 },
-    { field: 'code', headerName: 'Course Code', width: 200 },
-    { field: 'unit', headerName: 'Unit', width: 200 },
-    { field: 'datetime', headerName: 'Date & Time', width: 220 },
+    { field: 'facultyId', headerName: 'Faculty ID', width: 285 },
+    { field: 'code', headerName: 'Course Code', width: 275 },
+    { field: 'unit', headerName: 'Unit', width: 275 },
+    { field: 'datetime', headerName: 'Date & Time', width: 350 },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -65,58 +124,101 @@ const ManageQB = () => {
     },
   ];
 
+  const handleLogout = () => {
+    navigate('/');
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="w-56 bg-white shadow-md">
         <FacultyNavbar />
       </div>
-      <div className="flex-1 pl-16 pr-4 mt-5 bg-gray-50 overflow-y-auto">
+
+      <div className="flex-1 pl-16 pr-4 bg-gray-50 overflow-y-auto mt-5">
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
-          <h2 className="text-2xl font-bold text-gray-800">MANAGE QUESTION</h2>
-          <img
-            src={Profile}
-            alt="ADMIN"
-            className="w-14 h-14 rounded-full cursor-pointer"
-            onClick={() => setOpenProfileModal(true)}
-          />
+          <h2 className="text-2xl font-bold text-gray-800">QUESTION ADDED DETAILS</h2>
+           <Imagecomp />
         </div>
 
-        <ProfileFunction
-          isOpen={openProfileModal}
-          onClose={() => setOpenProfileModal(false)}
-          onLogout={handleLogout}
-        />
 
         <Paper sx={{ height: 550, width: '100%', p: 2 }}>
           <DataGrid
             rows={questionRows}
             columns={questionColumns}
-            pageSizeOptions={[6]}
+            pageSizeOptions={[6, 10]}
             initialState={{
               pagination: { paginationModel: { page: 0, pageSize: 6 } }
             }}
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
-            rowHeight={70}
+            rowHeight={60}
             sx={{
               border: 0,
               '& .MuiDataGrid-row:nth-of-type(odd)': {
                 backgroundColor: '#F7F6FE',
+              },
+              '& .MuiDataGrid-row:nth-of-type(even)': {
+                backgroundColor: '#ffffff',
               },
               '& .MuiDataGrid-columnHeaders': {
                 backgroundColor: '#ffffff',
                 fontWeight: 'bold',
                 fontSize: 16,
               },
+              '& .MuiDataGrid-row': {
+                alignItems: 'center',
+              },
               '& .MuiDataGrid-cell': {
-                padding: '12px',
-                fontSize: 15,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                padding: '16px',
               },
             }}
           />
         </Paper>
 
-        
+        {/* View Modal */}
+        {viewModalOpen && selectedQuestion && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-xl p-6 w-[600px] shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">Question Details</h2>
+              <p><strong>Exam:</strong> {selectedQuestion.exam_name}</p>
+              <p><strong>Unit:</strong> {selectedQuestion.unit}</p>
+              <p><strong>Topic:</strong> {selectedQuestion.topic}</p>
+              <p><strong>Marks:</strong> {selectedQuestion.mark}</p>
+              <p><strong>Question:</strong> {selectedQuestion.question}</p>
+              <p><strong>Answer:</strong> {selectedQuestion.answer}</p>
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editModalOpen && selectedQuestion && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-xl p-6 w-[600px] shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">Edit Question</h2>
+              <div className="flex flex-col gap-3">
+                <input type="text" value={selectedQuestion.exam_name} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, exam_name: e.target.value })} placeholder="Exam Name" className="border p-2 rounded" />
+                <input type="text" value={selectedQuestion.unit} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, unit: e.target.value })} placeholder="Unit" className="border p-2 rounded" />
+                <input type="text" value={selectedQuestion.topic} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, topic: e.target.value })} placeholder="Topic" className="border p-2 rounded" />
+                <input type="number" value={selectedQuestion.mark} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, mark: e.target.value })} placeholder="Marks" className="border p-2 rounded" />
+                <textarea value={selectedQuestion.question} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, question: e.target.value })} placeholder="Question" className="border p-2 rounded" />
+                <textarea value={selectedQuestion.answer} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, answer: e.target.value })} placeholder="Answer" className="border p-2 rounded" />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button onClick={() => setEditModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+                <button onClick={handleSaveEdit} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
