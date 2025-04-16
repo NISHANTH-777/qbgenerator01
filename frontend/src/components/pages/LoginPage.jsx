@@ -121,7 +121,7 @@ const LoginPage = () => {
             >
               {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
             </IconButton>
-          </div>
+          </div>  
 
           <div className="flex items-center gap-2 mt-1">
             <Checkbox />
