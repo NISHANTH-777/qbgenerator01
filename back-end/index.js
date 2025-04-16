@@ -307,27 +307,46 @@ app.get("/faculty-question-stats", (req, res) => {
 });
 
 
-
-
 app.post("/upload", upload.single("file"), (req, res) => {
   const filePath = path.join(__dirname, "uploads", req.file.filename);
-  const courseCode = req.body.course_code;
   const results = [];
-
-  if (!courseCode) return res.status(400).send("Missing course_code in request");
 
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
+      // Check required fields only (adjust if needed)
       if (data.question && data.answer && !isNaN(parseInt(data.mark))) {
         results.push(data);
       }
     })
     .on("end", () => {
       results.forEach((row) => {
-        const query = "INSERT INTO questions (question, answer, mark, course_code) VALUES (?, ?, ?, ?)";
-        db.query(query, [row.question, row.answer, parseInt(row.mark), courseCode], (err) => {
-          if (err) console.error("Insert error:", err);
+        const query = `
+          INSERT INTO questions (
+            exam_name, unit, topic, mark, question, answer, course_code, type,
+            option_a, option_b, option_c, option_d
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+          row.exam_name || null,
+          row.unit || null,
+          row.topic || null,
+          parseInt(row.mark) || 0,
+          row.question || null,
+          row.answer || null,
+          row.course_code || null,
+          row.type || null,
+          row.option_a || null,
+          row.option_b || null,
+          row.option_c || null,
+          row.option_d || null,
+        ];
+
+        db.query(query, values, (err) => {
+          if (err) {
+            console.error("Insert error:", err);
+          }
         });
       });
 
@@ -338,6 +357,27 @@ app.post("/upload", upload.single("file"), (req, res) => {
       res.send("File uploaded and data inserted");
     });
 });
+
+app.post('/add-question', (req, res) => {
+  const { exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d } = req.body;
+
+  if (!exam_name || !unit || !topic || !mark || !question || !answer || !course_code || !type) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  // Proceed with inserting the question into the database
+  const query = `INSERT INTO questions (exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(query, [exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d], (err) => {
+    if (err) {
+      console.error("Error inserting question:", err);
+      return res.status(500).json({ message: 'Error inserting question.' });
+    }
+    return res.status(200).json({ message: 'Question added successfully.' });
+  });
+});
+
+
 
 app.get("/get-course-code", (req, res) => {
   const { email } = req.query;
