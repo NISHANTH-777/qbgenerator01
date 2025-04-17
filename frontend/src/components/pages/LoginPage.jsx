@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Checkbox from '@mui/material/Checkbox';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
@@ -132,10 +131,7 @@ const LoginPage = () => {
             </IconButton>
           </div>  
 
-          <div className="flex items-center gap-2 mt-1">
-            <Checkbox />
-            <span className="text-sm text-gray-600">Remember me</span>
-          </div>
+          
 
           <Tooltip title="Click to log in" enterDelay={500} leaveDelay={200}>
             <button type="submit" className="bg-blue-500 w-full p-3 rounded-lg text-white mt-2">Login</button>

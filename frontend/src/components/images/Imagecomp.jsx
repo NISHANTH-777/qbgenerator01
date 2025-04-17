@@ -56,7 +56,7 @@ const user = JSON.parse(localStorage.getItem('user'));
         ×
       </button>
       <img
-        src={Profile}
+         src={user.photoURL}
         alt="Profile"
         className="w-24 h-24 rounded-full mx-auto mb-6 border-2 border-gray-300"
       />
