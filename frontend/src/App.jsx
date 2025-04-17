@@ -11,15 +11,15 @@ import QBDetails from './components/pages/faculty/QBDetails';
 import AddQuestions from './components/pages/faculty/AddQuestions';
 import { Navigate } from 'react-router-dom';
 
-const ProtectedRoute = ({ children,role }) => {
-  const user = localStorage.getItem('user');
-  if ((user || user.role == role) ) {
+const ProtectedRoute = ({ children, role }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user && user.role === role) {
     return children;
-    }
-    return <Navigate to="/" />
-  };
+  }
 
- 
+  return <Navigate to="/" />;
+};
+
 
 
 const App = () => {
