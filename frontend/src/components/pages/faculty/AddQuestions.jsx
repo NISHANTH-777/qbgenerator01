@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import FacultyNavbar from "../../navbar/FacultyNavbar";
+import { Imagecomp } from "../../images/Imagecomp";
 
 const AddQuestions = () => {
   const [isUpload, setIsUpload] = useState(false); 
@@ -102,6 +104,18 @@ const AddQuestions = () => {
   };
 
   return (
+    <div className="flex h-screen bg-gray-50">
+      <div className="w-56 bg-white shadow-md">
+        <FacultyNavbar />
+      </div>
+
+      <div className="flex-1 pl-11 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
+        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
+          <h2 className="text-3xl font-bold text-gray-800">Add Question Bank</h2>
+          <Imagecomp />
+        </div>
+        
+
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add a Question</h2>
 
@@ -178,7 +192,7 @@ const AddQuestions = () => {
             />
           </div>
 
-          {/* Read-only Course Code */}
+          
           <div>
             <label className="block text-gray-700">Course Code</label>
             <div className="border border-gray-300 rounded px-4 py-2 w-full bg-gray-100">
@@ -264,6 +278,8 @@ const AddQuestions = () => {
       )}
 
       {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+    </div>
+    </div>
     </div>
   );
 };
