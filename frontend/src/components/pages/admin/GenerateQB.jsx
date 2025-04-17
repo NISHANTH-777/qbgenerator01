@@ -81,33 +81,33 @@ const GenerateQB = () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user?.email) throw new Error("User not logged in");
-      // const courseRes = await axios.get(`http://localhost:7000/get-course-code?email=${user.email}`);
       const course = formData.subjectCode;
       setCourseCode(course);
       const paperRes = await axios.get(`http://localhost:7000/generate-qb?course_code=${course}`);
       setPaper(paperRes.data);
     } catch (err) {
       console.error("Error generating paper:", err);
-      // alert("Failed to generate paper. Check console for details.");
     } finally {
       setLoading(false);
     }
   };
 
   const exportToPDF = async () => {
-    const jsPDF = (await import('jspdf')).default;
-    const html2canvas = (await import('html2canvas')).default;
-    const input = document.getElementById('question-paper');
-    html2canvas(input).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('question-paper.pdf');
-    });
+    const html2pdf = (await import('html2pdf.js')).default;
+  
+    const element = document.getElementById('question-paper');
+  
+    const opt = {
+      margin:       0.5,
+      filename:     'question-paper.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+  
+    html2pdf().set(opt).from(element).save();
   };
+  
 
   const sections = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
   const bankColumns = [
