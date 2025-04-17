@@ -9,7 +9,7 @@ const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 require("dotenv").config();
 
 const db = mysql.createConnection({
@@ -36,7 +36,9 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  dest: "uploads/", // Store files in the uploads folder
+});
 
 app.post('/check-user', (req, res) => {
   const { email } = req.body;
@@ -309,45 +311,21 @@ app.post("/upload", upload.single("file"), (req, res) => {
   const courseCode = req.body.course_code;
   const results = [];
 
-  if (!courseCode) return res.status(400).send("Missing course_code in request");
+  if (!courseCode) {
+    return res.status(400).send("Missing course_code in request");
+  }
 
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
-      // Make sure all required fields are present
-      if (
-        data.exam_name &&
-        data.unit &&
-        data.topic &&
-        data.question &&
-        data.answer &&
-        !isNaN(parseInt(data.mark))
-      ) {
+      if (data.question && data.answer && !isNaN(parseInt(data.mark))) {
         results.push(data);
       }
     })
     .on("end", () => {
       results.forEach((row) => {
-        const query = `
-          INSERT INTO questions 
-          (exam_name, unit, topic, question, answer, mark, course_code, type, option_a, option_b, option_c, option_d) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        db.query(query, [
-          row.exam_name,
-          row.unit,
-          row.topic,
-          row.question,
-          row.answer,
-          parseInt(row.mark),
-          courseCode,
-          row.type || "Descriptive",
-          row.option_a || null,
-          row.option_b || null,
-          row.option_c || null,
-          row.option_d || null
-        ], (err) => {
+        const query = "INSERT INTO questions (question, answer, mark, course_code) VALUES (?, ?, ?, ?)";
+        db.query(query, [row.question, row.answer, parseInt(row.mark), courseCode], (err) => {
           if (err) console.error("Insert error:", err);
         });
       });
@@ -356,64 +334,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
         if (err) console.error("Failed to delete uploaded file:", err);
       });
 
-      res.send("File uploaded and data inserted successfully");
+      res.send("File uploaded and data inserted");
+    })
+    .on("error", (err) => {
+      console.error("Error processing file:", err);
+      res.status(500).send("Error processing CSV file.");
     });
 });
-
-// In your backend file (e.g., server.js or routes/questions.js)
-app.post("/add-question", (req, res) => {
-  const {
-    exam_name,
-    unit,
-    topic,
-    mark,
-    question,
-    answer,
-    course_code,
-    type,
-    option_a,
-    option_b,
-    option_c,
-    option_d,
-  } = req.body;
-
-  if (!exam_name || !unit || !topic || !mark || !question || !answer || !course_code) {
-    return res.status(400).send("Missing required fields");
-  }
-
-  const query = `
-    INSERT INTO questions 
-    (exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    query,
-    [
-      exam_name,
-      unit,
-      topic,
-      parseInt(mark),
-      question,
-      answer,
-      course_code,
-      type || "Descriptive",
-      option_a || null,
-      option_b || null,
-      option_c || null,
-      option_d || null,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting question:", err);
-        return res.status(500).send("Failed to insert question");
-      }
-
-      res.status(200).send("Question added successfully");
-    }
-  );
-});
-
 
 app.get("/get-course-code", (req, res) => {
   const { email } = req.query;
@@ -522,7 +449,7 @@ db.query(query, [course_code, subject_name, exam_name], (err, result) => {
 
 
 app.get('/qb-history', (req, res) => {
-  const query = `SELECT course_code, subject_name,exam_name,date_time FROM generated_papers`;
+  const query = "SELECT course_code, subject_name,exam_name,date_time FROM generated_papers";
 
   db.query(query, (err, results) => {
     if (err) {
@@ -534,7 +461,7 @@ app.get('/qb-history', (req, res) => {
 });
 
 app.get("/get-faculty-subjects", (req, res) => {
-  const query = `SELECT course_code, subject_name FROM faculty_list`;
+  const query = "SELECT course_code, subject_name FROM faculty_list";
 
   db.query(query, (err, results) => {
     if (err) {
