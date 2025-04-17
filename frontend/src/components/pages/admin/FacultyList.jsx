@@ -40,9 +40,9 @@ const FacultyList = () => {
       filterable: false,
     },
     { field: 'facultyId', headerName: 'Faculty ID', width: 200 },
-    { field: 'name', headerName: 'Faculty Name', width: 200 },
-    { field: 'code', headerName: 'Course Code', width: 200 },
-    { field: 'subject', headerName: 'Subject Name', width: 300 },
+    { field: 'name', headerName: 'Faculty Name', width: 250 },
+    { field: 'code', headerName: 'Course Code', width: 250 },
+    { field: 'subject', headerName: 'Subject Name', width: 350 },
   ];
 
 

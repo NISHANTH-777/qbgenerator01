@@ -49,7 +49,7 @@ const QBDetails = () => {
   const questionColumns = [
     { field: 'facultyId', headerName: 'Faculty ID', width: 285 },
     { field: 'code', headerName: 'Course Code', width: 275 },
-    { field: 'unit', headerName: 'Unit', width: 275 },
+    { field: 'unit', headerName: 'Unit', width: 290 },
     { field: 'datetime', headerName: 'Date & Time', width: 350 },
   ];
 

@@ -103,7 +103,7 @@ const ManageQB = () => {
     { field: 'facultyId', headerName: 'Faculty ID', width: 200 },
     { field: 'code', headerName: 'Course Code', width: 250 },
     { field: 'unit', headerName: 'Unit', width: 250 },
-    { field: 'datetime', headerName: 'Date & Time', width: 275 },
+    { field: 'datetime', headerName: 'Date & Time', width: 300 },
     {
       field: 'actions',
       headerName: 'Actions',
