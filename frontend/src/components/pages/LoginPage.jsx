@@ -34,8 +34,17 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify({
           email: res.data.user.email,
           role: res.data.user.role,
-        }));        
+        }));   
+        if(res.data.user.role === "admin"){   
         navigate('/admindashboard');
+        }
+        else if(res.data.user.role === "faculty"){
+          navigate('/facultydashboard');
+          }
+          else {
+            navigate('/');
+            localStorage.removeItem('user')
+          }
       } else {
         alert(res.data.message || 'Invalid credentials');
       }

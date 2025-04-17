@@ -12,6 +12,7 @@ const user = JSON.parse(localStorage.getItem('user'));
   const handlechangeclick = () => {
       setClicked(!clicked);
       navigate('/');
+      localStorage.removeItem('user')
     }; 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));

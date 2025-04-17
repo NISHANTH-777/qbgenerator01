@@ -40,7 +40,10 @@ const AdminNavbar = () => {
 
       <div className="font-semibold text-gray-500 hover:black mt-56 flex items-center gap-3 pl-4 ml-8">
         <MdLogout size={20} />
+        <div onClick={() => localStorage.removeItem('user')}>
         <Link to="/">Logout</Link>
+        </div>
+        
       </div>
     </nav>
   );

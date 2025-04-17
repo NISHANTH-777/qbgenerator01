@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks,MdLibraryAdd  } from 'react-icons/md';
 import Logo from '../images/bitlogo.png';
 
@@ -35,13 +35,9 @@ const FacultyNavbar = () => {
         ))}
       </ul>
 
-      <NavLink
-        to="/"
-        className="font-semibold text-gray-500 hover:text-black mt-auto flex items-center gap-3 pl-4 ml-8"
-      >
-        <MdLogout size={20} />
-        Logout
-      </NavLink>
+      <div onClick={() => localStorage.removeItem('user')}>
+        <Link to="/">Logout</Link>
+        </div>
     </nav>
   );
 };

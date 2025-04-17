@@ -130,6 +130,13 @@ const AddQuestions = () => {
           <option value="upload">File Upload</option>
         </select>
       </div>
+      <div>
+            <label className="block text-gray-700">Course Code</label>
+            <div className="border border-gray-300 rounded px-4 py-2 w-full bg-gray-100">
+              {courseCode || "Loading..."}
+            </div>
+          </div>
+          <br />
 
       {!isUpload && (
         <form onSubmit={handleSubmitForm} className="space-y-6">
@@ -190,14 +197,6 @@ const AddQuestions = () => {
               onChange={(e) => setAnswer(e.target.value)}
               required
             />
-          </div>
-
-          
-          <div>
-            <label className="block text-gray-700">Course Code</label>
-            <div className="border border-gray-300 rounded px-4 py-2 w-full bg-gray-100">
-              {courseCode || "Loading..."}
-            </div>
           </div>
 
           <div>

@@ -9,20 +9,88 @@ import FacultyDashboard from './components/pages/faculty/FacultyDashboard';
 import ManageQB from './components/pages/faculty/ManageQB';
 import QBDetails from './components/pages/faculty/QBDetails';
 import AddQuestions from './components/pages/faculty/AddQuestions';
+import { Navigate } from 'react-router-dom';
+
+const ProtectedRoute = ({ children,role }) => {
+  const user = localStorage.getItem('user');
+  if ((user || user.role == role) ) {
+    return children;
+    }
+    return <Navigate to="/" />
+  };
+
+ 
+
 
 const App = () => {
   return (
    <Router>
     <Routes>
       <Route path="/" element={<LoginPage/>} />
-      <Route path="/admindashboard" element={<Admindashboard/>} />
-      <Route path="/facultylist" element={<FacultyList />} />
-      <Route path="/generateqb" element={<GenerateQB />} />
-      <Route path="/qbdetails" element={<QuestionDetails/>} />
-      <Route path='/facultydashboard' element={<FacultyDashboard />}/>
-      <Route path='/manageqb' element={<ManageQB />} />
-      <Route path="/qbdetailsf" element={<QBDetails />} />
-      <Route path='/addquestions' element={<AddQuestions />} />
+      <Route 
+        path="/admindashboard" 
+         element={
+        <ProtectedRoute role="admin">
+        <Admindashboard />
+      </ProtectedRoute>
+       } 
+       />
+      <Route
+      path="/facultylist" 
+      element={
+        <ProtectedRoute role="admin">
+        <FacultyList />
+      </ProtectedRoute>
+      } 
+      />
+      <Route
+       path="/generateqb" 
+       element={
+        <ProtectedRoute role="admin">
+        <GenerateQB />
+      </ProtectedRoute>
+       } 
+       />
+      <Route
+       path="/qbdetails" 
+       element={
+        <ProtectedRoute role="admin">
+        <QuestionDetails />
+      </ProtectedRoute>
+       } 
+       />
+      <Route
+      path='/facultydashboard' 
+      element={
+        <ProtectedRoute role="faculty">
+        <FacultyDashboard />
+      </ProtectedRoute>
+       } 
+      />
+      <Route 
+      path='/manageqb' 
+      element={
+        <ProtectedRoute role="faculty">
+        <ManageQB />
+      </ProtectedRoute>
+       }
+      />
+      <Route
+       path="/qbdetailsf" 
+       element={
+        <ProtectedRoute role="faculty">
+        <QBDetails />
+      </ProtectedRoute>
+       }
+      />
+      <Route 
+      path='/addquestions' 
+      element={
+        <ProtectedRoute role="faculty">
+        <AddQuestions />
+      </ProtectedRoute>
+       }
+      />
     </Routes>
    </Router>
   )
