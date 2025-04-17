@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,8 +26,9 @@ const Admindashboard = () => {
   useEffect(() => {
     axios
       .get("http://localhost:7000/recently-added")
-      .then((res) =>{ setRecentQuestions(res.data)
-      console.log(res.data)
+      .then((res) => {
+        setRecentQuestions(res.data);
+        console.log(res.data);
       })
       .catch((err) =>
         console.error("Failed to fetch recent questions:", err)
@@ -31,23 +39,44 @@ const Admindashboard = () => {
       .then((res) => {
         const { monthly, weekly } = res.data;
 
-        const monthlyFormatted = monthly.map((item, index) => ({
-          name: new Date(2025, index).toLocaleString("default", {
+        // Format monthly data
+        const monthlyMap = {};
+        monthly.forEach((item) => {
+          const [year, month] = item.month.split("-");
+          const index = parseInt(month, 10) - 1;
+          const monthName = new Date(2025, index).toLocaleString("default", {
             month: "short",
-          }),
-          QB_Generated: item.total_papers,
-        }));
+          });
 
-        const weeklyFormatted = weekly.map((item) => ({
-          name: `W${item.week}`,
-          QB_Generated: item.total_papers,
-        }));
+          if (!monthlyMap[monthName]) {
+            monthlyMap[monthName] = 0;
+          }
+          monthlyMap[monthName] += item.total_papers;
+        });
+
+        const monthlyFormatted = Object.entries(monthlyMap).map(
+          ([name, QB_Generated]) => ({ name, QB_Generated })
+        );
+
+        // Format weekly data
+        const weeklyMap = {};
+        weekly.forEach((item) => {
+          const weekName = `W${String(item.week).slice(-2)}`;
+          if (!weeklyMap[weekName]) {
+            weeklyMap[weekName] = 0;
+          }
+          weeklyMap[weekName] += item.total_papers;
+        });
+
+        const weeklyFormatted = Object.entries(weeklyMap).map(
+          ([name, QB_Generated]) => ({ name, QB_Generated })
+        );
 
         setMonthlyData(monthlyFormatted);
-        setWeeklyData(weeklyFormatted);
+        setWeeklyData(weeklyFormatted.slice(0, 7)); // Last 7 weeks only
       })
       .catch((err) => console.error("Failed to fetch stats:", err));
-  }, []);  
+  }, []);
 
   const filteredMonthlyData =
     monthRange === "first"

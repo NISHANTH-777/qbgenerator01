@@ -109,6 +109,7 @@ app.get("/faculty-list", (req, res) => {
     else return res.status(400).send(err);
   });
 });
+
 app.get("/faculty-data", (req, res) => {
   const {email} = req.query
   const query = "SELECT * FROM faculty_list WHERE email=?";
@@ -136,8 +137,6 @@ app.get("/faculty-question-list", (req, res) => {
     else res.status(400).json({ error: err.message });
   });
 });
-
-
 
 app.get("/question-view/:id", (req, res) => {
   const { id } = req.params;
@@ -240,20 +239,18 @@ app.get('/faculty-recently-added', (req, res) => {
 
 
 
-app.get("/question-stats", (req, res) => { 
+app.get("/question-stats", (req, res) => {
   const weeklyQuery = `
-    SELECT fl.faculty_id, YEARWEEK(q.created_at) AS week, COUNT(*) AS total_papers 
-    FROM qb.questions AS q
-    JOIN qb.faculty_list AS fl ON q.course_code = fl.course_code 
-    GROUP BY fl.faculty_id, YEARWEEK(q.created_at) 
-    ORDER BY YEARWEEK(q.created_at) DESC
+    SELECT YEARWEEK(created_at) AS week, COUNT(*) AS total_papers 
+    FROM qb.questions 
+    GROUP BY YEARWEEK(created_at) 
+    ORDER BY week DESC
   `;
 
   const monthlyQuery = `
-    SELECT fl.faculty_id, DATE_FORMAT(q.created_at, '%Y-%m') AS month, COUNT(*) AS total_papers 
-    FROM qb.questions AS q
-    JOIN qb.faculty_list AS fl ON q.course_code = fl.course_code 
-    GROUP BY fl.faculty_id, DATE_FORMAT(q.created_at, '%Y-%m') 
+    SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS total_papers 
+    FROM qb.questions 
+    GROUP BY DATE_FORMAT(created_at, '%Y-%m') 
     ORDER BY month DESC
   `;
 
@@ -268,6 +265,7 @@ app.get("/question-stats", (req, res) => {
   });
 });
 
+
 app.get("/faculty-question-stats", (req, res) => {
   const courseCode = req.query.course_code;
 
@@ -275,7 +273,6 @@ app.get("/faculty-question-stats", (req, res) => {
     return res.status(400).json({ error: "Course code is required" });
   }
 
-  // Weekly stats: last 7 weeks
   const weeklyQuery = `
     SELECT fl.faculty_id, YEARWEEK(q.created_at, 1) AS week, COUNT(*) AS total_papers
     FROM qb.questions AS q
@@ -286,7 +283,6 @@ app.get("/faculty-question-stats", (req, res) => {
     ORDER BY week ASC
   `;
 
-  // Monthly stats: last 6 months
   const monthlyQuery = `
     SELECT fl.faculty_id, DATE_FORMAT(q.created_at, '%Y-%m') AS month, COUNT(*) AS total_papers
     FROM qb.questions AS q
@@ -307,9 +303,6 @@ app.get("/faculty-question-stats", (req, res) => {
     });
   });
 });
-
-
-
 
 app.post("/upload", upload.single("file"), (req, res) => {
   const filePath = path.join(__dirname, "uploads", req.file.filename);

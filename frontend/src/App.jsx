@@ -21,7 +21,6 @@ const ProtectedRoute = ({ children, role }) => {
 };
 
 
-
 const App = () => {
   return (
    <Router>
