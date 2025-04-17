@@ -10,7 +10,7 @@ const AdminNavbar = () => {
     { to: '/admindashboard', label: 'Dashboard', icon: <MdDashboard size={20} /> },
     { to: '/facultylist', label: 'Faculty List', icon: <MdPeople size={20} /> },
     { to: '/qbdetails', label: 'QB Details', icon: <MdDescription size={20} /> },
-    { to: '/generateqb', label: 'Generate Qb', icon: <MdLibraryBooks size={20} /> },
+    { to: '/generateqb', label: 'Generate QB', icon: <MdLibraryBooks size={20} /> },
   ];
 
   return (
@@ -20,30 +20,35 @@ const AdminNavbar = () => {
       </div>
 
       <div className="flex flex-col gap-6">
-        <ul className="flex flex-col font-semibold text-gray-500 gap-4 text-left pl-4">
+        <ul className="flex flex-col font-semibold text-gray-500 gap-4 text-left">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
             return (
-              <li
-                key={item.to}
-                className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-3 ${
-                  isActive ? 'bg-blue-500 text-white' : 'hover:bg-blue-500 hover:text-white'
-                }`}
-              >
-                {item.icon}
-                <Link to={item.to}>{item.label}</Link>
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  className={`px-4 py-2 rounded-md transition-all duration-200 flex items-center gap-3 ${
+                    isActive ? 'bg-blue-500 text-white' : 'hover:bg-blue-500 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
               </li>
             );
           })}
         </ul>
       </div>
 
-      <div className="font-semibold text-gray-500 hover:black mt-56 flex items-center gap-3 pl-4 ml-8">
-        <MdLogout size={20} />
-        <div onClick={() => localStorage.removeItem('user')}>
-        <Link to="/">Logout</Link>
-        </div>
-        
+      <div className="mt-auto pl-4 ml-4">
+        <Link
+          to="/"
+          onClick={() => localStorage.removeItem('user')}
+          className="font-semibold text-gray-500 hover:text-black flex items-center gap-3"
+        >
+          <MdLogout size={20} />
+          <span>Logout</span>
+        </Link>
       </div>
     </nav>
   );
