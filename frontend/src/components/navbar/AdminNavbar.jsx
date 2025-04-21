@@ -9,6 +9,7 @@ const AdminNavbar = () => {
   const navItems = [
     { to: '/admindashboard', label: 'Dashboard', icon: <MdDashboard size={20} /> },
     { to: '/facultylist', label: 'Faculty List', icon: <MdPeople size={20} /> },
+    { to: '/add-task', label: 'Add Task', icon: <MdLibraryBooks size={20} /> },
     { to: '/qbdetails', label: 'QB Details', icon: <MdDescription size={20} /> },
     { to: '/generateqb', label: 'Generate QB', icon: <MdLibraryBooks size={20} /> },
   ];

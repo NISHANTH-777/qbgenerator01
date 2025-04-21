@@ -599,4 +599,4 @@ app.get("/faculty-task-progress/:faculty_id", (req, res) => {
 
 app.listen(7000, () => {
   console.log("🚀 Server running on http://localhost:7000");
-}); 
+});
