@@ -103,7 +103,6 @@ app.get('/test-user', (req, res) => {
   });
 });
 
-
 app.get("/faculty-list", (req, res) => {
   const query = "SELECT * FROM faculty_list";
   db.query(query, (err, results) => {
@@ -199,7 +198,6 @@ app.get("/question-history", (req, res) => {
   });
 });
 
-
 app.get("/recently-added", (req, res) => {
   const query = `
     SELECT fl.course_code, q.unit, q.created_at 
@@ -239,8 +237,6 @@ app.get('/faculty-recently-added', (req, res) => {
   });
 });
 
-
-
 app.get("/question-stats", (req, res) => {
   const weeklyQuery = `
     SELECT YEARWEEK(created_at) AS week, COUNT(*) AS total_papers 
@@ -266,7 +262,6 @@ app.get("/question-stats", (req, res) => {
     });
   });
 });
-
 
 app.get("/faculty-question-stats", (req, res) => {
   const courseCode = req.query.course_code;
@@ -342,6 +337,61 @@ app.post("/upload", upload.single("file"), (req, res) => {
     });
 });
 
+// In your backend file (e.g., server.js or routes/questions.js)
+app.post("/add-question", (req, res) => {
+  const {
+    exam_name,
+    unit,
+    topic,
+    mark,
+    question,
+    answer,
+    course_code,
+    type,
+    option_a,
+    option_b,
+    option_c,
+    option_d,
+  } = req.body;
+
+  if (!exam_name || !unit || !topic || !mark || !question || !answer || !course_code) {
+    return res.status(400).send("Missing required fields");
+  }
+
+  const query = `
+    INSERT INTO questions 
+    (exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [
+      exam_name,
+      unit,
+      topic,
+      parseInt(mark),
+      question,
+      answer,
+      course_code,
+      type || "Descriptive",
+      option_a || null,
+      option_b || null,
+      option_c || null,
+      option_d || null,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting question:", err);
+        return res.status(500).send("Failed to insert question");
+      }
+
+      res.status(200).send("Question added successfully");
+    }
+  );
+});
+
+
 app.get("/get-course-code", (req, res) => {
   const { email } = req.query;
   if (!email) return res.status(400).send("Missing email");
@@ -361,72 +411,80 @@ app.get("/get-course-code", (req, res) => {
 
 app.get("/generate-qb", (req, res) => {
   const courseCode = req.query.course_code;
+  const unitLimit = parseInt(req.query.unit); // unit limit like 2 or 3
 
-  if (!courseCode) return res.status(400).json({ error: "Missing course_code" });
+  if (!courseCode || isNaN(unitLimit)) {
+    return res.status(400).json({ error: "Missing or invalid course_code or unit" });
+  }
 
-  db.query("SELECT * FROM questions WHERE course_code = ? ORDER BY RAND()", [courseCode], (err, all) => {
-    if (err) return res.status(500).json({ error: "Database error" });
+  // Adjust SQL to filter by unit (unit <= unitLimit)
+  db.query(
+    "SELECT * FROM questions WHERE course_code = ? AND CAST(REPLACE(unit, 'Unit ', '') AS UNSIGNED) <= ? ORDER BY RAND()",
+    [courseCode, unitLimit],
+    (err, all) => {
+      if (err) return res.status(500).json({ error: "Database error" });
 
-    const paper = {};
-    const usedIds = new Set();
+      const paper = {};
+      const usedIds = new Set();
 
-    const oneMarkQs = all.filter((q) => q.mark === 1);
-    const fourMarkQs = all.filter((q) => q.mark === 4);
-    const others = all.filter((q) => q.mark !== 1);
+      const oneMarkQs = all.filter((q) => q.mark === 1);
+      const fourMarkQs = all.filter((q) => q.mark === 4);
+      const others = all.filter((q) => q.mark !== 1);
 
-    if (oneMarkQs.length < 15) {
-      return res.status(400).json({ error: "Not enough 1-mark questions to generate full paper." });
+      if (oneMarkQs.length < 15) {
+        return res.status(400).json({ error: "Not enough 1-mark questions to generate full paper." });
+      }
+
+      const getUniqueQuestions = (source, count) => {
+        const selected = [];
+        let i = 0;
+        while (selected.length < count && i < source.length) {
+          const q = source[i++];
+          if (!usedIds.has(q.id)) {
+            usedIds.add(q.id);
+            selected.push(q);
+          }
+        }
+        return selected;
+      };
+
+      const getComboThatSumsTo = (target) => {
+        const available = others.filter((q) => !usedIds.has(q.id));
+        const result = [];
+        let found = false;
+
+        function backtrack(path, sum, index) {
+          if (found || sum > target || index >= available.length) return;
+          if (sum === target && path.length === 2) {
+            result.push(...path);
+            found = true;
+            return;
+          }
+
+          backtrack([...path, available[index]], sum + available[index].mark, index + 1);
+          backtrack(path, sum, index + 1);
+        }
+
+        backtrack([], 0, 0);
+        return result;
+      };
+
+      ["A1", "A2", "A3", "B1", "B2", "B3"].forEach((section) => {
+        const oneMarks = getUniqueQuestions(oneMarkQs, 2);
+        const combo = getComboThatSumsTo(8);
+        combo.forEach((q) => usedIds.add(q.id));
+        paper[section] = [...oneMarks, ...combo];
+      });
+
+      ["C1", "C2", "C3"].forEach((section) => {
+        const oneMark = getUniqueQuestions(oneMarkQs, 1);
+        const fourMark = getUniqueQuestions(fourMarkQs, 1);
+        paper[section] = [...oneMark, ...fourMark];
+      });
+
+      res.json(paper);
     }
-
-    const getUniqueQuestions = (source, count) => {
-      const selected = [];
-      let i = 0;
-      while (selected.length < count && i < source.length) {
-        const q = source[i++];
-        if (!usedIds.has(q.id)) {
-          usedIds.add(q.id);
-          selected.push(q);
-        }
-      }
-      return selected;
-    };
-
-    const getComboThatSumsTo = (target) => {
-      const available = others.filter((q) => !usedIds.has(q.id));
-      const result = [];
-      let found = false;
-
-      function backtrack(path, sum, index) {
-        if (found || sum > target || index >= available.length) return;
-        if (sum === target && path.length === 2) {
-          result.push(...path);
-          found = true;
-          return;
-        }
-
-        backtrack([...path, available[index]], sum + available[index].mark, index + 1);
-        backtrack(path, sum, index + 1);
-      }
-
-      backtrack([], 0, 0);
-      return result;
-    };
-
-    ["A1", "A2", "A3", "B1", "B2", "B3"].forEach((section) => {
-      const oneMarks = getUniqueQuestions(oneMarkQs, 2);
-      const combo = getComboThatSumsTo(8);
-      combo.forEach((q) => usedIds.add(q.id));
-      paper[section] = [...oneMarks, ...combo];
-    });
-
-    ["C1", "C2", "C3"].forEach((section) => {
-      const oneMark = getUniqueQuestions(oneMarkQs, 1);
-      const fourMark = getUniqueQuestions(fourMarkQs, 1);
-      paper[section] = [...oneMark, ...fourMark];
-    });
-
-    res.json(paper);
-  });
+  );
 });
 
 app.post('/question-history', (req, res) => {
@@ -445,8 +503,6 @@ db.query(query, [course_code, subject_name, exam_name], (err, result) => {
   res.status(200).json({ message: "History saved successfully" });
 });
 });
-
-
 
 app.get('/qb-history', (req, res) => {
   const query = "SELECT course_code, subject_name,exam_name,date_time FROM generated_papers";
@@ -476,8 +532,71 @@ app.get("/test", (req, res) => {
   res.send("Hello from test route");
 });
 
+app.post("/give-task", (req, res) => {
+  const { faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date } = req.body;
+  const query = `INSERT INTO task (faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(query, [faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date], (err, results) => {
+    if (err) {
+      return res.status(400).json({ error: err });
+    }
+    res.status(200).json({ message: "Task added successfully", results });
+  });
+});
+
+app.get("/faculty-task-progress/:faculty_id", (req, res) => {
+  const facultyId = req.params.faculty_id;
+  const query = `
+    SELECT 
+      t.unit,
+      t.m1, 
+      t.m2, 
+      t.m3, 
+      t.m4, 
+      t.m5, 
+      t.m6,
+      IFNULL(SUM(CASE WHEN q.mark = 1 THEN 1 ELSE 0 END), 0) AS m1_added,
+      IFNULL(SUM(CASE WHEN q.mark = 2 THEN 1 ELSE 0 END), 0) AS m2_added,
+      IFNULL(SUM(CASE WHEN q.mark = 3 THEN 1 ELSE 0 END), 0) AS m3_added,
+      IFNULL(SUM(CASE WHEN q.mark = 4 THEN 1 ELSE 0 END), 0) AS m4_added,
+      IFNULL(SUM(CASE WHEN q.mark = 5 THEN 1 ELSE 0 END), 0) AS m5_added,
+      IFNULL(SUM(CASE WHEN q.mark = 6 THEN 1 ELSE 0 END), 0) AS m6_added
+    FROM task t
+    LEFT JOIN questions q ON t.unit = q.unit AND t.faculty_id = q.faculty_id
+    WHERE t.faculty_id = ? AND t.due_date >= CURDATE()
+    GROUP BY t.unit, t.m1, t.m2, t.m3, t.m4, t.m5, t.m6
+  `;
+
+  db.query(query, [facultyId], (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+
+    const data = results.map(row => ({
+      unit: row.unit,
+      m1_added: row.m1_added,
+      m1_required: row.m1,
+      m1_pending: Math.max(row.m1 - row.m1_added, 0),
+      m2_added: row.m2_added,
+      m2_required: row.m2,
+      m2_pending: Math.max(row.m2 - row.m2_added, 0),
+      m3_added: row.m3_added,
+      m3_required: row.m3,
+      m3_pending: Math.max(row.m3 - row.m3_added, 0),
+      m4_added: row.m4_added,
+      m4_required: row.m4,
+      m4_pending: Math.max(row.m4 - row.m4_added, 0),
+      m5_added: row.m5_added,
+      m5_required: row.m5,
+      m5_pending: Math.max(row.m5 - row.m5_added, 0),
+      m6_added: row.m6_added,
+      m6_required: row.m6,
+      m6_pending: Math.max(row.m6 - row.m6_added, 0)
+    }));
+
+    res.status(200).json(data);
+  });
+});
+
 
 
 app.listen(7000, () => {
   console.log("🚀 Server running on http://localhost:7000");
-});
+}); 
