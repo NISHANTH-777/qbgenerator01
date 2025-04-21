@@ -81,9 +81,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white rounded-2xl shadow-lg flex flex-col items-center w-[500px] py-10 px-6 mt-10 mb-10">
-        <img className="w-[450px] h-20 rounded-full"src="/bitbanner.png" alt="BIT LOGO" />
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+      <div className="bg-white rounded-2xl shadow-lg flex flex-col items-center w-full max-w-lg py-10 px-6 mt-10 mb-10">
+        <img className="w-full h-20 object-contain rounded-full mb-6" src="/bitbanner.png" alt="BIT LOGO" />
 
         <div className="mt-8 flex flex-col items-center gap-4 w-full">
           <h1 className="font-bold text-xl">Welcome Back..</h1>
@@ -130,8 +130,6 @@ const LoginPage = () => {
               {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
             </IconButton>
           </div>  
-
-          
 
           <Tooltip title="Click to log in" enterDelay={500} leaveDelay={200}>
             <button type="submit" className="bg-blue-500 w-full p-3 rounded-lg text-white mt-2">Login</button>

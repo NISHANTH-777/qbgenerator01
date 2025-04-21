@@ -1,4 +1,4 @@
-import { Eye, Pencil, Trash } from 'lucide-react'; 
+import { Eye, Pencil, Trash, Menu } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
@@ -13,9 +13,10 @@ const ManageQB = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); 
 
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.email) {
@@ -82,7 +83,7 @@ const ManageQB = () => {
       .then(() => {
         setEditModalOpen(false);
         setSelectedQuestion(null);
-        window.location.reload(); // Refresh to update table
+        window.location.reload(); 
       })
       .catch((err) => console.error("Error updating question:", err));
   };
@@ -124,19 +125,38 @@ const ManageQB = () => {
     },
   ];
 
-
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="w-56 bg-white shadow-md">
-        <FacultyNavbar />
+      
+      <div
+        className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 md:static md:block w-64`}
+      >
+        <FacultyNavbar onNavigate={navigate} onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 pl-16 pr-4 bg-gray-50 overflow-y-auto mt-5">
-        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
-          <h2 className="text-2xl font-bold text-gray-800">QUESTION ADDED DETAILS</h2>
-           <Imagecomp />
-        </div>
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black opacity-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
 
+      <div className="flex-1 flex flex-col overflow-y-auto">
+     
+        <div className="flex justify-between items-center px-4 py-4 bg-white shadow-md sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button
+              className="block md:hidden text-gray-700"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <Menu size={28} />
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800">Manage Question Bank</h2>
+          </div>
+          <Imagecomp />
+        </div>
 
         <Paper sx={{ height: 550, width: '100%', p: 2 }}>
           <DataGrid
@@ -175,7 +195,6 @@ const ManageQB = () => {
           />
         </Paper>
 
-        {/* View Modal */}
         {viewModalOpen && selectedQuestion && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white rounded-xl p-6 w-[600px] shadow-lg">
@@ -196,7 +215,6 @@ const ManageQB = () => {
           </div>
         )}
 
-        {/* Edit Modal */}
         {editModalOpen && selectedQuestion && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white rounded-xl p-6 w-[600px] shadow-lg">
