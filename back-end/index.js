@@ -200,7 +200,7 @@ app.get("/question-history", (req, res) => {
 
 app.get("/recently-added", (req, res) => {
   const query = `
-    SELECT fl.course_code, q.unit, q.created_at 
+    SELECT fl.course_code,fl.faculty_id, q.unit, q.created_at 
     FROM qb.faculty_list AS fl 
     JOIN qb.questions AS q ON fl.course_code = q.course_code 
     ORDER BY q.created_at DESC 
@@ -210,7 +210,7 @@ app.get("/recently-added", (req, res) => {
     if (!err) res.status(200).send(results);
     else return res.status(400).send(err);
   });
-});
+}); 
 
 app.get('/faculty-recently-added', (req, res) => {
   const courseCode = req.query.course_code;
@@ -594,6 +594,25 @@ app.get("/faculty-task-progress/:faculty_id", (req, res) => {
     res.status(200).json(data);
   });
 });
+
+app.get("/faculty-id", (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).send("Missing email");
+
+  const query = `
+    SELECT faculty_id 
+    FROM faculty_list 
+    WHERE email = ?
+  `;
+
+  db.query(query, [email], (err, results) => {
+    if (err) return res.status(500).send("Error fetching faculty-id");
+    if (results.length === 0) return res.status(404).send("No faculty found");
+    
+    res.json({ faculty_id: results[0].faculty_id });
+  });
+});
+
 
 
 

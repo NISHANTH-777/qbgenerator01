@@ -120,6 +120,7 @@ const Admindashboard = () => {
             <table className="min-w-full text-left text-sm border">
               <thead className="bg-white h-14">
                 <tr>
+                  <th className="py-4 px-4">Faculty ID</th>
                   <th className="py-4 px-4">Course Code</th>
                   <th className="py-4 px-4">Unit</th>
                   <th className="py-4 px-4">Date & Time</th>
@@ -131,6 +132,7 @@ const Admindashboard = () => {
                     key={index}
                     className={index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}
                   >
+                    <td className="py-4 px-4">{q.faculty_id}</td>
                     <td className="py-4 px-4">{q.course_code}</td>
                     <td className="py-4 px-4">{q.unit}</td>
                     <td className="py-4 px-4">
