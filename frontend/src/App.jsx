@@ -10,6 +10,7 @@ import ManageQB from './components/pages/faculty/ManageQB';
 import QBDetails from './components/pages/faculty/QBDetails';
 import AddQuestions from './components/pages/faculty/AddQuestions';
 import { Navigate } from 'react-router-dom';
+import GiveTaskForm from './components/pages/admin/GiveTaskForm';
 
 const ProtectedRoute = ({ children, role }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -39,6 +40,14 @@ const App = () => {
       element={
         <ProtectedRoute role="admin">
         <FacultyList />
+      </ProtectedRoute>
+      } 
+      />
+      <Route
+      path="/add-task" 
+      element={
+        <ProtectedRoute role="admin">
+        <GiveTaskForm />
       </ProtectedRoute>
       } 
       />
