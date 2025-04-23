@@ -1,124 +1,100 @@
-import React, { useState, useEffect } from 'react';
-import AdminNavbar from '../../navbar/AdminNavbar';
-import { DataGrid } from '@mui/x-data-grid';
-import Paper from '@mui/material/Paper';
-import Tooltip from '@mui/material/Tooltip';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Imagecomp } from '../../images/Imagecomp';
-import { Drawer, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import React, { useEffect, useState } from "react";
+import html2pdf from "html2pdf.js";
+import axios from "axios";
+import AdminNavbar from "../../navbar/AdminNavbar";
+import { Drawer, IconButton } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { Imagecomp } from "../../images/Imagecomp";
 
-
-const GenerateQB = () => {
-  const [errorMessage, setErrorMessage] = useState('');
-  const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState({ unit: '', subjectCode: '', subjectName: '' });
-  const [clicked, setClicked] = useState(false);
-  const [showGenerated, setShowGenerated] = useState(false);
-  const [paper, setPaper] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [courseCode, setCourseCode] = useState('');
-  const [openSidebar, setOpenSidebar] = useState(false);
-  const navigate = useNavigate();
+const SampleQuestionPaper = () => {
+  const [paperData, setPaperData] = useState(null);
+  const [formData, setFormData] = useState({ course_code: "", unit: "" });
   const [subjectOptions, setSubjectOptions] = useState([]);
-  const [bankRows, setBankRows] = useState([]);
+  const [error, setError] = useState("");
+  const [openSidebar, setOpenSidebar] = useState(false);
 
   useEffect(() => {
-    axios.get('http://localhost:7000/get-faculty-subjects')
+    axios.get("http://localhost:7000/get-faculty-subjects")
       .then((res) => setSubjectOptions(res.data))
       .catch((err) => console.error("Error fetching subject options:", err));
   }, []);
 
-  const handlechangeclick = () => {
-    setClicked(!clicked);
-    navigate('/');
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setOpenModal(false);
-    // await handleGenerateHistory();
-    await generatePaper();
-    await GenerateHistory();
-    setShowGenerated(true);
-  };
-
-
-
-  const GenerateHistory = async () => {
+  const fetchPaper = async () => {
     try {
-      const res = await axios.get("http://localhost:7000/qb-history");
-      const formattedRows = res.data.map((row, index) => ({
-        id: index + 1,
-        course_code: row.course_code,
-        subject_name: row.subject_name,
-        exam_name: row.exam_name,
-        date_time: new Date(row.date_time).toLocaleString(),
-      }));
-      setBankRows(formattedRows);
-    } catch (error) {
-      console.error(" handleGenerateHistoryror fetching paper history:");
-    }
-  };
-
-  useEffect(() => {
-    GenerateHistory();
-  }, []);
-
-  const generatePaper = async () => {
-    setLoading(true);
-    setErrorMessage('');
-    try {
-      const course = formData.subjectCode;
       const unit = formData.unit.replace("Unit ", "");
-      const paperRes = await axios.get(`http://localhost:7000/generate-qb?course_code=${course}&unit=${unit}`);
-      
-      if (paperRes.data.error) {
-        setErrorMessage(paperRes.data.error); // 👈 shows "Not enough questions" error
-        return;
-      }
-  
-      setPaper(paperRes.data);
-    } catch (err) {
-      console.error("Error generating paper:", err);
-      if (err.response && err.response.data?.error) {
-        setErrorMessage(err.response.data.error); // 👈 show backend 400 error
+      const res = await axios.get(`http://localhost:7000/generate-qb?course_code=${formData.course_code}&unit=${unit}`);
+      if (res.data.error) {
+        setError(res.data.error);
+        setPaperData(null);
       } else {
-        setErrorMessage('Something went wrong. Please try again.');
+        const subject = subjectOptions.find(s => s.course_code === formData.course_code);
+        setPaperData({
+          college: "Bannari Amman Institute of Technology",
+          exam_name: "Periodical Test – II",
+          department: "IV Sem – B.E. / B.Tech. CSE",
+          course_code: formData.course_code,
+          subject_name: subject?.subject_name || "Subject Name",
+          time: "1:30 hrs",
+          max_marks: 50,
+          instructions: [
+            "1.Students should not mark/write anything on the Question Paper other than the register number.",
+            "2.Section A of the Question Paper contains questions for 15 Marks. Sections B and C contain questions for 30 Marks each.",
+            "3.Section A: 10 marks, Section B: 20 marks, Section C: 20 marks.Students can attempt answering any two out of three subsections in each section. The maximum mark is limited to 10 in section A and 20 in section B&C."
+          ],
+          paper: res.data,
+        });
+        setError("");
       }
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate question paper.");
     }
   };
-  
-  
 
-  const exportToPDF = async () => {
-    const html2pdf = (await import('html2pdf.js')).default;
-    const element = document.getElementById('question-paper');
+  const exportToPDF = () => {
+    const element = document.getElementById("question-paper");
     const opt = {
-      margin: 0.5,
-      filename: 'question-paper.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
+      margin: [0.75, 0.5],
+      filename: `${paperData.course_code}_question_paper.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
     };
     html2pdf().set(opt).from(element).save();
   };
 
-  const sections = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
-  const bankColumns = [
-    { field: 'id', headerName: 'ID', width: 125 },
-    { field: 'course_code', headerName: 'Course Code', width: 250 },
-    { field: 'subject_name', headerName: 'Subject', width: 300 },
-    { field: 'exam_name', headerName: 'Exam Name', width: 200 },
-    { field: 'date_time', headerName: 'Generated At', width: 300 },
-  ];
+  const renderQuestions = (sectionData) => (
+    <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
+      <thead>
+        <tr className="bg-gray-200">
+          <th className="border border-gray-400 px-2 py-2">Q. No</th>
+          <th className="border border-gray-400 px-2 py-2">Question</th>
+          <th className="border border-gray-400 px-2 py-2">Marks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sectionData?.map((q, idx) => (
+          <React.Fragment key={q.id || idx}>
+            <tr className="align-top">
+              <td className="border border-gray-400 px-2 py-3 text-center">Q{idx + 1}</td>
+              <td className="border border-gray-400 px-3 py-3">
+                {q.question}
+                {q.mark === 1 && (
+                  <ul className="pl-4 mt-1 list-none">
+                    <li><strong>A)</strong> {q.option_a}</li>
+                    <li><strong>B)</strong> {q.option_b}</li>
+                    <li><strong>C)</strong> {q.option_c}</li>
+                    <li><strong>D)</strong> {q.option_d}</li>
+                  </ul>
+                )}
+              </td>
+              <td className="border border-gray-400 px-2 py-3 text-center">{q.mark}</td>
+            </tr>
+          </React.Fragment>
+        ))}
+      </tbody>
+    </table>
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -154,144 +130,127 @@ const GenerateQB = () => {
             </IconButton>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center sm:text-left mb-2 sm:mb-0">
-            QUESTION BANK HISTORY
+            Generate Question Paper
           </h2>
           <Imagecomp />
         </div>
 
-        {errorMessage && (
-  <div className="text-red-600 font-medium text-center mt-4">
-    {errorMessage}
-  </div>
-)}
+        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+          <select
+            name="course_code"
+            value={formData.course_code}
+            onChange={(e) => setFormData({ ...formData, course_code: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+          >
+            <option value="">-- Select Subject --</option>
+            {subjectOptions.map((subject, idx) => (
+              <option key={idx} value={subject.course_code}>
+                {subject.course_code} - {subject.subject_name}
+              </option>
+            ))}
+          </select>
 
-        <div className="flex justify-end mb-4 ml-4">
-          <Tooltip title="CLICK TO GENERATE NEW QB" enterDelay={500} leaveDelay={300}>
-            <button
-              className="bg-blue-500 px-6 py-2 rounded-lg text-white font-medium hover:bg-blue-700 transition"
-              onClick={() => setOpenModal(true)}
-            >
-              GENERATE
-            </button>
-          </Tooltip>
+          <select
+            name="unit"
+            value={formData.unit}
+            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+          >
+            <option value="">Select Unit</option>
+            <option value="Unit 1">Unit 1</option>
+            <option value="Unit 2">Unit 2</option>
+            <option value="Unit 3">Unit 3</option>
+            <option value="Unit 4">Unit 4</option>
+            <option value="Unit 5">Unit 5</option>
+          </select>
+
+          <button
+            onClick={fetchPaper}
+            className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
+          >
+            Generate Paper
+          </button>
+
+          {error && <div className="text-red-600 mt-3 text-center font-medium">{error}</div>}
         </div>
 
-        {openModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4 overflow-y-auto">
-            <div className="bg-white p-6 sm:p-8 rounded-xl w-full max-w-md shadow-xl max-h-full overflow-y-auto">
-              <h2 className="text-lg sm:text-xl font-bold mb-6 text-center">GENERATE QUESTION BANK</h2>
-              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
-                <div>
-                  <label className="block font-semibold mb-1">Unit:</label>
-                  <select
-                    name="unit"
-                    value={formData.unit}
-                    onChange={handleChange}
-                    className="w-full bg-gray-200 rounded-md px-4 py-2"
-                    required
-                  >
-                    <option value="">Unit</option>
-                    <option value="Unit 1">Unit 1</option>
-                    <option value="Unit 2">Unit 2</option>
-                    <option value="Unit 3">Unit 3</option>
-                    <option value="Unit 4">Unit 4</option>
-                    <option value="Unit 5">Unit 5</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold mb-1">Subject:</label>
-                  <select
-                    name="subjectCode"
-                    value={formData.subjectCode}
-                    onChange={(e) => {
-                      const selected = subjectOptions.find(s => s.course_code === e.target.value);
-                      setFormData({
-                        ...formData,
-                        subjectCode: e.target.value,
-                        subjectName: selected?.subject_name || '',
-                      });
-                    }}
-                    className="w-full bg-gray-200 rounded-md px-4 py-2"
-                    required
-                  >
-                    <option value="">-- Select Subject --</option>
-                    {subjectOptions.map((subject, idx) => (
-                      <option key={idx} value={subject.course_code}>
-                        {subject.course_code} - {subject.subject_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="pt-4 flex justify-center">
-                  <button type="submit" className="bg-blue-500 px-10 py-3 text-white font-semibold rounded-lg hover:bg-blue-600">
-                    GENERATE
-                  </button>
-                </div>
-
-                <div className="pt-2 text-center">
-                  <button type="button" onClick={() => setOpenModal(false)} className="text-lg px-10 py-2 rounded-md text-white bg-slate-700 hover:underline">Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        <div className="ml-4">
-          <Paper sx={{ height: 550, width: '100%', p: 2, mb: 6 }}>
-            <DataGrid
-              rows={bankRows}
-              columns={bankColumns}
-              pageSizeOptions={[6, 10]}
-              initialState={{ pagination: { paginationModel: { page: 0, pageSize: 6 } } }}
-              disableRowSelectionOnClick
-              hideFooterSelectedRowCount
-              rowHeight={60}
-            />
-          </Paper>
-        </div>
-
-        {showGenerated && paper && (
-          <div className="ml-4" style={{ padding: '30px', fontFamily: 'Arial, sans-serif' }}>
-            <h1 style={{ marginBottom: '20px' }}>📄 Generated Question Paper</h1>
-            <p><strong>Course Code:</strong> {courseCode}</p>
-
-            <div className="mb-4">
-              <button onClick={exportToPDF} className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+        {paperData && (
+          <>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={exportToPDF}
+                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+              >
                 Export to PDF
               </button>
             </div>
 
-            <div id="question-paper">
-              {sections.map(section => (
-                <div key={section} style={{ marginBottom: '30px' }}>
-                  <h2>Section {section}</h2>
-                  {paper[section] && paper[section].length > 0 ? (
-                    paper[section].sort((a, b) => a.mark - b.mark).map((q, idx) => (
-                      <div key={q.id || idx} style={{ marginLeft: '20px', marginBottom: '15px' }}>
-                        <p><strong>Q{idx + 1}:</strong> {q.question} <em>({q.mark} mark{q.mark > 1 ? 's' : ''})</em></p>
-                        {q.mark === 1 && (
-                          <ul style={{ listStyleType: 'none', paddingLeft: '20px' }}>
-                            <li><strong>A)</strong> {q.option_a}</li>
-                            <li><strong>B)</strong> {q.option_b}</li>
-                            <li><strong>C)</strong> {q.option_c}</li>
-                            <li><strong>D)</strong> {q.option_d}</li>
-                          </ul>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ marginLeft: '20px' }}>No questions selected for this section.</p>
-                  )}
+            <div
+              id="question-paper"
+              className="mt-6 p-12 bg-white text-black font-serif leading-relaxed border rounded shadow"
+              style={{ paddingTop: '60px', paddingBottom: '60px' }}
+            >
+              <h1 className="text-center text-xl font-bold uppercase">
+                {paperData.college}
+              </h1>
+              <p className="text-center text-sm italic mb-2">
+                (An Autonomous Institution Affiliated to Anna University)
+              </p>
+              <h2 className="text-center text-md font-semibold">{paperData.exam_name}</h2>
+              <p className="text-center text-sm mb-6">{paperData.department}</p>
+
+              <div className="flex justify-between text-sm mb-4">
+                <div><strong>Subject:</strong> {paperData.subject_name} ({paperData.course_code})</div>
+                <div><strong>Time:</strong> {paperData.time}</div>
+                <div><strong>Max Marks:</strong> {paperData.max_marks}</div>
+              </div>
+
+              <h3 className="font-semibold underline mb-2">Instructions:</h3>
+              <ul className="list-disc list-inside text-sm mb-4">
+                {paperData.instructions.map((inst, idx) => (
+                  <li key={idx}>{inst}</li>
+                ))}
+              </ul>
+
+              {Object.entries(paperData.paper).map(([section, questions]) => (
+                <div key={section} className="mb-6">
+                  <h4 className="text-md font-bold">Section {section}</h4>
+                  <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="border border-gray-400 px-2 py-2">Q. No</th>
+                        <th className="border border-gray-400 px-2 py-2">Question</th>
+                        <th className="border border-gray-400 px-2 py-2">Marks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {questions?.map((q, idx) => (
+                        <tr className="align-top" key={q.id || idx}>
+                          <td className="border border-gray-400 px-2 py-3 text-center">Q{idx + 1}</td>
+                          <td className="border border-gray-400 px-3 py-3">
+                            {q.question}
+                            {q.mark === 1 && (
+                              <ul className="pl-4 mt-1 list-none">
+                                <li><strong>A)</strong> {q.option_a}</li>
+                                <li><strong>B)</strong> {q.option_b}</li>
+                                <li><strong>C)</strong> {q.option_c}</li>
+                                <li><strong>D)</strong> {q.option_d}</li>
+                              </ul>
+                            )}
+                          </td>
+                          <td className="border border-gray-400 px-2 py-3 text-center">{q.mark}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
   );
 };
 
-export default GenerateQB;
+export default SampleQuestionPaper;

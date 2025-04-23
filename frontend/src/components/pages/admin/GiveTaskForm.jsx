@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import axios from "axios";
-import { Menu } from "lucide-react";
+import { Menu, CalendarDays, User, ListChecks } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
+import toast, { Toaster } from "react-hot-toast";
 
 const GiveTaskForm = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,20 @@ const GiveTaskForm = () => {
   });
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [facultyList, setFacultyList] = useState([]);
+
+  // Fetch faculty list on mount
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const res = await axios.get("http://localhost:7000/faculty-list");
+        setFacultyList(res.data);
+      } catch (err) {
+        toast.error("Failed to load faculty list");
+      }
+    };
+    fetchFaculty();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,14 +46,28 @@ const GiveTaskForm = () => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:7000/give-task", formData);
-      alert(res.data.message);
+      toast.success(res.data.message || "Task Assigned Successfully!");
+      setFormData({
+        faculty_id: "",
+        unit: "",
+        m1: "",
+        m2: "",
+        m3: "",
+        m4: "",
+        m5: "",
+        m6: "",
+        due_date: "",
+      });
     } catch (err) {
-      alert("Error: " + (err.response?.data?.error || err.message));
+      toast.error("Failed to assign task");
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+      <Toaster position="top-right" reverseOrder={false} />
+
+      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -46,6 +75,7 @@ const GiveTaskForm = () => {
       >
         <AdminNavbar onClose={() => setSidebarOpen(false)} />
       </div>
+
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black opacity-30 md:hidden"
@@ -53,9 +83,10 @@ const GiveTaskForm = () => {
         ></div>
       )}
 
-
+      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-4 bg-white shadow-md sticky top-0 z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 bg-white shadow sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
@@ -63,69 +94,104 @@ const GiveTaskForm = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">TASK ASSIGNING TO FACULTY</h2>
+            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+              Assign Task to Faculty
+            </h2>
           </div>
           <Imagecomp />
         </div>
 
-        <div className="flex justify-center px-4 pb-6 my-6">
+        {/* Form */}
+        <div className="flex justify-center items-center p-6">
           <form
             onSubmit={handleSubmit}
-            className="bg-gray-100 p-6 rounded-2xl shadow-xl w-full max-w-lg space-y-4"
+            className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-10 py-8 animate-fadeIn space-y-6"
           >
-            <h2 className="text-xl font-semibold text-black text-center">ASSIGN TASK TO FACULTY</h2>
+            <h3 className="text-3xl font-bold text-center text-gray-800 mb-2">
+              ✨ Faculty Task Assignment
+            </h3>
+            <p className="text-center text-gray-500 text-sm">
+              Assign specific question types and units to faculty with a deadline.
+            </p>
 
-            <input
-              name="faculty_id"
-              placeholder="Faculty ID"
-              value={formData.faculty_id}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-
-            <select
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select Unit</option>
-              <option value="Unit 1">1</option>
-              <option value="Unit 2">2</option>
-              <option value="Unit 3">3</option>
-              <option value="Unit 4">4</option>
-              <option value="Unit 5">5</option>
-              
-            </select>
-
-            {[
-              { name: "m1", placeholder: "Required Number of 1-Mark Questions", type: "number" },
-              { name: "m2", placeholder: "Required Number of 2-Mark Questions", type: "number" },
-              { name: "m3", placeholder: "Required Number of 3-Mark Questions", type: "number" },
-              { name: "m4", placeholder: "Required Number of 4-Mark Questions", type: "number" },
-              { name: "m5", placeholder: "Required Number of 5-Mark Questions", type: "number" },
-              { name: "m6", placeholder: "Required Number of 6-Mark Questions", type: "number" },
-              { name: "due_date", placeholder: "Due Date", type: "date" },
-            ].map(({ name, placeholder, type = "text" }) => (
-              <input
-                key={name}
-                type={type}
-                name={name}
-                placeholder={placeholder}
-                value={formData[name]}
+            {/* Faculty Dropdown */}
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <User size={18} /> Faculty
+              </label>
+              <select
+                name="faculty_id"
+                value={formData.faculty_id}
                 onChange={handleChange}
                 required
-                className="w-full p-2 border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ))}
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Select Faculty</option>
+                {facultyList.map((faculty, idx) => (
+                  <option key={idx} value={faculty.faculty_id}>
+                    {faculty.faculty_id} — {faculty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            {/* Unit Select */}
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <ListChecks size={18} /> Unit
+              </label>
+              <select
+                name="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Select Unit</option>
+                {[1, 2, 3, 4, 5].map((u) => (
+                  <option key={u} value={`Unit ${u}`}>{`Unit ${u}`}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Marks Inputs */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {["m1", "m2", "m3", "m4", "m5", "m6"].map((m, idx) => (
+                <div key={m}>
+                  <label className="text-sm text-gray-600 font-medium">{`${m.slice(1)}-Mark`}</label>
+                  <input
+                    type="number"
+                    name={m}
+                    value={formData[m]}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <CalendarDays size={18} /> Due Date
+              </label>
+              <input
+                type="date"
+                name="due_date"
+                value={formData.due_date}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition duration-300"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2.5 rounded-xl hover:opacity-90 transition duration-300 shadow-lg"
             >
-              Submit Task
+              ✅ Assign Task
             </button>
           </form>
         </div>
