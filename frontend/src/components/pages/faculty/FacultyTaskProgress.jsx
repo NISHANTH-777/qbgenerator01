@@ -5,44 +5,45 @@ import Paper from '@mui/material/Paper';
 import { Typography } from '@mui/material';
 
 const FacultyTaskProgress = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    // Dummy data
-    const data = [
-      {
-        unit: 'Unit 1',
-        m1_required: 10, m1_added: 8, m1_pending: 2,
-        m2_required: 12, m2_added: 12, m2_pending: 0,
-        m3_required: 8,  m3_added: 6,  m3_pending: 2,
-        m4_required: 9,  m4_added: 5,  m4_pending: 4,
-        m5_required: 7,  m5_added: 7,  m5_pending: 0,
-        m6_required: 6,  m6_added: 3,  m6_pending: 3,
-      },
-      {
-        unit: 'Unit 2',
-        m1_required: 15, m1_added: 10, m1_pending: 5,
-        m2_required: 10, m2_added: 10, m2_pending: 0,
-        m3_required: 9,  m3_added: 9,  m3_pending: 0,
-        m4_required: 12, m4_added: 8,  m4_pending: 4,
-        m5_required: 11, m5_added: 6,  m5_pending: 5,
-        m6_required: 5,  m6_added: 5,  m6_pending: 0,
-      },
-    ];
+    const fetchProgressData = async () => {
+      try {
+        // 1. Get faculty ID using email
+        const res = await axios.get("http://localhost:7000/faculty-id", {
+          params: { email: user.email },
+        });
 
-    const formattedRows = data.flatMap((unitData, unitIndex) =>
-      [1, 2, 3, 4, 5, 6].map((mark) => ({
-        id: `${unitIndex}-${mark}`,
-        unit: unitData.unit,
-        mark: `M${mark}`,
-        required: unitData[`m${mark}_required`],
-        added: unitData[`m${mark}_added`],
-        pending: unitData[`m${mark}_pending`],
-      }))
-    );
+        const facultyId = res.data.faculty_id;
 
-    setRows(formattedRows);
-  }, []);
+        // 2. Get faculty task progress using facultyId
+        const progressRes = await axios.get(`http://localhost:7000/faculty-task-progress/${facultyId}`);
+        const progressData = progressRes.data;
+
+        // 3. Format the data for DataGrid
+        const formattedRows = progressData.flatMap((unitData, unitIndex) =>
+          [1, 2, 3, 4, 5, 6].map((mark) => ({
+            id: `${unitIndex}-${mark}`,
+            unit: unitData.unit,
+            mark: `M${mark}`,
+            required: unitData[`m${mark}_required`],
+            added: unitData[`m${mark}_added`],
+            pending: unitData[`m${mark}_pending`],
+          }))
+        );
+
+        setRows(formattedRows);
+      } catch (error) {
+        console.error("Error fetching faculty task progress:", error);
+      }
+    };
+
+    if (user?.email) {
+      fetchProgressData();
+    }
+  }, [user]);
 
   const columns = [
     { field: 'unit', headerName: 'Unit', width: 275, align: 'center', headerAlign: 'left' },
