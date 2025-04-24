@@ -111,9 +111,9 @@ const AddQuestions = () => {
         <FacultyNavbar />
       </div>
 
-      <div className="flex-1 px-4 py-5 overflow-y-auto">
+      <div className="flex-1 pl-9 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
     
-        <div className="flex flex-row justify-between items-center mb-5 p-4 bg-white shadow sticky top-0 z-10">
+        <div className="flex flex-row justify-between items-center mb-5 p-4 bg-white shadow sticky top-0 z-10 rounded-md">
         
           <button
             className="md:hidden text-gray-800"
@@ -122,7 +122,7 @@ const AddQuestions = () => {
             <Menu size={24} />
           </button>
 
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 ml-4">Add Question Bank</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 ml-4 ">Add Question Bank</h2>
 
           <div className="mt-3 sm:mt-0 w-full sm:w-auto ml-4">
             <Imagecomp />

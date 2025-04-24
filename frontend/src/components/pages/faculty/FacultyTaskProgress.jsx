@@ -54,8 +54,8 @@ const FacultyTaskProgress = () => {
   ];
 
   return (
-    <div className="px-4 py-4">
-      <Typography variant="h5" gutterBottom>Faculty Task Progress</Typography>
+    <div className="mb-6">
+      <Typography variant="h6" fontWeight="bold" gutterBottom>Faculty Task Progress</Typography>
       <Paper sx={{ minWidth: 600, height: 550, p: 2 }}>
         <div style={{ width: '100%' }}>
           <DataGrid

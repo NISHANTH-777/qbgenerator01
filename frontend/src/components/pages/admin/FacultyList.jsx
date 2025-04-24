@@ -41,7 +41,7 @@ const FacultyList = () => {
     {
       field: "photo",
       headerName: "Photo",
-      width: 150,
+      flex: 0.7,
       renderCell: (params) => (
         <Avatar
           src={params.value}
@@ -52,18 +52,24 @@ const FacultyList = () => {
       sortable: false,
       filterable: false,
     },
-    { field: "facultyId", headerName: "Faculty ID", width: 200 },
-    { field: "name", headerName: "Faculty Name", width: 250 },
-    { field: "code", headerName: "Course Code", width: 233 },
-    { field: "subject", headerName: "Subject Name", width: 350 },
+    { field: "facultyId", headerName: "Faculty ID", flex: 1 },
+    { field: "name", headerName: "Faculty Name", flex: 1.2 },
+    { field: "code", headerName: "Course Code", flex: 1 },
+    { field: "subject", headerName: "Subject Name", flex: 1.5 },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
       <div
-        className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:block w-64`}
+        className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 md:static md:block w-64`}
       >
-        <AdminNavbar onNavigate={handleNavigate} onClose={() => setSidebarOpen(false)} />
+        <AdminNavbar
+          onNavigate={handleNavigate}
+          onClose={() => setSidebarOpen(false)}
+        />
       </div>
 
       {/* Overlay for mobile */}
@@ -74,8 +80,10 @@ const FacultyList = () => {
         ></div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-4 bg-white shadow-md sticky top-0 z-10">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-y-auto pl-1 pr-4 bg-gray-50 ml-5 mt-5">
+        {/* Header (preserved and responsive) */}
+        <div className="flex flex-wrap justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
@@ -83,13 +91,18 @@ const FacultyList = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">FACULTY LIST</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
+              FACULTY LIST
+            </h2>
           </div>
-          <Imagecomp />
+          <div className="mt-4 md:mt-0">
+            <Imagecomp />
+          </div>
         </div>
 
-        <div className="px-4 pb-6  my-4 overflow-x-auto">
-          <Paper sx={{ width: "100%", p: 2 }}>
+        {/* DataGrid */}
+        <div className="pb-6 my-4  overflow-x-auto">
+          <Paper sx={{ minWidth: 600, width: "100%", p: { xs: 1, sm: 2 } }}>
             <DataGrid
               rows={data}
               columns={facultyColumns}

@@ -65,8 +65,8 @@ const Facultydashboard = () => {
         <FacultyNavbar />
       </div>
 
-      <div className="flex-1 pl-11 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
-        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md">
+      <div className="flex-1 pl-9 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
+        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <h2 className="text-2xl font-bold text-gray-800">DASHBOARD</h2>
            <Imagecomp />
         </div>
@@ -75,7 +75,7 @@ const Facultydashboard = () => {
           <FacultyTaskProgress /> 
         </div>
 
-        <div className="bg-white p-4 rounded-xl shadow">
+        <div className="bg-white p-4 rounded-xl shadow mb-5">
           <div className="flex items-center gap-5 mb-5">
             <button
               className={`px-4 py-2 rounded-lg font-medium ${view === "Monthly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}

@@ -21,7 +21,6 @@ const GiveTaskForm = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [facultyList, setFacultyList] = useState([]);
 
-  // Fetch faculty list on mount
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
@@ -64,7 +63,7 @@ const GiveTaskForm = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <Toaster position="top-right" reverseOrder={false} />
 
       {/* Sidebar */}
@@ -83,10 +82,10 @@ const GiveTaskForm = () => {
         ></div>
       )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      {/* Main */}
+      <div className="flex-1 px-4 pt-5 pb-10 overflow-y-auto md:ml-5">
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 bg-white shadow sticky top-0 z-10">
+        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
@@ -94,27 +93,29 @@ const GiveTaskForm = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
-              Assign Task to Faculty
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+             Task Assignment
+
             </h2>
           </div>
-          <Imagecomp />
+          <div className="mt-4 md:mt-0">
+            <Imagecomp />
+          </div>
         </div>
 
         {/* Form */}
-        <div className="flex justify-center items-center p-6">
+        <div className="flex justify-center px-2">
           <form
             onSubmit={handleSubmit}
-            className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-10 py-8 animate-fadeIn space-y-6"
+            className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
           >
-            <h3 className="text-3xl font-bold text-center text-gray-800 mb-2">
-              ✨ Faculty Task Assignment
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">
+              Faculty Task Assignment
             </h3>
             <p className="text-center text-gray-500 text-sm">
               Assign specific question types and units to faculty with a deadline.
             </p>
 
-            {/* Faculty Dropdown */}
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
                 <User size={18} /> Faculty
@@ -135,7 +136,6 @@ const GiveTaskForm = () => {
               </select>
             </div>
 
-            {/* Unit Select */}
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
                 <ListChecks size={18} /> Unit
@@ -154,11 +154,12 @@ const GiveTaskForm = () => {
               </select>
             </div>
 
-            {/* Marks Inputs */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {["m1", "m2", "m3", "m4", "m5", "m6"].map((m, idx) => (
+              {["m1", "m2", "m3", "m4", "m5", "m6"].map((m) => (
                 <div key={m}>
-                  <label className="text-sm text-gray-600 font-medium">{`${m.slice(1)}-Mark`}</label>
+                  <label className="text-sm text-gray-600 font-medium">
+                    {`${m.slice(1)}-Mark`}
+                  </label>
                   <input
                     type="number"
                     name={m}
@@ -171,7 +172,6 @@ const GiveTaskForm = () => {
               ))}
             </div>
 
-            {/* Due Date */}
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
                 <CalendarDays size={18} /> Due Date
@@ -186,12 +186,11 @@ const GiveTaskForm = () => {
               />
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2.5 rounded-xl hover:opacity-90 transition duration-300 shadow-lg"
             >
-              ✅ Assign Task
+              Assign Task
             </button>
           </form>
         </div>

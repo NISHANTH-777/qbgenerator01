@@ -116,24 +116,28 @@ const SampleQuestionPaper = () => {
       >
         <AdminNavbar />
       </Drawer>
-
-      <div className="flex-1 px-4 sm:px-6 md:px-8 bg-gray-50 overflow-y-auto lg:ml-56">
-        <div className="flex justify-between items-center mb-5 p-4 -mr-8 sticky top-0 z-10 bg-white shadow-md">
-          <div className="block lg:hidden">
-            <IconButton
-              onClick={() => setOpenSidebar(true)}
+     
+     <div className="flex flex-col w-full h-screen overflow-y-auto mb-5 p-4 lg:ml-64">
+      <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
+         <div className="block lg:hidden">
+           <IconButton
+            onClick={() => setOpenSidebar(true)}
               edge="start"
-              color="inherit"
-              aria-label="menu"
-            >
-              <MenuIcon />
-            </IconButton>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center sm:text-left mb-2 sm:mb-0">
-            Generate Question Paper
+               color="inherit"
+                aria-label="menu"
+                 >
+               <MenuIcon />
+           </IconButton>
+           </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center sm:text-left mb-2 sm:mb-0 flex-grow">
+          Generate Question Paper
           </h2>
-          <Imagecomp />
-        </div>
+
+           < Imagecomp />
+             </div>
+
+
 
         <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
           <select
@@ -215,41 +219,14 @@ const SampleQuestionPaper = () => {
               {Object.entries(paperData.paper).map(([section, questions]) => (
                 <div key={section} className="mb-6">
                   <h4 className="text-md font-bold">Section {section}</h4>
-                  <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="border border-gray-400 px-2 py-2">Q. No</th>
-                        <th className="border border-gray-400 px-2 py-2">Question</th>
-                        <th className="border border-gray-400 px-2 py-2">Marks</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {questions?.map((q, idx) => (
-                        <tr className="align-top" key={q.id || idx}>
-                          <td className="border border-gray-400 px-2 py-3 text-center">Q{idx + 1}</td>
-                          <td className="border border-gray-400 px-3 py-3">
-                            {q.question}
-                            {q.mark === 1 && (
-                              <ul className="pl-4 mt-1 list-none">
-                                <li><strong>A)</strong> {q.option_a}</li>
-                                <li><strong>B)</strong> {q.option_b}</li>
-                                <li><strong>C)</strong> {q.option_c}</li>
-                                <li><strong>D)</strong> {q.option_d}</li>
-                              </ul>
-                            )}
-                          </td>
-                          <td className="border border-gray-400 px-2 py-3 text-center">{q.mark}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {renderQuestions(questions)}
                 </div>
               ))}
             </div>
           </>
         )}
       </div>
-    </div>
+      </div>
   );
 };
 

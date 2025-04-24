@@ -101,14 +101,16 @@ const ManageQB = () => {
   };
 
   const questionColumns = [
-    { field: 'facultyId', headerName: 'Faculty ID', width: 200 },
-    { field: 'code', headerName: 'Course Code', width: 250 },
-    { field: 'unit', headerName: 'Unit', width: 250 },
-    { field: 'datetime', headerName: 'Date & Time', width: 300 },
+    { field: 'facultyId', headerName: 'Faculty ID', flex: 1 },
+    { field: 'code', headerName: 'Course Code', flex: 1 },
+    { field: 'unit', headerName: 'Unit', flex: 1 },
+    { field: 'datetime', headerName: 'Date & Time', flex: 1.2 },
     {
       field: 'actions',
       headerName: 'Actions',
-      width: 200,
+      flex: 0.8,
+      sortable: false,
+      filterable: false,
       renderCell: (params) => (
         <div className="flex gap-4 items-center">
           <button onClick={() => handleView(params.row.id)} title="View">
@@ -124,6 +126,7 @@ const ManageQB = () => {
       ),
     },
   ];
+  
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -143,10 +146,10 @@ const ManageQB = () => {
         ></div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="flex-1 pl-1 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
      
-        <div className="flex justify-between items-center px-4 py-4 bg-white shadow-md sticky top-0 z-10">
-          <div className="flex items-center gap-4">
+        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
+          <div className="flex items-center gap-4 ">
             <button
               className="block md:hidden text-gray-700"
               onClick={() => setSidebarOpen(!sidebarOpen)}

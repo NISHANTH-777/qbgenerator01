@@ -75,12 +75,12 @@ const Admindashboard = () => {
 
   const handleNavigate = (path) => {
     navigate(path);
-    setSidebarOpen(false); 
+    setSidebarOpen(false);
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -96,28 +96,27 @@ const Admindashboard = () => {
         ></div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-y-auto">
-  
-        <div className="flex justify-between items-center px-4 py-4 bg-white shadow-md sticky top-0 z-10">
+      {/* Main Content */}
+      <div className="flex-1 bg-gray-50 overflow-y-auto p-4">
+        {/* Top Bar */}
+        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <div className="flex items-center gap-4">
-        
             <button
               className="block md:hidden text-gray-700"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">DASHBOARD</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">DASHBOARD</h2>
           </div>
           <Imagecomp />
         </div>
 
-        <div className="bg-white mx-4 my-4 p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">
-            Recently Added Questions
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm border">
+        {/* Recently Added Questions */}
+        <div className="bg-white my-4 p-4 rounded-lg shadow ">
+          <h3 className="text-lg font-semibold mb-4">Recently Added Questions</h3>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-sm border">
               <thead className="bg-white h-14">
                 <tr>
                   <th className="py-4 px-4">Faculty ID</th>
@@ -145,13 +144,12 @@ const Admindashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white mx-4 mb-6 p-4 rounded-xl shadow">
-          <div className="flex items-center gap-4 mb-5 flex-wrap">
+        {/* Graph Section */}
+        <div className="bg-white mb-6 p-4 rounded-xl shadow">
+          <div className="flex flex-wrap gap-2 mb-5">
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Monthly"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
+                view === "Monthly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Monthly")}
             >
@@ -159,9 +157,7 @@ const Admindashboard = () => {
             </button>
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Weekly"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
+                view === "Weekly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Weekly")}
             >
@@ -180,7 +176,7 @@ const Admindashboard = () => {
               >
                 <ChevronLeft size={24} />
               </button>
-              <span className="font-semibold text-gray-700">
+              <span className="font-semibold text-gray-700 text-sm sm:text-base">
                 {monthRange === "first" ? "Jan - Jun" : "Jul - Dec"}
               </span>
               <button
@@ -195,16 +191,18 @@ const Admindashboard = () => {
             </div>
           )}
 
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={view === "Monthly" ? filteredMonthlyData : weeklyData}
-            >
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="QB_Generated" fill="#3B82F6" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="w-full h-[250px] sm:h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={view === "Monthly" ? filteredMonthlyData : weeklyData}
+              >
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="QB_Generated" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </div>
