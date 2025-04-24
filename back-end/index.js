@@ -427,27 +427,52 @@ app.get("/get-course-code", (req, res) => {
   });
 });
 
-app.get("/generate-qb", (req, res) => {
-  const courseCode = req.query.course_code;
-  const unitLimit = parseInt(req.query.unit); // unit limit like 2 or 3
+function normalizeUnit(unit) {
+  return unit
+    .replace("Unit ", "")
+    .replace(/([A-Za-z]+)/g, ".$1")
+    .split(".")
+    .map((v) => (isNaN(v) ? v : parseInt(v)));
+}
 
-  if (!courseCode || isNaN(unitLimit)) {
-    return res.status(400).json({ error: "Missing or invalid course_code or unit" });
+function compareUnits(u1, u2) {
+  const a = normalizeUnit(u1);
+  const b = normalizeUnit(u2);
+
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const valA = a[i] !== undefined ? a[i] : 0;
+    const valB = b[i] !== undefined ? b[i] : 0;
+
+    if (valA < valB) return -1;
+    if (valA > valB) return 1;
+  }
+  return 0;
+}
+
+app.get("/generate-qb", (req, res) => {
+  const { course_code, from_unit, to_unit } = req.query;
+
+  if (!course_code || !from_unit || !to_unit) {
+    return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
   }
 
-  // Adjust SQL to filter by unit (unit <= unitLimit)
   db.query(
-    "SELECT * FROM questions WHERE course_code = ? AND CAST(REPLACE(unit, 'Unit ', '') AS UNSIGNED) <= ? ORDER BY RAND()",
-    [courseCode, unitLimit],
-    (err, all) => {
+    "SELECT * FROM questions WHERE course_code = ?",
+    [course_code],
+    (err, results) => {
       if (err) return res.status(500).json({ error: "Database error" });
+
+      // Filter units in range
+      const filtered = results.filter((q) =>
+        compareUnits(q.unit, from_unit) >= 0 && compareUnits(q.unit, to_unit) <= 0
+      );
 
       const paper = {};
       const usedIds = new Set();
 
-      const oneMarkQs = all.filter((q) => q.mark === 1);
-      const fourMarkQs = all.filter((q) => q.mark === 4);
-      const others = all.filter((q) => q.mark !== 1);
+      const oneMarkQs = filtered.filter((q) => q.mark === 1);
+      const fourMarkQs = filtered.filter((q) => q.mark === 4);
+      const others = filtered.filter((q) => q.mark !== 1);
 
       if (oneMarkQs.length < 15) {
         return res.status(400).json({ error: "Not enough 1-mark questions to generate full paper." });
@@ -487,6 +512,7 @@ app.get("/generate-qb", (req, res) => {
         return result;
       };
 
+      // Section A & B (2 one-mark + 2 others to total 10)
       ["A1", "A2", "A3", "B1", "B2", "B3"].forEach((section) => {
         const oneMarks = getUniqueQuestions(oneMarkQs, 2);
         const combo = getComboThatSumsTo(8);
@@ -494,6 +520,7 @@ app.get("/generate-qb", (req, res) => {
         paper[section] = [...oneMarks, ...combo];
       });
 
+      // Section C (1 one-mark + 1 four-mark)
       ["C1", "C2", "C3"].forEach((section) => {
         const oneMark = getUniqueQuestions(oneMarkQs, 1);
         const fourMark = getUniqueQuestions(fourMarkQs, 1);
@@ -504,6 +531,7 @@ app.get("/generate-qb", (req, res) => {
     }
   );
 });
+
 
 app.post('/question-history', (req, res) => {
   const { course_code, subject_name, exam_name } = req.body;

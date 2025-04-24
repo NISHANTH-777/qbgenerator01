@@ -6,28 +6,40 @@ import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Imagecomp } from "../../images/Imagecomp";
 
-const SampleQuestionPaper = () => {
+const GenerateQuestion = () => {
   const [paperData, setPaperData] = useState(null);
-  const [formData, setFormData] = useState({ course_code: "", unit: "" });
+  const [formData, setFormData] = useState({
+    course_code: "",
+    from_unit: "",
+    to_unit: "",
+  });
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [error, setError] = useState("");
   const [openSidebar, setOpenSidebar] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:7000/get-faculty-subjects")
+    axios
+      .get("http://localhost:7000/get-faculty-subjects")
       .then((res) => setSubjectOptions(res.data))
       .catch((err) => console.error("Error fetching subject options:", err));
   }, []);
 
   const fetchPaper = async () => {
     try {
-      const unit = formData.unit.replace("Unit ", "");
-      const res = await axios.get(`http://localhost:7000/generate-qb?course_code=${formData.course_code}&unit=${unit}`);
+      const { from_unit, to_unit, course_code } = formData;
+      const from = from_unit.replace("Unit ", "");
+      const to = to_unit.replace("Unit ", "");
+
+      const res = await axios.get(
+        `http://localhost:7000/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`
+      );
       if (res.data.error) {
         setError(res.data.error);
         setPaperData(null);
       } else {
-        const subject = subjectOptions.find(s => s.course_code === formData.course_code);
+        const subject = subjectOptions.find(
+          (s) => s.course_code === formData.course_code
+        );
         setPaperData({
           college: "Bannari Amman Institute of Technology",
           exam_name: "Periodical Test – II",
@@ -39,7 +51,7 @@ const SampleQuestionPaper = () => {
           instructions: [
             "1.Students should not mark/write anything on the Question Paper other than the register number.",
             "2.Section A of the Question Paper contains questions for 15 Marks. Sections B and C contain questions for 30 Marks each.",
-            "3.Section A: 10 marks, Section B: 20 marks, Section C: 20 marks.Students can attempt answering any two out of three subsections in each section. The maximum mark is limited to 10 in section A and 20 in section B&C."
+            "3.Section A: 10 marks, Section B: 20 marks, Section C: 20 marks.Students can attempt answering any two out of three subsections in each section. The maximum mark is limited to 10 in section A and 20 in section B&C.",
           ],
           paper: res.data,
         });
@@ -76,19 +88,31 @@ const SampleQuestionPaper = () => {
         {sectionData?.map((q, idx) => (
           <React.Fragment key={q.id || idx}>
             <tr className="align-top">
-              <td className="border border-gray-400 px-2 py-3 text-center">Q{idx + 1}</td>
+              <td className="border border-gray-400 px-2 py-3 text-center">
+                Q{idx + 1}
+              </td>
               <td className="border border-gray-400 px-3 py-3">
                 {q.question}
                 {q.mark === 1 && (
                   <ul className="pl-4 mt-1 list-none">
-                    <li><strong>A)</strong> {q.option_a}</li>
-                    <li><strong>B)</strong> {q.option_b}</li>
-                    <li><strong>C)</strong> {q.option_c}</li>
-                    <li><strong>D)</strong> {q.option_d}</li>
+                    <li>
+                      <strong>A)</strong> {q.option_a}
+                    </li>
+                    <li>
+                      <strong>B)</strong> {q.option_b}
+                    </li>
+                    <li>
+                      <strong>C)</strong> {q.option_c}
+                    </li>
+                    <li>
+                      <strong>D)</strong> {q.option_d}
+                    </li>
                   </ul>
                 )}
               </td>
-              <td className="border border-gray-400 px-2 py-3 text-center">{q.mark}</td>
+              <td className="border border-gray-400 px-2 py-3 text-center">
+                {q.mark}
+              </td>
             </tr>
           </React.Fragment>
         ))}
@@ -106,44 +130,44 @@ const SampleQuestionPaper = () => {
         open={openSidebar}
         onClose={() => setOpenSidebar(false)}
         sx={{
-          display: { xs: 'block', lg: 'none' },
-          '& .MuiDrawer-paper': {
+          display: { xs: "block", lg: "none" },
+          "& .MuiDrawer-paper": {
             width: 250,
             top: 0,
-            height: '100vh',
+            height: "100vh",
           },
         }}
       >
         <AdminNavbar />
       </Drawer>
-     
-     <div className="flex flex-col w-full h-screen overflow-y-auto mb-5 p-4 lg:ml-64">
-      <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
-         <div className="block lg:hidden">
-           <IconButton
-            onClick={() => setOpenSidebar(true)}
+
+      <div className="flex flex-col w-full h-screen overflow-y-auto mb-5 p-4 lg:ml-64">
+        <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
+          <div className="block lg:hidden">
+            <IconButton
+              onClick={() => setOpenSidebar(true)}
               edge="start"
-               color="inherit"
-                aria-label="menu"
-                 >
-               <MenuIcon />
-           </IconButton>
-           </div>
+              color="inherit"
+              aria-label="menu"
+            >
+              <MenuIcon />
+            </IconButton>
+          </div>
 
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center sm:text-left mb-2 sm:mb-0 flex-grow">
-          Generate Question Paper
+            Generate Question Paper
           </h2>
 
-           < Imagecomp />
-             </div>
-
-
+          <Imagecomp />
+        </div>
 
         <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
           <select
             name="course_code"
             value={formData.course_code}
-            onChange={(e) => setFormData({ ...formData, course_code: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, course_code: e.target.value })
+            }
             className="w-full p-3 border border-gray-300 rounded mb-4"
           >
             <option value="">-- Select Subject --</option>
@@ -154,19 +178,55 @@ const SampleQuestionPaper = () => {
             ))}
           </select>
 
-          <select
-            name="unit"
-            value={formData.unit}
-            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-            className="w-full p-3 border border-gray-300 rounded mb-4"
-          >
-            <option value="">Select Unit</option>
-            <option value="Unit 1">Unit 1</option>
-            <option value="Unit 2">Unit 2</option>
-            <option value="Unit 3">Unit 3</option>
-            <option value="Unit 4">Unit 4</option>
-            <option value="Unit 5">Unit 5</option>
-          </select>
+          <div className="flex gap-3">
+            <select
+              name="from_unit"
+              value={formData.from_unit}
+              onChange={(e) =>
+                setFormData({ ...formData, from_unit: e.target.value })
+              }
+              className="w-1/2 p-3 border border-gray-300 rounded mb-4"
+            >
+              <option value="">From Unit</option>
+              {[
+                "Unit 1",
+                "Unit 2",
+                "Unit 3",
+                "Unit 3A",
+                "Unit 3B",
+                "Unit 4",
+                "Unit 5",
+              ].map((unit, idx) => (
+                <option key={idx} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="to_unit"
+              value={formData.to_unit}
+              onChange={(e) =>
+                setFormData({ ...formData, to_unit: e.target.value })
+              }
+              className="w-1/2 p-3 border border-gray-300 rounded mb-4"
+            >
+              <option value="">To Unit</option>
+              {[
+                "Unit 1",
+                "Unit 2",
+                "Unit 3",
+                "Unit 3A",
+                "Unit 3B",
+                "Unit 4",
+                "Unit 5",
+              ].map((unit, idx) => (
+                <option key={idx} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <button
             onClick={fetchPaper}
@@ -175,7 +235,11 @@ const SampleQuestionPaper = () => {
             Generate Paper
           </button>
 
-          {error && <div className="text-red-600 mt-3 text-center font-medium">{error}</div>}
+          {error && (
+            <div className="text-red-600 mt-3 text-center font-medium">
+              {error}
+            </div>
+          )}
         </div>
 
         {paperData && (
@@ -192,7 +256,7 @@ const SampleQuestionPaper = () => {
             <div
               id="question-paper"
               className="mt-6 p-12 bg-white text-black font-serif leading-relaxed border rounded shadow"
-              style={{ paddingTop: '60px', paddingBottom: '60px' }}
+              style={{ paddingTop: "60px", paddingBottom: "60px" }}
             >
               <h1 className="text-center text-xl font-bold uppercase">
                 {paperData.college}
@@ -200,13 +264,24 @@ const SampleQuestionPaper = () => {
               <p className="text-center text-sm italic mb-2">
                 (An Autonomous Institution Affiliated to Anna University)
               </p>
-              <h2 className="text-center text-md font-semibold">{paperData.exam_name}</h2>
-              <p className="text-center text-sm mb-6">{paperData.department}</p>
+              <h2 className="text-center text-md font-semibold">
+                {paperData.exam_name}
+              </h2>
+              <p className="text-center text-sm mb-6">
+                {paperData.department}
+              </p>
 
               <div className="flex justify-between text-sm mb-4">
-                <div><strong>Subject:</strong> {paperData.subject_name} ({paperData.course_code})</div>
-                <div><strong>Time:</strong> {paperData.time}</div>
-                <div><strong>Max Marks:</strong> {paperData.max_marks}</div>
+                <div>
+                  <strong>Subject:</strong> {paperData.subject_name} (
+                  {paperData.course_code})
+                </div>
+                <div>
+                  <strong>Time:</strong> {paperData.time}
+                </div>
+                <div>
+                  <strong>Max Marks:</strong> {paperData.max_marks}
+                </div>
               </div>
 
               <h3 className="font-semibold underline mb-2">Instructions:</h3>
@@ -226,8 +301,8 @@ const SampleQuestionPaper = () => {
           </>
         )}
       </div>
-      </div>
+    </div>
   );
 };
 
-export default SampleQuestionPaper;
+export default GenerateQuestion;
