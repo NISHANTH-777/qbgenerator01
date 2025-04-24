@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import FacultyNavbar from "../../navbar/FacultyNavbar";
+import axios from "axios";
+import { Menu, ListChecks, CalendarDays, User } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
-import { Menu } from "lucide-react"; 
+import toast, { Toaster } from "react-hot-toast";
 
 const AddQuestions = () => {
+  const [formData, setFormData] = useState({
+    exam_name: "",
+    unit: "",
+    topic: "",
+    mark: "",
+    question: "",
+    answer: "",
+    course_code: "",
+    question_type: "",
+    option_a: "",
+    option_b: "",
+    option_c: "",
+    option_d: "",
+  });
   const [isUpload, setIsUpload] = useState(false);
-  const [examName, setExamName] = useState("");
-  const [unit, setUnit] = useState("");
-  const [topic, setTopic] = useState("");
-  const [mark, setMark] = useState("");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [courseCode, setCourseCode] = useState("");
-  const [questionType, setQuestionType] = useState("");
-  const [optionA, setOptionA] = useState("");
-  const [optionB, setOptionB] = useState("");
-  const [optionC, setOptionC] = useState("");
-  const [optionD, setOptionD] = useState("");
   const [file, setFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const [courseCode, setCourseCode] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -34,37 +33,27 @@ const AddQuestions = () => {
       .get(`http://localhost:7000/get-course-code?email=${user?.email}`)
       .then((res) => {
         setCourseCode(res.data.course_code);
+        setFormData((prev) => ({ ...prev, course_code: res.data.course_code }));
       })
       .catch((err) => {
-        console.error("Error fetching course code:", err);
-        alert("Failed to load course code.");
+        toast.error("Failed to load course code.");
       });
   }, []);
 
-  const handleSubmitForm = async (event) => {
-    event.preventDefault();
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     if (!isUpload) {
-      if (!examName || !unit || !topic || !mark || !question || !answer || !courseCode || !questionType) {
-        setErrorMessage("All fields are required when submitting manually.");
+      if (Object.values(formData).some((val) => !val)) {
+        toast.error("All fields are required when submitting manually.");
         return;
       }
     }
-
-    const data = {
-      exam_name: examName,
-      unit,
-      topic,
-      mark,
-      question,
-      answer,
-      course_code: courseCode,
-      type: questionType,
-      option_a: optionA || null,
-      option_b: optionB || null,
-      option_c: optionC || null,
-      option_d: optionD || null,
-    };
 
     try {
       if (isUpload && file) {
@@ -75,146 +64,273 @@ const AddQuestions = () => {
         await axios.post("http://localhost:7000/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("File uploaded successfully!");
+        toast.success("File uploaded successfully!");
       } else {
-        await axios.post("http://localhost:7000/add-question", data, {
+        await axios.post("http://localhost:7000/add-question", formData, {
           headers: { "Content-Type": "application/json" },
         });
-        alert("Question added successfully!");
+        toast.success("Question added successfully!");
       }
 
-      setExamName("");
-      setUnit("");
-      setTopic("");
-      setMark("");
-      setQuestion("");
-      setAnswer("");
-      setQuestionType("");
-      setOptionA("");
-      setOptionB("");
-      setOptionC("");
-      setOptionD("");
+      setFormData({
+        exam_name: "",
+        unit: "",
+        topic: "",
+        mark: "",
+        question: "",
+        answer: "",
+        question_type: "",
+        option_a: "",
+        option_b: "",
+        option_c: "",
+        option_d: "",
+      });
       setFile(null);
-      setErrorMessage("");
     } catch (error) {
-      setErrorMessage("Error adding question.");
-      console.error("Error:", error.response ? error.response.data : error.message);
+      toast.error("Error adding question.");
+      console.error(error);
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50 overflow-hidden">
-     
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+      <Toaster position="top-right" reverseOrder={false} />
       <div
-        className={`md:w-56 w-full bg-white shadow-md ${sidebarOpen ? 'block' : 'hidden'} md:block`}
+        className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 md:static md:block w-64`}
       >
-        <FacultyNavbar />
+        <FacultyNavbar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 pl-9 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
-    
-        <div className="flex flex-row justify-between items-center mb-5 p-4 bg-white shadow sticky top-0 z-10 rounded-md">
-        
-          <button
-            className="md:hidden text-gray-800"
-            onClick={toggleSidebar}
-          >
-            <Menu size={24} />
-          </button>
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black opacity-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
 
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 ml-4 ">Add Question Bank</h2>
-
-          <div className="mt-3 sm:mt-0 w-full sm:w-auto ml-4">
-            <Imagecomp />
-          </div>
-        </div>
-
-        <div className="w-full max-w-3xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Add a Question</h2>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-1">Choose Input Method</label>
-            <select
-              className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-              value={isUpload ? "upload" : "input"}
-              onChange={(e) => setIsUpload(e.target.value === "upload")}
-            >
-              <option value="input">Manual Input</option>
-              <option value="upload">File Upload</option>
-            </select>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-1">Course Code</label>
-            <div className="border border-gray-300 rounded px-3 py-2 w-full bg-gray-100 text-sm">
-              {courseCode || "Loading..."}
+      <div className="flex-1 px-4 pt-5 pb-10 overflow-y-auto md:ml-5">
+      <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-x-auto">
+          <div className="flex items-center gap-4">
+             <button
+                className="block md:hidden text-gray-700"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  >
+                <Menu size={28} />
+              </button>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Add Question Bank</h2>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <Imagecomp />
             </div>
           </div>
 
-          {!isUpload ? (
-            <form onSubmit={handleSubmitForm} className="space-y-4">
-              {[{ label: "Exam Name", value: examName, onChange: setExamName },
-                { label: "Unit", value: unit, onChange: setUnit },
-                { label: "Topic", value: topic, onChange: setTopic },
-                { label: "Mark", value: mark, onChange: setMark, type: "number" },
-                { label: "Question", value: question, onChange: setQuestion, textarea: true },
-                { label: "Answer", value: answer, onChange: setAnswer, textarea: true },
-                { label: "Question Type", value: questionType, onChange: setQuestionType },
-                { label: "Option A", value: optionA, onChange: setOptionA },
-                { label: "Option B", value: optionB, onChange: setOptionB },
-                { label: "Option C", value: optionC, onChange: setOptionC },
-                { label: "Option D", value: optionD, onChange: setOptionD }]
-                .map(({ label, value, onChange, textarea, type = "text" }, i) => (
-                  <div key={i}>
-                    <label className="block text-gray-700 mb-1">{label}</label>
-                    {textarea ? (
-                      <textarea
-                        className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        required
-                      />
-                    ) : (
-                      <input
-                        type={type}
-                        className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        required={label !== "Option A" && label !== "Option B" && label !== "Option C" && label !== "Option D"}
-                      />
-                    )}
-                  </div>
-                ))}
 
-              <button
-                type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition duration-200 text-sm"
+        <div className="flex justify-center px-2">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
+          >
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">
+              Add a Question
+            </h3>
+
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <User size={18} /> Input Method
+              </label>
+              <select
+                name="input_method"
+                value={isUpload ? "upload" : "input"}
+                onChange={(e) => setIsUpload(e.target.value === "upload")}
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
-                Add Question
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmitForm} className="space-y-4">
-              <div>
-                <label className="block text-gray-700 mb-1">Upload CSV File</label>
+                <option value="input">Manual Input</option>
+                <option value="upload">File Upload</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <ListChecks size={18} /> Course Code
+              </label>
+              <div className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm bg-gray-100">
+                {courseCode || "Loading..."}
+              </div>
+            </div>
+
+            {!isUpload ? (
+              <>
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Exam Name
+                  </label>
+                  <input
+                    type="text"
+                    name="exam_name"
+                    value={formData.exam_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Unit
+                  </label>
+                  <input
+                    type="text"
+                    name="unit"
+                    value={formData.unit}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Topic
+                  </label>
+                  <input
+                    type="text"
+                    name="topic"
+                    value={formData.topic}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Mark
+                  </label>
+                  <input
+                    type="number"
+                    name="mark"
+                    value={formData.mark}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Question
+                  </label>
+                  <textarea
+                    name="question"
+                    value={formData.question}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Answer
+                  </label>
+                  <textarea
+                    name="answer"
+                    value={formData.answer}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Question Type
+                  </label>
+                  <input
+                    type="text"
+                    name="question_type"
+                    value={formData.question_type}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Option A
+                  </label>
+                  <input
+                    type="text"
+                    name="option_a"
+                    value={formData.option_a}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Option B
+                  </label>
+                  <input
+                    type="text"
+                    name="option_b"
+                    value={formData.option_b}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Option C
+                  </label>
+                  <input
+                    type="text"
+                    name="option_c"
+                    value={formData.option_c}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Option D
+                  </label>
+                  <input
+                    type="text"
+                    name="option_d"
+                    value={formData.option_d}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="space-y-1">
+                <label className="font-medium text-gray-700 flex items-center gap-2">
+                  <ListChecks size={18} /> Upload CSV File
+                </label>
                 <input
                   type="file"
                   accept=".csv"
                   onChange={(e) => setFile(e.target.files[0])}
-                  className="border border-gray-300 rounded px-3 py-2 w-full text-sm"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
+            )}
 
-              <button
-                type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition duration-200 text-sm"
-              >
-                Upload File
-              </button>
-            </form>
-          )}
-
-          {errorMessage && <p className="text-red-500 text-sm mt-4">{errorMessage}</p>}
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2.5 rounded-xl hover:opacity-90 transition duration-300 shadow-lg"
+            >
+              {isUpload ? "Upload File" : "Add Question"}
+            </button>
+          </form>
         </div>
       </div>
     </div>

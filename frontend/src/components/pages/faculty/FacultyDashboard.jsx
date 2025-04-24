@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
 import FacultyTaskProgress from './FacultyTaskProgress';
- 
+import { Drawer, IconButton } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 
 const Facultydashboard = () => {
   const [view, setView] = useState("Monthly");
@@ -15,6 +16,7 @@ const Facultydashboard = () => {
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [weeklyStats, setWeeklyStats] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
+  const [openSidebar, setOpenSidebar] = useState(false);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -61,22 +63,47 @@ const Facultydashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="w-56 bg-white shadow-md">
+      <div className="hidden lg:flex w-56 bg-white shadow-md">
         <FacultyNavbar />
       </div>
 
-      <div className="flex-1 pl-9 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
+      <Drawer
+        open={openSidebar}
+        onClose={() => setOpenSidebar(false)}
+        sx={{
+          display: { xs: "block", lg: "none" },
+          "& .MuiDrawer-paper": {
+            width: 250,
+            top: 0,
+            height: "100vh",
+          },
+        }}
+      >
+        <FacultyNavbar />
+      </Drawer>
+
+      <div className="flex-1 sm:pl-1 lg:pl-9 pr-4 bg-gray-50 overflow-y-auto ml-5 mt-5">
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
-          <h2 className="text-2xl font-bold text-gray-800">DASHBOARD</h2>
-           <Imagecomp />
+          <div className="block lg:hidden">
+            <IconButton
+              onClick={() => setOpenSidebar(true)}
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+            >
+              <MenuIcon />
+            </IconButton>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 flex-grow text-center sm:text-left">DASHBOARD</h2>
+          <Imagecomp />
         </div>
 
         <div>
-          <FacultyTaskProgress /> 
+          <FacultyTaskProgress />
         </div>
 
         <div className="bg-white p-4 rounded-xl shadow mb-5">
-          <div className="flex items-center gap-5 mb-5">
+          <div className="flex flex-wrap items-center gap-5 mb-5">
             <button
               className={`px-4 py-2 rounded-lg font-medium ${view === "Monthly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
               onClick={() => setView("Monthly")}
