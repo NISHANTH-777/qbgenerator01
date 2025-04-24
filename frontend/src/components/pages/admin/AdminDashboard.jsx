@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
@@ -80,7 +73,6 @@ const Admindashboard = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -96,7 +88,6 @@ const Admindashboard = () => {
         ></div>
       )}
 
-      {/* Main Content */}
       <div className="flex-1 bg-gray-50 overflow-y-auto p-4">
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
@@ -112,7 +103,6 @@ const Admindashboard = () => {
           <Imagecomp />
         </div>
 
-        {/* Recently Added Questions */}
         <div className="bg-white my-4 p-4 rounded-lg shadow ">
           <h3 className="text-lg font-semibold mb-4">Recently Added Questions</h3>
           <div className="overflow-x-auto w-full">
@@ -144,7 +134,6 @@ const Admindashboard = () => {
           </div>
         </div>
 
-        {/* Graph Section */}
         <div className="bg-white mb-6 p-4 rounded-xl shadow">
           <div className="flex flex-wrap gap-2 mb-5">
             <button

@@ -65,8 +65,6 @@ const GiveTaskForm = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <Toaster position="top-right" reverseOrder={false} />
-
-      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -82,9 +80,7 @@ const GiveTaskForm = () => {
         ></div>
       )}
 
-      {/* Main */}
       <div className="flex-1 px-4 pt-5 pb-10 overflow-y-auto md:ml-5">
-        {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <button
@@ -103,7 +99,6 @@ const GiveTaskForm = () => {
           </div>
         </div>
 
-        {/* Form */}
         <div className="flex justify-center px-2">
           <form
             onSubmit={handleSubmit}

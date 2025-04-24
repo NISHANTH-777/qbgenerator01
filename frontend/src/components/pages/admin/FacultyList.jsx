@@ -60,7 +60,6 @@ const FacultyList = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar */}
       <div
         className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -72,7 +71,6 @@ const FacultyList = () => {
         />
       </div>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black opacity-30 md:hidden"
@@ -80,9 +78,7 @@ const FacultyList = () => {
         ></div>
       )}
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-y-auto pl-1 pr-4 bg-gray-50 ml-5 mt-5">
-        {/* Header (preserved and responsive) */}
         <div className="flex flex-wrap justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <div className="flex items-center gap-4">
             <button
@@ -100,7 +96,6 @@ const FacultyList = () => {
           </div>
         </div>
 
-        {/* DataGrid */}
         <div className="pb-6 my-4  overflow-x-auto">
           <Paper sx={{ minWidth: 600, width: "100%", p: { xs: 1, sm: 2 } }}>
             <DataGrid
