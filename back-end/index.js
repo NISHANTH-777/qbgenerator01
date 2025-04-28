@@ -5,6 +5,7 @@ const fs = require("fs");
 const mysql = require("mysql");
 const cors = require("cors");
 const path = require("path");
+const seedrandom = require('seedrandom');
 
 const app = express();
 app.use(cors());
@@ -435,6 +436,7 @@ function normalizeUnit(unit) {
     .map((v) => (isNaN(v) ? v : parseInt(v)));
 }
 
+// Compare Units function (to compare the normalized units)
 function compareUnits(u1, u2) {
   const a = normalizeUnit(u1);
   const b = normalizeUnit(u2);
@@ -449,6 +451,29 @@ function compareUnits(u1, u2) {
   return 0;
 }
 
+// Shuffle function
+function shuffleArray(arr, seed) {
+  let rng = new seedrandom(seed);
+  let shuffled = arr.slice();
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
+  }
+
+  return shuffled;
+}
+
+// Utility function to group questions
+function groupQuestions(unit, results, usedIds) {
+  return {
+    oneMarks: results.filter((q) => q.unit === unit && q.mark === 1 && !usedIds.has(q.id)),
+    fourMarks: results.filter((q) => q.unit === unit && q.mark === 4 && !usedIds.has(q.id)),
+    otherMarks: results.filter((q) => q.unit === unit && q.mark !== 1 && q.mark !== 4 && !usedIds.has(q.id)),
+  };
+}
+
+// Endpoint to generate question paper
 app.get("/generate-qb", (req, res) => {
   const { course_code, from_unit, to_unit } = req.query;
 
@@ -456,81 +481,64 @@ app.get("/generate-qb", (req, res) => {
     return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
   }
 
-  db.query(
-    "SELECT * FROM questions WHERE course_code = ?",
-    [course_code],
-    (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
+  const validRange1 = compareUnits(from_unit, "Unit 1") === 0 && compareUnits(to_unit, "Unit 3A") === 0;
+  const validRange2 = compareUnits(from_unit, "Unit 3B") === 0 && compareUnits(to_unit, "Unit 5") === 0;
 
-      // Filter units in range
-      const filtered = results.filter((q) =>
-        compareUnits(q.unit, from_unit) >= 0 && compareUnits(q.unit, to_unit) <= 0
-      );
+  if (!validRange1 && !validRange2) {
+    return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
+  }
 
-      const paper = {};
-      const usedIds = new Set();
+  const sectionUnits = validRange1
+    ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
+    : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
 
-      const oneMarkQs = filtered.filter((q) => q.mark === 1);
-      const fourMarkQs = filtered.filter((q) => q.mark === 4);
-      const others = filtered.filter((q) => q.mark !== 1);
+  db.query("SELECT * FROM questions WHERE course_code = ?", [course_code], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
 
-      if (oneMarkQs.length < 15) {
-        return res.status(400).json({ error: "Not enough 1-mark questions to generate full paper." });
+    // Seed for consistent shuffle
+    const randomSalt = Math.floor(Math.random() * 10000);
+    const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
+
+    const shuffledQuestions = shuffleArray(results, seed);
+
+    const paper = {};
+    const usedIds = new Set();
+
+    // Logic for selecting questions for Sections A and B
+    for (const section of ["A", "B"]) {
+      const unit = sectionUnits[section];
+      const { oneMarks, otherMarks } = groupQuestions(unit, shuffledQuestions, usedIds);
+
+      const selectedOneMarks = oneMarks.slice(0, 2);
+      const selectedOtherMarks = otherMarks.slice(0, 2);
+
+      if (selectedOneMarks.length < 2 || selectedOtherMarks.length < 2) {
+        return res.status(400).json({ error: `Not enough questions in ${unit} for Section ${section}` });
       }
 
-      const getUniqueQuestions = (source, count) => {
-        const selected = [];
-        let i = 0;
-        while (selected.length < count && i < source.length) {
-          const q = source[i++];
-          if (!usedIds.has(q.id)) {
-            usedIds.add(q.id);
-            selected.push(q);
-          }
-        }
-        return selected;
-      };
-
-      const getComboThatSumsTo = (target) => {
-        const available = others.filter((q) => !usedIds.has(q.id));
-        const result = [];
-        let found = false;
-
-        function backtrack(path, sum, index) {
-          if (found || sum > target || index >= available.length) return;
-          if (sum === target && path.length === 2) {
-            result.push(...path);
-            found = true;
-            return;
-          }
-
-          backtrack([...path, available[index]], sum + available[index].mark, index + 1);
-          backtrack(path, sum, index + 1);
-        }
-
-        backtrack([], 0, 0);
-        return result;
-      };
-
-      // Section A & B (2 one-mark + 2 others to total 10)
-      ["A1", "A2", "A3", "B1", "B2", "B3"].forEach((section) => {
-        const oneMarks = getUniqueQuestions(oneMarkQs, 2);
-        const combo = getComboThatSumsTo(8);
-        combo.forEach((q) => usedIds.add(q.id));
-        paper[section] = [...oneMarks, ...combo];
-      });
-
-      // Section C (1 one-mark + 1 four-mark)
-      ["C1", "C2", "C3"].forEach((section) => {
-        const oneMark = getUniqueQuestions(oneMarkQs, 1);
-        const fourMark = getUniqueQuestions(fourMarkQs, 1);
-        paper[section] = [...oneMark, ...fourMark];
-      });
-
-      res.json(paper);
+      // Add questions for Section A and B
+      for (let i = 1; i <= 3; i++) {
+        paper[`${section}${i}`] = [...selectedOneMarks, ...selectedOtherMarks];
+      }
     }
-  );
+
+    // Logic for selecting questions for Section C
+    const unitC = sectionUnits.C;
+    const { oneMarks: oneMarkC, fourMarks: fourMarkC } = groupQuestions(unitC, shuffledQuestions, usedIds);
+
+    if (oneMarkC.length < 3 || fourMarkC.length < 3) {
+      return res.status(400).json({ error: `Not enough questions in ${unitC} for Section C` });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      paper[`C${i}`] = [oneMarkC[i - 1], fourMarkC[i - 1]];
+    }
+
+    return res.json(paper);
+  });
 });
+
+
 
 
 app.post('/question-history', (req, res) => {

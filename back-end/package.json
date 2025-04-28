@@ -21,6 +21,7 @@
     "mysql2": "^3.14.0",
     "mysql2-promise": "^0.1.4",
     "nodemon": "^3.1.9",
+    "seedrandom": "^3.0.5",
     "xlsx": "^0.18.5"
   }
 }
