@@ -13,8 +13,18 @@ const GenerateQuestion = () => {
     course_code: "",
     from_unit: "",
     to_unit: "",
+    department: "", 
+    exam_type: "",
   });
   const [subjectOptions, setSubjectOptions] = useState([]);
+  const [departmentOptions, setDepartmentOptions] = useState([ 
+    { id: 1, name: "C.S.E" },
+    { id: 2, name: "E.E.E" },
+    { id: 3, name: "A.I.M.L" },
+    { id: 4, name: "C.S.B.S" },
+    { id: 5, name: "I.T" },
+    { id: 6, name: "A.I.D.S" },
+  ]);
   const [error, setError] = useState("");
   const [openSidebar, setOpenSidebar] = useState(false);
 
@@ -68,10 +78,10 @@ const GenerateQuestion = () => {
     const element = document.getElementById("question-paper");
   
     const opt = {
-      margin: [-0.5, 0, 0, 0],
+      margin: [0.2, 0.2, 0.2, 0.2], 
       filename: `${paperData.course_code}_question_paper.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
+      image: { type: "jpeg", quality: 1 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: {
         unit: "in",
         format: "a4",
@@ -84,9 +94,6 @@ const GenerateQuestion = () => {
       .from(element)
       .save();
   };
-  
-  
-  
 
   const renderQuestions = (sectionData, sectionLabel) => (
     <div className="section-wrapper">
@@ -199,15 +206,7 @@ const GenerateQuestion = () => {
               className="w-1/2 p-3 border border-gray-300 rounded mb-4"
             >
               <option value="">From Unit</option>
-              {[
-                "Unit 1",
-                "Unit 2",
-                "Unit 3",
-                "Unit 3A",
-                "Unit 3B",
-                "Unit 4",
-                "Unit 5",
-              ].map((unit, idx) => (
+              {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
                 <option key={idx} value={unit}>
                   {unit}
                 </option>
@@ -223,21 +222,43 @@ const GenerateQuestion = () => {
               className="w-1/2 p-3 border border-gray-300 rounded mb-4"
             >
               <option value="">To Unit</option>
-              {[
-                "Unit 1",
-                "Unit 2",
-                "Unit 3",
-                "Unit 3A",
-                "Unit 3B",
-                "Unit 4",
-                "Unit 5",
-              ].map((unit, idx) => (
+              {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
                 <option key={idx} value={unit}>
                   {unit}
                 </option>
               ))}
             </select>
           </div>
+
+          <select
+            name="exam_type"
+            value={formData.exam_type}
+            onChange={(e) =>
+              setFormData({ ...formData, exam_type: e.target.value })
+            }
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+          >
+            <option value="">-- Select Exam Type --</option>
+            <option value="Periodical Test - I">PT-1</option>
+            <option value="Periodical Test - II">PT-2</option>
+          </select>
+
+          <select
+            name="department"
+            value={formData.department}
+            onChange={(e) =>
+              setFormData({ ...formData, department: e.target.value })
+            }
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+            required
+          >
+            <option value="">-- Select Department --</option>
+            {departmentOptions.map((dept) => (
+              <option key={dept.id} value={dept.name}>
+                {dept.name}
+              </option>
+            ))}
+          </select>
 
           <button
             onClick={fetchPaper}
@@ -316,11 +337,18 @@ const GenerateQuestion = () => {
                     </div>
 
                     <div className="text-center pt-2">
-                      <h2 className="text-md font-semibold">
-                        {paperData.exam_name}
-                      </h2>
-                      <p className="text-sm">{paperData.department}</p>
-                    </div>
+                    <h2 className="text-md font-semibold">
+                       {formData.exam_type && ` ${formData.exam_type}`}
+                     </h2>
+
+
+                     {formData.department && (
+                         <div className="text-sm font-semibold mt-2 ">
+                           Department :  <strong>{formData.department}</strong>
+                         </div>
+                       )}
+                     </div>
+
                   </div>
                 </div>
               </div>

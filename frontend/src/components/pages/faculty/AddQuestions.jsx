@@ -3,8 +3,9 @@ import FacultyNavbar from "../../navbar/FacultyNavbar";
 import axios from "axios";
 import { Menu, ListChecks, CalendarDays, User } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
-
 import { Drawer } from "@mui/material";
+import { toast, ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const AddQuestions = () => {
   const [formData, setFormData] = useState({
@@ -115,21 +116,20 @@ const AddQuestions = () => {
       </Drawer>
 
       <div className="flex-1 px-4 pt-5 pb-10 overflow-y-auto md:ml-10">
-      <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-x-auto">
+        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-x-auto">
           <div className="flex items-center gap-4">
-             <button
-                className="block md:hidden text-gray-700"
-                  onClick={() => setOpenSidebar(!openSidebar)}
-                  >
-                <Menu size={28} />
-              </button>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Add Question Bank</h2>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <Imagecomp />
-            </div>
+            <button
+              className="block md:hidden text-gray-700"
+              onClick={() => setOpenSidebar(!openSidebar)}
+            >
+              <Menu size={28} />
+            </button>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Add Question Bank</h2>
           </div>
-
+          <div className="mt-4 md:mt-0">
+            <Imagecomp />
+          </div>
+        </div>
 
         <div className="flex justify-center px-2">
           <form
@@ -317,25 +317,30 @@ const AddQuestions = () => {
             ) : (
               <div className="space-y-1">
                 <label className="font-medium text-gray-700 flex items-center gap-2">
-                  <ListChecks size={18} /> Upload CSV File
+                  <CalendarDays size={18} /> Upload CSV/Excel
                 </label>
                 <input
                   type="file"
-                  accept=".csv"
+                  accept=".csv,.xlsx,.xls"
                   onChange={(e) => setFile(e.target.files[0])}
+                  required
                   className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             )}
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-2.5 rounded-xl hover:opacity-90 transition duration-300 shadow-lg"
-            >
-              {isUpload ? "Upload File" : "Add Question"}
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className="w-full px-6 py-2 text-white bg-blue-600 rounded-xl hover:bg-blue-700 focus:outline-none"
+              >
+                {isUpload ? "Upload File" : "Submit Question"}
+              </button>
+            </div>
           </form>
         </div>
+
+        <ToastContainer /> 
       </div>
     </div>
   );

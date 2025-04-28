@@ -4,7 +4,8 @@ import axios from "axios";
 import { Menu, CalendarDays, User, ListChecks } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
 import { Drawer } from "@mui/material";
-import { toast } from "react-toastify"; 
+import { toast, ToastContainer } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css"; 
 
 const GiveTaskForm = () => {
   const [formData, setFormData] = useState({
@@ -85,7 +86,7 @@ const GiveTaskForm = () => {
       </Drawer>
 
       <div className="flex-1 px-4 pt-5 pb-10 md:ml-3 lg:ml-64">
-        <div className="flex flex-wrap justify-between items-center mb-6  px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-auto">
+        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-auto">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
@@ -193,6 +194,8 @@ const GiveTaskForm = () => {
           </form>
         </div>
       </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
