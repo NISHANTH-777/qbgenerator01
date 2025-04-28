@@ -5,6 +5,7 @@ import AdminNavbar from "../../navbar/AdminNavbar";
 import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Imagecomp } from "../../images/Imagecomp";
+import bitlogo from '../../images/bitlogo.png';
 
 const GenerateQuestion = () => {
   const [paperData, setPaperData] = useState(null);
@@ -65,59 +66,69 @@ const GenerateQuestion = () => {
 
   const exportToPDF = () => {
     const element = document.getElementById("question-paper");
+  
     const opt = {
-      margin: [0.75, 0.5],
+      margin: [-0.5, 0, 0, 0],
       filename: `${paperData.course_code}_question_paper.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      jsPDF: {
+        unit: "in",
+        format: "a4",
+        orientation: "portrait",
+      },
     };
-    html2pdf().set(opt).from(element).save();
+  
+    html2pdf()
+      .set(opt)
+      .from(element)
+      .save();
   };
+  
+  
+  
 
-  const renderQuestions = (sectionData) => (
-    <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
-      <thead>
-        <tr className="bg-gray-200">
-          <th className="border border-gray-400 px-2 py-2">Q. No</th>
-          <th className="border border-gray-400 px-2 py-2">Question</th>
-          <th className="border border-gray-400 px-2 py-2">Marks</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sectionData?.map((q, idx) => (
-          <React.Fragment key={q.id || idx}>
-            <tr className="align-top">
+  const renderQuestions = (sectionData, sectionLabel) => (
+    <div className="section-wrapper">
+      <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border border-gray-400 px-2 py-2" style={{ width: '15%' }}>Section</th>
+            <th className="border border-gray-400 px-2 py-2" style={{ width: '15%' }}>Q. No</th>
+            <th className="border border-gray-400 px-2 py-2" style={{ width: '70%' }}>Question</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sectionData?.map((q, idx) => (
+            <tr key={q.id || idx} className="align-top">
+              {idx === 0 && (
+                <td
+                  className="border border-gray-400 px-2 py-3 text-center"
+                  rowSpan={sectionData.length}
+                >
+                  {sectionLabel}
+                </td>
+              )}
               <td className="border border-gray-400 px-2 py-3 text-center">
-                Q{idx + 1}
+                ({String.fromCharCode(97 + idx)})
               </td>
-              <td className="border border-gray-400 px-3 py-3">
-                {q.question}
+              <td className="border border-gray-400 px-3 py-3 whitespace-pre-line">
+                <div>{q.question}</div>
                 {q.mark === 1 && (
-                  <ul className="pl-4 mt-1 list-none">
-                    <li>
-                      <strong>A)</strong> {q.option_a}
-                    </li>
-                    <li>
-                      <strong>B)</strong> {q.option_b}
-                    </li>
-                    <li>
-                      <strong>C)</strong> {q.option_c}
-                    </li>
-                    <li>
-                      <strong>D)</strong> {q.option_d}
-                    </li>
-                  </ul>
+                  <div className="mt-2">
+                    <div>i) {q.option_a}</div>
+                    <div>ii) {q.option_b}</div>
+                    <div>iii) {q.option_c}</div>
+                    <div>iv) {q.option_d}</div>
+                  </div>
                 )}
-              </td>
-              <td className="border border-gray-400 px-2 py-3 text-center">
-                {q.mark}
+                <div className="text-right mt-2">({q.mark} Mark)</div>
               </td>
             </tr>
-          </React.Fragment>
-        ))}
-      </tbody>
-    </table>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 
   return (
@@ -247,7 +258,7 @@ const GenerateQuestion = () => {
             <div className="flex justify-end mt-6">
               <button
                 onClick={exportToPDF}
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
               >
                 Export to PDF
               </button>
@@ -258,45 +269,92 @@ const GenerateQuestion = () => {
               className="mt-6 p-12 bg-white text-black font-serif leading-relaxed border rounded shadow"
               style={{ paddingTop: "60px", paddingBottom: "60px" }}
             >
-              <h1 className="text-center text-xl font-bold uppercase">
-                {paperData.college}
-              </h1>
-              <p className="text-center text-sm italic mb-2">
-                (An Autonomous Institution Affiliated to Anna University)
-              </p>
-              <h2 className="text-center text-md font-semibold">
-                {paperData.exam_name}
-              </h2>
-              <p className="text-center text-sm mb-6">
-                {paperData.department}
-              </p>
+              <div className="flex justify-between mb-6">
+                <div className="border border-black px-4 py-3 text-md font-semibold">
+                  Regulation: 2022
+                </div>
+                <div className="border border-black px-4 py-3 text-lg font-semibold">
+                  A
+                </div>
+              </div>
 
-              <div className="flex justify-between text-sm mb-4">
+              <div className="flex items-center justify-end mb-6 gap-2">
+                <div className="text-sm font-semibold">Reg No :</div>
+                <div className="flex">
+                  {[...Array(12)].map((_, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      className="w-8 h-8 text-center border border-black text-sm font-semibold"
+                      maxLength="1"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="border border-black rounded-md p-4 mb-6 shadow-sm">
+                <div className="flex items-start justify-center gap-4">
+                  <div className="pr-4 border-r border-black flex justify-center items-center">
+                    <img
+                      src={bitlogo}
+                      alt="BIT LOGO"
+                      className="w-48 h-36 object-contain"
+                    />
+                  </div>
+
+                  <div className="flex flex-col w-full px-4">
+                    <div className="text-center pb-2 border-b border-black">
+                      <h1 className="text-lg font-bold uppercase">
+                        {paperData.college}
+                      </h1>
+                      <p className="text-sm italic">
+                        (An Autonomous Institution Affiliated to Anna University)
+                      </p>
+                      <p className="text-md font-semibold">
+                        SATHYAMANGALAM - 638 401
+                      </p>
+                    </div>
+
+                    <div className="text-center pt-2">
+                      <h2 className="text-md font-semibold">
+                        {paperData.exam_name}
+                      </h2>
+                      <p className="text-sm">{paperData.department}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col text-sm mb-4">
                 <div>
                   <strong>Subject:</strong> {paperData.subject_name} (
                   {paperData.course_code})
                 </div>
-                <div>
-                  <strong>Time:</strong> {paperData.time}
-                </div>
-                <div>
-                  <strong>Max Marks:</strong> {paperData.max_marks}
+                <div className="flex mt-2 justify-between">
+                  <div className="mr-4">
+                    <strong>Time:</strong> {paperData.time}
+                  </div>
+                  <div>
+                    <strong>Max Marks:</strong> {paperData.max_marks}
+                  </div>
                 </div>
               </div>
 
-              <h3 className="font-semibold underline mb-2">Instructions:</h3>
-              <ul className="list-disc list-inside text-sm mb-4">
-                {paperData.instructions.map((inst, idx) => (
-                  <li key={idx}>{inst}</li>
-                ))}
-              </ul>
+              <div className="border border-black px-8 py-5 mb-6 ">
+                <h3 className="font-semibold underline mb-2">Instructions:</h3>
+                <ul className="list-disc list-inside text-sm mb-4">
+                  {paperData.instructions.map((inst, idx) => (
+                    <li key={idx}>{inst}</li>
+                  ))}
+                </ul>
 
-              {Object.entries(paperData.paper).map(([section, questions]) => (
-                <div key={section} className="mb-6">
-                  <h4 className="text-md font-bold">Section {section}</h4>
-                  {renderQuestions(questions)}
-                </div>
-              ))}
+                {Object.entries(paperData.paper).map(([section, questions]) => (
+                  <div key={section} className="mb-6 ">
+                    <h4 className="text-md font-bold mb-2 text-center">Section {section}</h4>
+                    {renderQuestions(questions, section)}
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}

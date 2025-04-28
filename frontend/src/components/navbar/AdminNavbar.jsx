@@ -16,7 +16,7 @@ const AdminNavbar = () => {
   ];
 
   return (
-    <nav className="w-64 h-screen fixed bg-white shadow-lg flex flex-col p-5 gap-10">
+    <nav className="w-64 h-screen fixed  bg-white shadow-lg flex flex-col p-5 gap-10 ">
       <div>
         <img className="w-32 h-32 ml-10" src={Logo} alt="BIT LOGO" />
       </div>

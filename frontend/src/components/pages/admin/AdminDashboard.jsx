@@ -89,7 +89,6 @@ const Admindashboard = () => {
       )}
 
       <div className="flex-1 bg-gray-50 overflow-y-auto p-4">
-        {/* Top Bar */}
         <div className="flex justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <div className="flex items-center gap-4">
             <button

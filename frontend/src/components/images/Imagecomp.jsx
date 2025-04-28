@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import Profile from './profile.png';
 import { useNavigate } from 'react-router-dom';
-import axios from "axios";
+import axios from 'axios';
 
 export const Imagecomp = () => {
   const user = JSON.parse(localStorage.getItem('user'));
   const [openProfileModal, setOpenProfileModal] = useState(false);
-  const [clicked, setClicked] = useState(false);
   const [facultyData, setFacultyData] = useState(null);
   const navigate = useNavigate();
 
-  const handlechangeclick = () => {
-    setClicked(!clicked);
-    navigate('/');
+  const handleLogout = () => {
     localStorage.removeItem('user');
+    navigate('/');
   };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.email) {
+    if (user?.email) {
       axios
         .get(`http://localhost:7000/faculty-data?email=${user.email}`)
         .then((res) => {
@@ -26,38 +23,21 @@ export const Imagecomp = () => {
             setFacultyData(res.data[0]);
           }
         })
-        .catch((err) => console.error("Error fetching faculty data:", err));
+        .catch((err) => console.error('Error fetching faculty data:', err));
     }
-  }, []);
+  }, [user]);
 
   return (
     <div>
-      {/* Profile Image */}
-      {user?.photoURL ? (
-        <img
-          src={user.photoURL}
-          alt="Profile"
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            cursor: 'pointer',
-          }}
-          onClick={() => setOpenProfileModal(true)}
-          className="cursor-pointer"
-        />
-      ) : (
-        <img
-          src={Profile}
-          alt="ADMIN"
-          className="w-14 h-14 rounded-full cursor-pointer"
-          onClick={() => setOpenProfileModal(true)}
-        />
-      )}
+      <img
+        src={user?.photoURL || Profile}
+        alt="Profile"
+        className="w-14 h-14 rounded-full cursor-pointer"
+        onClick={() => setOpenProfileModal(true)}
+      />
 
-      {/* Profile Modal */}
       {openProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50 flex items-center justify-end px-5 lg:pr-5">
           <div className="bg-white w-full sm:w-[360px] p-8 rounded-2xl relative shadow-xl text-center animate-slide-in">
             <button
               className="absolute top-4 right-5 text-2xl text-gray-500 hover:text-black"
@@ -66,7 +46,7 @@ export const Imagecomp = () => {
               ×
             </button>
             <img
-              src={user.photoURL || Profile}
+              src={user?.photoURL || Profile}
               alt="Profile"
               className="w-24 h-24 rounded-full mx-auto mb-6 border-2 border-gray-300"
             />
@@ -82,7 +62,7 @@ export const Imagecomp = () => {
             )}
             <button
               className="mt-8 w-full bg-blue-500 text-white font-semibold py-3 rounded-md hover:bg-blue-600 transition"
-              onClick={handlechangeclick}
+              onClick={handleLogout}
             >
               LOGOUT
             </button>

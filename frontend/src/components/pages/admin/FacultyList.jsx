@@ -78,7 +78,7 @@ const FacultyList = () => {
         ></div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-y-auto pl-1 pr-4 bg-gray-50 ml-5 mt-5">
+      <div className="flex-1 flex flex-col overflow-y-auto pl-1 pr-4 bg-gray-50 ml-3 mt-4">
         <div className="flex flex-wrap justify-between items-center mb-5 p-4 sticky top-0 z-10 bg-white shadow-md rounded-md">
           <div className="flex items-center gap-4">
             <button

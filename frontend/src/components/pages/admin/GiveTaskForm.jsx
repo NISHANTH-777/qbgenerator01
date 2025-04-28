@@ -3,7 +3,8 @@ import AdminNavbar from "../../navbar/AdminNavbar";
 import axios from "axios";
 import { Menu, CalendarDays, User, ListChecks } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
-import toast, { Toaster } from "react-hot-toast";
+import { Drawer } from "@mui/material";
+import { toast } from "react-toastify"; 
 
 const GiveTaskForm = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const GiveTaskForm = () => {
     due_date: "",
   });
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openSidebar, setOpenSidebar] = useState(false);
   const [facultyList, setFacultyList] = useState([]);
 
   useEffect(() => {
@@ -63,35 +64,37 @@ const GiveTaskForm = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      <Toaster position="top-right" reverseOrder={false} />
-      <div
-        className={`fixed z-40 top-0 left-0 h-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 md:static md:block w-64`}
-      >
-        <AdminNavbar onClose={() => setSidebarOpen(false)} />
+    <div className="flex min-h-screen bg-gray-50">
+      <div className="hidden lg:flex flex-col fixed top-0 left-0 w-56 h-screen bg-white shadow-md z-50">
+        <AdminNavbar />
       </div>
 
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black opacity-30 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+      <Drawer
+        open={openSidebar}
+        onClose={() => setOpenSidebar(false)}
+        sx={{
+          display: { xs: "block", lg: "none" },
+          "& .MuiDrawer-paper": {
+            width: 250,
+            top: 0,
+            height: "100vh",
+          },
+        }}
+      >
+        <AdminNavbar />
+      </Drawer>
 
-      <div className="flex-1 px-4 pt-5 pb-10 overflow-y-auto md:ml-5">
-        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10">
+      <div className="flex-1 px-4 pt-5 pb-10 md:ml-3 lg:ml-64">
+        <div className="flex flex-wrap justify-between items-center mb-6  px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-auto">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => setOpenSidebar(!openSidebar)}
             >
               <Menu size={28} />
             </button>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-             Task Assignment
-
+              Task Assignment
             </h2>
           </div>
           <div className="mt-4 md:mt-0">

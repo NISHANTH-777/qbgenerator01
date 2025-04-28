@@ -11,18 +11,15 @@ const FacultyTaskProgress = () => {
   useEffect(() => {
     const fetchProgressData = async () => {
       try {
-        // 1. Get faculty ID using email
         const res = await axios.get("http://localhost:7000/faculty-id", {
           params: { email: user.email },
         });
 
         const facultyId = res.data.faculty_id;
 
-        // 2. Get faculty task progress using facultyId
         const progressRes = await axios.get(`http://localhost:7000/faculty-task-progress/${facultyId}`);
         const progressData = progressRes.data;
 
-        // 3. Format the data for DataGrid
         const formattedRows = progressData.flatMap((unitData, unitIndex) =>
           [1, 2, 3, 4, 5, 6].map((mark) => ({
             id: `${unitIndex}-${mark}`,
