@@ -9,7 +9,7 @@ import FacultyTaskProgress from './FacultyTaskProgress';
 import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
-const Facultydashboard = () => {
+const FacultyDashboard = () => {
   const [view, setView] = useState("Monthly");
   const [monthlyPeriod, setMonthlyPeriod] = useState("first");
   const [courseCode, setCourseCode] = useState(false);
@@ -154,4 +154,4 @@ const Facultydashboard = () => {
   );
 };
 
-export default Facultydashboard;
+export default FacultyDashboard;
