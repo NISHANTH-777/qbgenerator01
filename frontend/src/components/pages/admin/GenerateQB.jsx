@@ -78,7 +78,7 @@ const GenerateQuestion = () => {
     const element = document.getElementById("question-paper");
   
     const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2], 
+      margin: [0.2, 0.2, 0.2, 0.2], // Very small margin for compact content
       filename: `${paperData.course_code}_question_paper.pdf`,
       image: { type: "jpeg", quality: 1 },
       html2canvas: { scale: 2, useCORS: true },
@@ -87,7 +87,9 @@ const GenerateQuestion = () => {
         format: "a4",
         orientation: "portrait",
       },
+      // No pagebreak option here
     };
+  
   
     html2pdf()
       .set(opt)

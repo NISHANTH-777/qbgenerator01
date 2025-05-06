@@ -27,7 +27,9 @@ const FacultyTaskProgress = () => {
             mark: `M${mark}`,
             required: unitData[`m${mark}_required`],
             added: unitData[`m${mark}_added`],
-            pending: unitData[`m${mark}_pending`],
+            pending: Math.max(unitData[`m${mark}_required`] - unitData[`m${mark}_added`], 0),
+            // Format due_date to show only the date part (yyyy-mm-dd)
+            due_date: new Date(unitData.due_date).toISOString().split('T')[0]
           }))
         );
 
@@ -48,11 +50,20 @@ const FacultyTaskProgress = () => {
     { field: 'required', headerName: 'Required', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
     { field: 'added', headerName: 'Added', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
     { field: 'pending', headerName: 'Pending', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
+    {
+      field: 'due_date',
+      headerName: 'Due Date',
+      width: 180,
+      align: 'center',
+      headerAlign: 'left',
+    }
   ];
 
   return (
-    <div className="mb-6 ">
-      <Typography variant="h6" fontWeight="bold" gutterBottom marginLeft={1}>Faculty Task Progress</Typography>
+    <div className="mb-6">
+      <Typography variant="h6" fontWeight="bold" gutterBottom marginLeft={1}>
+        Faculty Task Progress
+      </Typography>
       <Paper sx={{ minWidth: 600, height: 550, p: 2 }}>
         <div style={{ width: '100%' }}>
           <DataGrid

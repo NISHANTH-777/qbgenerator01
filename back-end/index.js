@@ -608,6 +608,7 @@ app.get("/faculty-task-progress/:faculty_id", (req, res) => {
       t.m4, 
       t.m5, 
       t.m6,
+      t.due_date,
       IFNULL(SUM(CASE WHEN q.mark = 1 THEN 1 ELSE 0 END), 0) AS m1_added,
       IFNULL(SUM(CASE WHEN q.mark = 2 THEN 1 ELSE 0 END), 0) AS m2_added,
       IFNULL(SUM(CASE WHEN q.mark = 3 THEN 1 ELSE 0 END), 0) AS m3_added,
@@ -617,7 +618,7 @@ app.get("/faculty-task-progress/:faculty_id", (req, res) => {
     FROM task t
     LEFT JOIN questions q ON t.unit = q.unit AND t.faculty_id = q.faculty_id
     WHERE t.faculty_id = ? AND t.due_date >= CURDATE()
-    GROUP BY t.unit, t.m1, t.m2, t.m3, t.m4, t.m5, t.m6
+    GROUP BY t.unit, t.m1, t.m2, t.m3, t.m4, t.m5, t.m6, t.due_date
   `;
 
   db.query(query, [facultyId], (err, results) => {
@@ -625,6 +626,7 @@ app.get("/faculty-task-progress/:faculty_id", (req, res) => {
 
     const data = results.map(row => ({
       unit: row.unit,
+      due_date: row.due_date, 
       m1_added: row.m1_added,
       m1_required: row.m1,
       m1_pending: Math.max(row.m1 - row.m1_added, 0),
