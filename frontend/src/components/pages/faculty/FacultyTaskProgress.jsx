@@ -28,7 +28,6 @@ const FacultyTaskProgress = () => {
             required: unitData[`m${mark}_required`],
             added: unitData[`m${mark}_added`],
             pending: Math.max(unitData[`m${mark}_required`] - unitData[`m${mark}_added`], 0),
-            // Format due_date to show only the date part (yyyy-mm-dd)
             due_date: new Date(unitData.due_date).toISOString().split('T')[0]
           }))
         );
@@ -45,18 +44,12 @@ const FacultyTaskProgress = () => {
   }, [user]);
 
   const columns = [
-    { field: 'unit', headerName: 'Unit', width: 275, align: 'center', headerAlign: 'left' },
-    { field: 'mark', headerName: 'Mark', width: 230, align: 'center', headerAlign: 'left' },
-    { field: 'required', headerName: 'Required', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
-    { field: 'added', headerName: 'Added', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
-    { field: 'pending', headerName: 'Pending', width: 215, type: 'number', align: 'center', headerAlign: 'left' },
-    {
-      field: 'due_date',
-      headerName: 'Due Date',
-      width: 180,
-      align: 'center',
-      headerAlign: 'left',
-    }
+    { field: 'unit', headerName: 'Unit', flex:1, align: 'center', headerAlign: 'left' },
+    { field: 'mark', headerName: 'Mark', flex:1, align: 'center', headerAlign: 'left' },
+    { field: 'required', headerName: 'Required', flex:1, type: 'number', align: 'center', headerAlign: 'left' },
+    { field: 'added', headerName: 'Added', flex:1, type: 'number', align: 'center', headerAlign: 'left' },
+    { field: 'pending', headerName: 'Pending', flex:1, type: 'number', align: 'center', headerAlign: 'left' },
+    {field: 'due_date',headerName: 'Due Date',flex:1.2,align: 'center',headerAlign: 'left',}
   ];
 
   return (
