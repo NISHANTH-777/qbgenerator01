@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import {MdDashboard,MdDescription,MdLogout,MdLibraryBooks,MdLibraryAdd,} from 'react-icons/md';
+import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks, MdLibraryAdd } from 'react-icons/md';
+import { useDispatch } from 'react-redux';
+import { removeUser } from '../../store/userSlice'; // Adjust the path as needed
 import Logo from '../images/bitlogo.png';
 
 const FacultyNavbar = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const navItems = [
     { to: '/facultydashboard', label: 'Dashboard', icon: <MdDashboard size={20} /> },
@@ -12,6 +15,11 @@ const FacultyNavbar = () => {
     { to: '/manageqb', label: 'Manage QB', icon: <MdLibraryBooks size={20} /> },
     { to: '/addquestions', label: 'Add Questions', icon: <MdLibraryAdd size={20} /> },
   ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    dispatch(removeUser()); // Clear user data in Redux
+  };
 
   return (
     <nav className="w-64 h-screen fixed bg-white shadow-lg flex flex-col p-5 gap-10">
@@ -43,7 +51,7 @@ const FacultyNavbar = () => {
       <div className="mt-auto pl-4 ml-4">
         <Link
           to="/"
-          onClick={() => localStorage.removeItem('user')}
+          onClick={handleLogout}
           className="font-semibold text-gray-500 hover:text-black flex items-center gap-3"
         >
           <MdLogout size={20} />

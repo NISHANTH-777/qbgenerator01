@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Profile from './profile.png';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser, removeUser } from '../../store/userSlice';
 
 export const Imagecomp = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.user.use);  
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const [facultyData, setFacultyData] = useState(null);
-  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    dispatch(removeUser());  
     navigate('/');
   };
 

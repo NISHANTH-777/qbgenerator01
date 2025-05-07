@@ -86,7 +86,7 @@ const GiveTaskForm = () => {
       </Drawer>
 
       <div className="flex-1 px-4 pt-5 pb-10 md:ml-3 lg:ml-64">
-        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-md sticky top-0 z-10 overflow-auto">
+        <div className="flex flex-wrap justify-between items-center mb-6 px-4 py-3 bg-white shadow-md rounded-sm sticky top-0 z-10 overflow-auto">
           <div className="flex items-center gap-4">
             <button
               className="block md:hidden text-gray-700"
@@ -106,14 +106,14 @@ const GiveTaskForm = () => {
         <div className="flex justify-center px-2">
           <form
             onSubmit={handleSubmit}
-            className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
+            className="w-full max-w-2xl bg-white/70 border border-gray-200 rounded-lg shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
           >
-            <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">
+            {/* <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2">
               Faculty Task Assignment
-            </h3>
-            <p className="text-center text-gray-500 text-sm">
+            </h3> */}
+            {/* <p className="text-center text-gray-500 text-sm">
               Assign specific question types and units to faculty with a deadline.
-            </p>
+            </p> */}
 
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">

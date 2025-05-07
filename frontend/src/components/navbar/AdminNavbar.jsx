@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MdDashboard, MdPeople, MdDescription, MdLibraryBooks, MdLogout } from 'react-icons/md';
-
+import { useDispatch } from 'react-redux';
+import { removeUser } from '../../store/userSlice'; // Adjust the path as needed
 import Logo from '../images/bitlogo.png';
 
 const AdminNavbar = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const navItems = [
     { to: '/admindashboard', label: 'Dashboard', icon: <MdDashboard size={20} /> },
@@ -15,8 +17,13 @@ const AdminNavbar = () => {
     { to: '/generateqb', label: 'Generate QB', icon: <MdLibraryBooks size={20} /> },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    dispatch(removeUser()); // Clear user data in Redux
+  };
+
   return (
-    <nav className="w-64 h-screen fixed  bg-white shadow-lg flex flex-col p-5 gap-10 ">
+    <nav className="w-64 h-screen fixed bg-white shadow-lg flex flex-col p-5 gap-10">
       <div>
         <img className="w-32 h-32 ml-10" src={Logo} alt="BIT LOGO" />
       </div>
@@ -45,7 +52,7 @@ const AdminNavbar = () => {
       <div className="mt-auto pl-4 ml-4">
         <Link
           to="/"
-          onClick={() => localStorage.removeItem('user')}
+          onClick={handleLogout}
           className="font-semibold text-gray-500 hover:text-black flex items-center gap-3"
         >
           <MdLogout size={20} />

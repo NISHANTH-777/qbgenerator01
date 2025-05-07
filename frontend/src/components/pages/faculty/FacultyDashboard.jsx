@@ -8,6 +8,7 @@ import { Imagecomp } from "../../images/Imagecomp";
 import FacultyTaskProgress from './FacultyTaskProgress';
 import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import { useSelector } from 'react-redux';
 
 const FacultyDashboard = () => {
   const [view, setView] = useState("Monthly");
@@ -17,13 +18,15 @@ const FacultyDashboard = () => {
   const [weeklyStats, setWeeklyStats] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [openSidebar, setOpenSidebar] = useState(false);
-
+ const user = useSelector((state) => state.user.user);  
+  const email = user.email
+  console.log(email)
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.email) {
+    
+    if (email) {
       axios
         .get("http://localhost:7000/api/faculty/get-course-code", {
-          params: { email: user.email },
+          params: { email: email },
         })
         .then((res) => {
           setCourseCode(res.data.course_code);

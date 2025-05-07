@@ -5,20 +5,22 @@ import Paper from '@mui/material/Paper';
 import { useNavigate } from 'react-router-dom';
 import FacultyNavbar from '../../navbar/FacultyNavbar';
 import { Imagecomp } from '../../images/Imagecomp';
-import { Menu } from 'lucide-react'; 
+import { Menu } from 'lucide-react';
+import { useSelector } from 'react-redux'; 
 
 const QBDetails = () => {
   const [questionRows, setQuestionRows] = useState([]);
   const [courseCode, setCourseCode] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const navigate = useNavigate();
-
+  const user = useSelector((state) => state.user.user);    
+   const email = user.email
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.email) {
+    
+    if (email) {
       axios
         .get("http://localhost:7000/api/faculty/get-course-code", {
-          params: { email: user.email },
+          params: { email: email },
         })
         .then((res) => {
           setCourseCode(res.data.course_code);

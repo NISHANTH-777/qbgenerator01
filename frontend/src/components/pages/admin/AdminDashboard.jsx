@@ -20,9 +20,9 @@ const Admindashboard = () => {
   const [monthlyData, setMonthlyData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [weekRangeStart, setWeekRangeStart] = useState(0);
 
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     axios
@@ -35,56 +35,57 @@ const Admindashboard = () => {
       .then((res) => {
         const { monthly, weekly } = res.data;
 
+        const monthsOrder = [
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        ];
+
         const monthlyMap = {};
+        monthsOrder.forEach((m) => {
+          monthlyMap[m] = 0;
+        });
+
         monthly.forEach((item) => {
           const [_, month] = item.month.split("-");
           const index = parseInt(month, 10) - 1;
           const monthName = new Date(2025, index).toLocaleString("default", {
             month: "short",
           });
-          monthlyMap[monthName] =
-            (monthlyMap[monthName] || 0) + item.total_generated;
+          monthlyMap[monthName] += item.total_generated;
         });
 
-        const monthlyFormatted = Object.entries(monthlyMap)
-          .map(([name, QB_Generated]) => ({ name, QB_Generated }))
-          .sort((a, b) => {
-            const monthsOrder = [
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-              "Sep",
-              "Oct",
-              "Nov",
-              "Dec",
-            ];
-            return monthsOrder.indexOf(a.name) - monthsOrder.indexOf(b.name);
-          });
+        const monthlyFormatted = monthsOrder.map((name) => ({
+          name,
+          QB_Generated: monthlyMap[name],
+        }));
 
         const weeklyMap = {};
+        for (let i = 1; i <= 52; i++) {
+          const weekName = `W${String(i).padStart(2, "0")}`;
+          weeklyMap[weekName] = 0;
+        }
+
         weekly.forEach((item) => {
-          const weekName = `W${String(item.week).slice(-2)}`;
-          weeklyMap[weekName] =
-            (weeklyMap[weekName] || 0) + item.total_generated;
+          const weekNum = parseInt(String(item.week).slice(4)); // From 202516 -> 16
+          const weekName = `W${String(weekNum).padStart(2, "0")}`;
+          weeklyMap[weekName] += item.total_generated;
         });
+        
 
         const weeklyFormatted = Object.entries(weeklyMap).map(
           ([name, QB_Generated]) => ({ name, QB_Generated })
         );
 
         setMonthlyData(monthlyFormatted);
-        setWeeklyData(weeklyFormatted.slice(0, 7));
+        setWeeklyData(weeklyFormatted);
       })
       .catch((err) => console.error("Failed to fetch stats:", err));
   }, []);
 
   const filteredMonthlyData =
     monthRange === "first" ? monthlyData.slice(0, 6) : monthlyData.slice(6);
+
+  const filteredWeeklyData = weeklyData.slice(weekRangeStart, weekRangeStart + 7);
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -214,10 +215,45 @@ const Admindashboard = () => {
             </div>
           )}
 
+          {view === "Weekly" && (
+            <div className="flex justify-between items-center mb-4 px-2">
+              <button
+                onClick={() =>
+                  setWeekRangeStart((prev) => Math.max(prev - 7, 0))
+                }
+                disabled={weekRangeStart === 0}
+                className={`p-2 rounded-full transition ${
+                  weekRangeStart === 0 ? "text-gray-300" : "hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <span className="font-semibold text-gray-700 text-sm sm:text-base">
+                Weeks {weekRangeStart + 1} -{" "}
+                {Math.min(weekRangeStart + 7, 52)}
+              </span>
+              <button
+                onClick={() =>
+                  setWeekRangeStart((prev) =>
+                    Math.min(prev + 7, 45)
+                  )
+                }
+                disabled={weekRangeStart + 7 >= 52}
+                className={`p-2 rounded-full transition ${
+                  weekRangeStart + 7 >= 52
+                    ? "text-gray-300"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+          )}
+
           <div className="w-full h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={view === "Monthly" ? filteredMonthlyData : weeklyData}
+                data={view === "Monthly" ? filteredMonthlyData : filteredWeeklyData}
               >
                 <XAxis dataKey="name" />
                 <YAxis />

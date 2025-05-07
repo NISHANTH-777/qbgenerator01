@@ -1,49 +1,52 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../../store/userSlice'; // Import the action to set user in Redux
+import { useNavigate } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from "../../firebase";
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleTogglePassword = () => {
     setShowPassword((prev) => !prev);
   };
 
+  // Handle manual login
   const handleManualLogin = async (e) => {
     e.preventDefault();
 
     try {
       const res = await axios.post('http://localhost:7000/api/auth/manual-login', {
         email,
-        password
+        password,
       });
-      localStorage.setItem("test", "hello");
-      console.log("test localStorage:", localStorage.getItem("test"));
+
       console.log("Login response:", res.data);
 
       if (res.data.success) {
-        localStorage.setItem('user', JSON.stringify({
+        // Dispatch user data to Redux store
+        dispatch(setUser({
           email: res.data.user.email,
           role: res.data.user.role,
-        }));   
-        if(res.data.user.role === "admin"){   
-        navigate('/admindashboard');
-        }
-        else if(res.data.user.role === "faculty"){
+        }));
+
+        // Navigate based on user role
+        if (res.data.user.role === "admin") {
+          navigate('/admindashboard');
+        } else if (res.data.user.role === "faculty") {
           navigate('/facultydashboard');
-          }
-          else {
-            navigate('/');
-            localStorage.removeItem('user')
-          }
+        } else {
+          navigate('/');
+        }
       } else {
         alert(res.data.message || 'Invalid credentials');
       }
@@ -53,23 +56,26 @@ const LoginPage = () => {
     }
   };
 
+  // Handle Google login
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
       const res = await axios.post('http://localhost:7000/api/auth/check-user', {
-        email: user.email
+        email: user.email,
       });
 
       if (res.data.exists) {
-        localStorage.setItem('user', JSON.stringify({
+        // Dispatch user data to Redux store
+        dispatch(setUser({
           email: user.email,
           name: user.displayName,
           role: res.data.role,
           course_code: res.data.course_code,
           photoURL: user.photoURL,
         }));
+
         navigate('/admindashboard');
       } else {
         alert('You are not registered.');
@@ -129,7 +135,7 @@ const LoginPage = () => {
             >
               {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
             </IconButton>
-          </div>  
+          </div>
 
           <Tooltip title="Click to log in" enterDelay={500} leaveDelay={200}>
             <button type="submit" className="bg-blue-500 w-full p-3 rounded-lg text-white mt-2">Login</button>

@@ -6,6 +6,7 @@ import { Imagecomp } from "../../images/Imagecomp";
 import { Drawer } from "@mui/material";
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
+import { useSelector } from 'react-redux';
 
 const AddQuestions = () => {
   const [formData, setFormData] = useState({
@@ -27,12 +28,14 @@ const AddQuestions = () => {
   const [openSidebar, setOpenSidebar] = useState(false);
   const [courseCode, setCourseCode] = useState("");
 
+  const user = useSelector((state) => state.user.user);    
+   const email = user.email
+   if (!email) throw new Error("User not logged in");
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user?.email) throw new Error("User not logged in");
+   
 
     axios
-      .get(`http://localhost:7000/api/faculty/get-course-code?email=${user?.email}`)
+      .get(`http://localhost:7000/api/faculty/get-course-code?email=${email}`)
       .then((res) => {
         setCourseCode(res.data.course_code);
         setFormData((prev) => ({ ...prev, course_code: res.data.course_code }));

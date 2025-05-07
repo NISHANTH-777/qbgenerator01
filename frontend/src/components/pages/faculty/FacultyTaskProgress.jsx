@@ -3,16 +3,18 @@ import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { Typography } from '@mui/material';
+import { useSelector } from 'react-redux';
 
 const FacultyTaskProgress = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+   const user = useSelector((state) => state.user.user);    
+    const email = user.email
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
     const fetchProgressData = async () => {
       try {
         const res = await axios.get("http://localhost:7000/api/faculty/faculty-id", {
-          params: { email: user.email },
+          params: { email: email },
         });
 
         const facultyId = res.data.faculty_id;
@@ -38,10 +40,10 @@ const FacultyTaskProgress = () => {
       }
     };
 
-    if (user?.email) {
+    if (email) {
       fetchProgressData();
     }
-  }, [user]);
+  }, [email]);
 
   const columns = [
     { field: 'unit', headerName: 'Unit', flex:1, align: 'center', headerAlign: 'left' },
