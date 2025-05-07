@@ -30,7 +30,7 @@ const GenerateQuestion = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/get-faculty-subjects")
+      .get("http://localhost:7000/api/admin/get-faculty-subjects")
       .then((res) => setSubjectOptions(res.data))
       .catch((err) => console.error("Error fetching subject options:", err));
   }, []);
@@ -42,7 +42,7 @@ const GenerateQuestion = () => {
       const to = to_unit.replace("Unit ", "");
 
       const res = await axios.get(
-        `http://localhost:7000/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`
+        `http://localhost:7000/api/admin/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`
       );
       if (res.data.error) {
         setError(res.data.error);

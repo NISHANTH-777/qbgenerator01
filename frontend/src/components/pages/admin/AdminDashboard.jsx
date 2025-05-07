@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
@@ -19,12 +26,12 @@ const Admindashboard = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/recently-added")
+      .get("http://localhost:7000/api/admin/recently-added")
       .then((res) => setRecentQuestions(res.data))
       .catch((err) => console.error("Failed to fetch recent questions:", err));
 
     axios
-      .get("http://localhost:7000/question-stats")
+      .get("http://localhost:7000/api/admin/generated-qb-stats")
       .then((res) => {
         const { monthly, weekly } = res.data;
 
@@ -35,14 +42,26 @@ const Admindashboard = () => {
           const monthName = new Date(2025, index).toLocaleString("default", {
             month: "short",
           });
-          monthlyMap[monthName] = (monthlyMap[monthName] || 0) + item.total_papers;
+          monthlyMap[monthName] =
+            (monthlyMap[monthName] || 0) + item.total_generated;
         });
 
         const monthlyFormatted = Object.entries(monthlyMap)
           .map(([name, QB_Generated]) => ({ name, QB_Generated }))
           .sort((a, b) => {
             const monthsOrder = [
-              "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
             ];
             return monthsOrder.indexOf(a.name) - monthsOrder.indexOf(b.name);
           });
@@ -50,7 +69,8 @@ const Admindashboard = () => {
         const weeklyMap = {};
         weekly.forEach((item) => {
           const weekName = `W${String(item.week).slice(-2)}`;
-          weeklyMap[weekName] = (weeklyMap[weekName] || 0) + item.total_papers;
+          weeklyMap[weekName] =
+            (weeklyMap[weekName] || 0) + item.total_generated;
         });
 
         const weeklyFormatted = Object.entries(weeklyMap).map(
@@ -78,7 +98,10 @@ const Admindashboard = () => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 md:static md:block w-64`}
       >
-        <AdminNavbar onNavigate={handleNavigate} onClose={() => setSidebarOpen(false)} />
+        <AdminNavbar
+          onNavigate={handleNavigate}
+          onClose={() => setSidebarOpen(false)}
+        />
       </div>
 
       {sidebarOpen && (
@@ -97,13 +120,17 @@ const Admindashboard = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">DASHBOARD</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+              DASHBOARD
+            </h2>
           </div>
           <Imagecomp />
         </div>
 
         <div className="bg-white my-4 p-4 rounded-lg shadow ">
-          <h3 className="text-lg font-semibold mb-4">Recently Added Questions</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Recently Added Questions
+          </h3>
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left text-sm border">
               <thead className="bg-white h-14">
@@ -137,7 +164,9 @@ const Admindashboard = () => {
           <div className="flex flex-wrap gap-2 mb-5">
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Monthly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                view === "Monthly"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Monthly")}
             >
@@ -145,7 +174,9 @@ const Admindashboard = () => {
             </button>
             <button
               className={`px-4 py-2 rounded-lg font-medium ${
-                view === "Weekly" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                view === "Weekly"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
               }`}
               onClick={() => setView("Weekly")}
             >
@@ -159,7 +190,9 @@ const Admindashboard = () => {
                 onClick={() => setMonthRange("first")}
                 disabled={monthRange === "first"}
                 className={`p-2 rounded-full transition ${
-                  monthRange === "first" ? "text-gray-300" : "hover:bg-gray-100"
+                  monthRange === "first"
+                    ? "text-gray-300"
+                    : "hover:bg-gray-100"
                 }`}
               >
                 <ChevronLeft size={24} />
@@ -171,7 +204,9 @@ const Admindashboard = () => {
                 onClick={() => setMonthRange("second")}
                 disabled={monthRange === "second"}
                 className={`p-2 rounded-full transition ${
-                  monthRange === "second" ? "text-gray-300" : "hover:bg-gray-100"
+                  monthRange === "second"
+                    ? "text-gray-300"
+                    : "hover:bg-gray-100"
                 }`}
               >
                 <ChevronRight size={24} />
@@ -187,7 +222,11 @@ const Admindashboard = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="QB_Generated" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                <Bar
+                  dataKey="QB_Generated"
+                  fill="#3B82F6"
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>

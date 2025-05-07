@@ -32,7 +32,7 @@ const AddQuestions = () => {
     if (!user?.email) throw new Error("User not logged in");
 
     axios
-      .get(`http://localhost:7000/get-course-code?email=${user?.email}`)
+      .get(`http://localhost:7000/api/faculty/get-course-code?email=${user?.email}`)
       .then((res) => {
         setCourseCode(res.data.course_code);
         setFormData((prev) => ({ ...prev, course_code: res.data.course_code }));
@@ -63,12 +63,12 @@ const AddQuestions = () => {
         formData.append("file", file);
         formData.append("course_code", courseCode);
 
-        await axios.post("http://localhost:7000/upload", formData, {
+        await axios.post("http://localhost:7000/api/faculty/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("File uploaded successfully!");
       } else {
-        await axios.post("http://localhost:7000/add-question", formData, {
+        await axios.post("http://localhost:7000/api/faculty/add-question", formData, {
           headers: { "Content-Type": "application/json" },
         });
         toast.success("Question added successfully!");

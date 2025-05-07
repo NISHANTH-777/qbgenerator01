@@ -17,7 +17,7 @@ const QBDetails = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.email) {
       axios
-        .get("http://localhost:7000/get-course-code", {
+        .get("http://localhost:7000/api/faculty/get-course-code", {
           params: { email: user.email },
         })
         .then((res) => {
@@ -30,7 +30,7 @@ const QBDetails = () => {
   useEffect(() => {
     if (courseCode) {
       axios
-        .get(`http://localhost:7000/faculty-question-list?course_code=${courseCode}`)
+        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`)
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,

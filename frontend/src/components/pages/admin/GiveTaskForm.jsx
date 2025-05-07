@@ -26,7 +26,7 @@ const GiveTaskForm = () => {
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
-        const res = await axios.get("http://localhost:7000/faculty-list");
+        const res = await axios.get("http://localhost:7000/api/admin/faculty-list");
         setFacultyList(res.data);
       } catch (err) {
         toast.error("Failed to load faculty list");
@@ -46,7 +46,7 @@ const GiveTaskForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:7000/give-task", formData);
+      const res = await axios.post("http://localhost:7000/api/admin/give-task", formData);
       toast.success(res.data.message || "Task Assigned Successfully!");
       setFormData({
         faculty_id: "",

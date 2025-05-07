@@ -11,13 +11,13 @@ const FacultyTaskProgress = () => {
   useEffect(() => {
     const fetchProgressData = async () => {
       try {
-        const res = await axios.get("http://localhost:7000/faculty-id", {
+        const res = await axios.get("http://localhost:7000/api/faculty/faculty-id", {
           params: { email: user.email },
         });
 
         const facultyId = res.data.faculty_id;
 
-        const progressRes = await axios.get(`http://localhost:7000/faculty-task-progress/${facultyId}`);
+        const progressRes = await axios.get(`http://localhost:7000/api/faculty/faculty-task-progress/${facultyId}`);
         const progressData = progressRes.data;
 
         const formattedRows = progressData.flatMap((unitData, unitIndex) =>

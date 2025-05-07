@@ -15,7 +15,7 @@ const FacultyList = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/faculty-list")
+      .get("http://localhost:7000/api/admin/faculty-list")
       .then((response) => {
         const formatted = response.data.map((item, index) => ({
           id: index + 1,

@@ -19,7 +19,7 @@ const QuestionDetails = () => {
   };
 
   useEffect(() => {
-    axios.get("http://localhost:7000/question-history")
+    axios.get("http://localhost:7000/api/admin/question-history")
       .then((res) => {
         const formatted = res.data.map((item, index) => ({
           id: index + 1,

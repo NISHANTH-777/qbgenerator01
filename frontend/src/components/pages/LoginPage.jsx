@@ -21,7 +21,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post('http://localhost:7000/manual-login', {
+      const res = await axios.post('http://localhost:7000/api/auth/manual-login', {
         email,
         password
       });
@@ -58,7 +58,7 @@ const LoginPage = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const res = await axios.post('http://localhost:7000/check-user', {
+      const res = await axios.post('http://localhost:7000/api/auth/check-user', {
         email: user.email
       });
 

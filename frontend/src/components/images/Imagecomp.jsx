@@ -17,7 +17,7 @@ export const Imagecomp = () => {
   useEffect(() => {
     if (user?.email) {
       axios
-        .get(`http://localhost:7000/faculty-data?email=${user.email}`)
+        .get(`http://localhost:7000/api/faculty/faculty-data?email=${user.email}`)
         .then((res) => {
           if (res.data.length > 0) {
             setFacultyData(res.data[0]);

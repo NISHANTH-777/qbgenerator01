@@ -21,7 +21,7 @@ const ManageQB = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.email) {
       axios
-        .get("http://localhost:7000/get-course-code", {
+        .get("http://localhost:7000/api/faculty/get-course-code", {
           params: { email: user.email },
         })
         .then((res) => {
@@ -34,7 +34,7 @@ const ManageQB = () => {
   useEffect(() => {
     if (courseCode) {
       axios
-        .get(`http://localhost:7000/faculty-question-list?course_code=${courseCode}`)
+        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`)
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
@@ -65,7 +65,7 @@ const ManageQB = () => {
   const handleEdit = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
     axios
-      .get(`http://localhost:7000/question-view/${selected.facultyId}`)
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`)
       .then((res) => {
         setSelectedQuestion(res.data[0]);
         setEditModalOpen(true);
@@ -77,7 +77,7 @@ const ManageQB = () => {
     const { id, exam_name, unit, topic, mark, question, answer } = selectedQuestion;
 
     axios
-      .put(`http://localhost:7000/question-edit/${id}`, {
+      .put(`http://localhost:7000/api/faculty/question-edit/${id}`, {
         exam_name, unit, topic, mark, question, answer,
       })
       .then(() => {
@@ -92,7 +92,7 @@ const ManageQB = () => {
     const selected = questionRows.find(row => row.id === rowId);
     if (window.confirm("Are you sure you want to delete this question?")) {
       axios
-        .delete(`http://localhost:7000/question-delete/${selected.facultyId}`)
+        .delete(`http://localhost:7000/api/faculty/question-delete/${selected.facultyId}`)
         .then(() => {
           setQuestionRows(prev => prev.filter(row => row.id !== rowId));
         })
