@@ -14,10 +14,10 @@ const QBHistory = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:7000/api/admin/generate-history"), {
+    axios.get("http://localhost:7000/api/admin/generate-history", {
       headers: {
         'Authorization': `Bearer ${token}`,
-      }}
+      }})
       .then((res) => {
         const formatted = res.data.map((item) => ({
           id: item.id,

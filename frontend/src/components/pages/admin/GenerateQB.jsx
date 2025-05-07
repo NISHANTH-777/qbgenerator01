@@ -68,7 +68,11 @@ const GenerateQuestion = () => {
         const subject = subjectOptions.find(
           (s) => s.course_code === course_code
         );
-        await axios.post("http://localhost:7000/api/admin/generate-history", formData, {
+        await axios.post("http://localhost:7000/api/admin/generate-history", {
+          course_code: course_code,
+          subject_name: subject?.subject_name || "Subject Name",
+          exam_name: exam_type
+        }, {
           headers: {
             'Authorization': `Bearer ${token}`,
           }
