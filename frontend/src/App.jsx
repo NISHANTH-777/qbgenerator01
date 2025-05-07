@@ -12,6 +12,7 @@ import ManageQB from './components/pages/faculty/ManageQB';
 import QBDetails from './components/pages/faculty/QBDetails';
 import AddQuestions from './components/pages/faculty/AddQuestions';
 import GiveTaskForm from './components/pages/admin/GiveTaskForm';
+import QBHistory from './components/pages/admin/QBHistory';
 
 const ProtectedRoute = ({ children, role }) => {
   const user = useSelector((state) => state.user.user);  // Access user from Redux store
@@ -65,6 +66,14 @@ const App = () => {
           element={
             <ProtectedRoute role="admin">
               <QuestionDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/qbhistory"
+          element={
+            <ProtectedRoute role="admin">
+              <QBHistory />
             </ProtectedRoute>
           }
         />

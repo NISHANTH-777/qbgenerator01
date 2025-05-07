@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MdDashboard, MdPeople, MdDescription, MdLibraryBooks, MdLogout } from 'react-icons/md';
+import { MdDashboard, MdPeople, MdDescription, MdLibraryBooks, MdLogout, MdHistory } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
-import { removeUser } from '../../store/userSlice'; // Adjust the path as needed
+import { removeUser } from '../../store/userSlice'; 
 import Logo from '../images/bitlogo.png';
 
 const AdminNavbar = () => {
@@ -15,11 +15,12 @@ const AdminNavbar = () => {
     { to: '/add-task', label: 'Add Task', icon: <MdLibraryBooks size={20} /> },
     { to: '/qbdetails', label: 'QB Details', icon: <MdDescription size={20} /> },
     { to: '/generateqb', label: 'Generate QB', icon: <MdLibraryBooks size={20} /> },
+    { to: '/qbhistory', label: 'QB History', icon: <MdHistory size={20} /> },
   ];
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    dispatch(removeUser()); // Clear user data in Redux
+    dispatch(removeUser());
   };
 
   return (

@@ -40,29 +40,45 @@ const GenerateQuestion = () => {
   }, []);
 
   const fetchPaper = async () => {
+    const { from_unit, to_unit, course_code, department, exam_type } = formData;
+  
+    // Validation
+    if (!course_code || !from_unit || !to_unit || !department || !exam_type) {
+      setError("Please fill all the fields before generating the paper.");
+      return;
+    }
+  
     try {
-      const { from_unit, to_unit, course_code } = formData;
       const from = from_unit.replace("Unit ", "");
       const to = to_unit.replace("Unit ", "");
-
+  
       const res = await axios.get(
-        `http://localhost:7000/api/admin/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`
-        , {
+        `http://localhost:7000/api/admin/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`,
+        {
           headers: {
             'Authorization': `Bearer ${token}`,
-          }});
+          }
+        }
+      );
+  
       if (res.data.error) {
         setError(res.data.error);
         setPaperData(null);
       } else {
         const subject = subjectOptions.find(
-          (s) => s.course_code === formData.course_code
+          (s) => s.course_code === course_code
         );
+        await axios.post("http://localhost:7000/api/admin/generate-history", formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+        
         setPaperData({
           college: "Bannari Amman Institute of Technology",
-          exam_name: "Periodical Test – II",
-          department: "IV Sem – B.E. / B.Tech. CSE",
-          course_code: formData.course_code,
+          exam_name: exam_type,
+          department: `IV Sem – B.E. / B.Tech. ${department}`,
+          course_code,
           subject_name: subject?.subject_name || "Subject Name",
           time: "1:30 hrs",
           max_marks: 50,
@@ -80,6 +96,7 @@ const GenerateQuestion = () => {
       setError("Failed to generate question paper.");
     }
   };
+  
 
   const exportToPDF = () => {
     const element = document.getElementById("question-paper");

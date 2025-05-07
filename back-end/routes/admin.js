@@ -38,23 +38,22 @@ router.get("/generated-qb-stats",verifyToken, (req, res) => {
       });
     });
 });
-  
-// router.get("/get-course-code",verifyToken, (req, res) => {
-//     const { email } = req.query;
-//     if (!email) return res.status(400).send("Missing email");
-  
-//     const query = `
-//       SELECT course_code 
-//       FROM faculty_list 
-//       WHERE email = ?
-//     `;
-  
-//     db.query(query, [email], (err, results) => {
-//       if (err) return res.status(500).send("Error fetching course code");
-//       if (results.length === 0) return res.status(404).send("No course code found");
-//       res.json({ course_code: results[0].course_code });
-//     });
-// });
+
+router.get('/generate-history',verifyToken, (req, res) => {
+  const sql = `
+    SELECT id, course_code, subject_name, exam_name, date_time
+    FROM generated_papers
+    ORDER BY date_time DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching question history:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.json(results);
+  });
+});
+
 
 router.get("/faculty-list",verifyToken, (req, res) => {
     const query = "SELECT * FROM faculty_list";
@@ -73,6 +72,29 @@ router.get("/faculty-question-list",verifyToken, (req, res) => {
       if (!err) res.status(200).json(results);
       else res.status(400).json({ error: err.message });
     });
+});
+
+router.post('/generate-history',verifyToken,(req, res) => {
+  const { course_code, subject_name, exam_name } = req.body;
+
+  if (!course_code || !subject_name || !exam_name) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const date_time = new Date(); 
+
+  const sql = `
+    INSERT INTO generated_papers (course_code, subject_name, exam_name, date_time)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  db.query(sql, [course_code, subject_name, exam_name, date_time], (err, result) => {
+    if (err) {
+      console.error('Error inserting question history:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    res.status(201).json({ message: 'History recorded successfully', insertId: result.insertId });
+  });
 });
   
 router.get("/question-history",verifyToken, (req, res) => {
