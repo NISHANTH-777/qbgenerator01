@@ -9,13 +9,17 @@ import { Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const FacultyList = () => {
+  const token = localStorage.getItem('token');
   const [data, setData] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/api/admin/faculty-list")
+      .get("http://localhost:7000/api/admin/faculty-list", {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }})
       .then((response) => {
         const formatted = response.data.map((item, index) => ({
           id: index + 1,

@@ -8,6 +8,7 @@ import axios from 'axios';
 import { Imagecomp } from '../../images/Imagecomp';
 
 const QuestionDetails = () => {
+  const token = localStorage.getItem('token');
   const [rows, setRows] = useState([]);
   const [clicked, setClicked] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,7 +20,10 @@ const QuestionDetails = () => {
   };
 
   useEffect(() => {
-    axios.get("http://localhost:7000/api/admin/question-history")
+    axios.get("http://localhost:7000/api/admin/question-history", {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }})
       .then((res) => {
         const formatted = res.data.map((item, index) => ({
           id: index + 1,
@@ -66,7 +70,7 @@ const QuestionDetails = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">QUESTION BANK DETAILS</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">QUESTIONS DETAILS</h2>
           </div>
           <Imagecomp />
         </div>

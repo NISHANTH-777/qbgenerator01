@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const seedrandom = require('seedrandom');
 const db = require("../db"); 
+const verifyToken = require('./jwtMiddleware');
 
-router.get("/generated-qb-stats", (req, res) => {
+router.get("/generated-qb-stats",verifyToken, (req, res) => {
     const weeklyQuery = `
       SELECT 
         YEARWEEK(date_time, 1) AS week, 
@@ -38,24 +39,24 @@ router.get("/generated-qb-stats", (req, res) => {
     });
 });
   
-router.get("/get-course-code", (req, res) => {
-    const { email } = req.query;
-    if (!email) return res.status(400).send("Missing email");
+// router.get("/get-course-code",verifyToken, (req, res) => {
+//     const { email } = req.query;
+//     if (!email) return res.status(400).send("Missing email");
   
-    const query = `
-      SELECT course_code 
-      FROM faculty_list 
-      WHERE email = ?
-    `;
+//     const query = `
+//       SELECT course_code 
+//       FROM faculty_list 
+//       WHERE email = ?
+//     `;
   
-    db.query(query, [email], (err, results) => {
-      if (err) return res.status(500).send("Error fetching course code");
-      if (results.length === 0) return res.status(404).send("No course code found");
-      res.json({ course_code: results[0].course_code });
-    });
-});
+//     db.query(query, [email], (err, results) => {
+//       if (err) return res.status(500).send("Error fetching course code");
+//       if (results.length === 0) return res.status(404).send("No course code found");
+//       res.json({ course_code: results[0].course_code });
+//     });
+// });
 
-router.get("/faculty-list", (req, res) => {
+router.get("/faculty-list",verifyToken, (req, res) => {
     const query = "SELECT * FROM faculty_list";
     db.query(query, (err, results) => {
       if (!err) res.status(200).send(results);
@@ -63,7 +64,7 @@ router.get("/faculty-list", (req, res) => {
     });
 });
 
-router.get("/faculty-question-list", (req, res) => {
+router.get("/faculty-question-list",verifyToken, (req, res) => {
     const { course_code } = req.query;
     if (!course_code) return res.status(400).json({ error: "Course code is required" });
   
@@ -74,7 +75,7 @@ router.get("/faculty-question-list", (req, res) => {
     });
 });
   
-router.get("/question-history", (req, res) => {
+router.get("/question-history",verifyToken, (req, res) => {
     const query = `
       SELECT 
         q.id AS id,
@@ -95,7 +96,7 @@ router.get("/question-history", (req, res) => {
     });
 });
   
-router.get("/recently-added", (req, res) => {
+router.get("/recently-added",verifyToken, (req, res) => {
     const query = `
       SELECT fl.course_code,fl.faculty_id, q.unit, q.created_at 
       FROM qb.faculty_list AS fl 
@@ -151,7 +152,7 @@ function groupQuestions(unit, results, usedIds) {
     };
 }
   
-router.get("/generate-qb", (req, res) => {
+router.get("/generate-qb",verifyToken, (req, res) => {
     const { course_code, from_unit, to_unit } = req.query;
   
     if (!course_code || !from_unit || !to_unit) {
@@ -215,7 +216,7 @@ router.get("/generate-qb", (req, res) => {
     });
 });
 
-router.get('/qb-history', (req, res) => {
+router.get('/qb-history', verifyToken,(req, res) => {
     const query = "SELECT course_code, subject_name,exam_name,date_time FROM generated_papers";
   
     db.query(query, (err, results) => {
@@ -227,7 +228,7 @@ router.get('/qb-history', (req, res) => {
     });
 });
 
-router.post('/question-history', (req, res) => {
+router.post('/question-history',verifyToken, (req, res) => {
     const { course_code, subject_name, exam_name } = req.body;
   
   const query = `
@@ -244,7 +245,7 @@ router.post('/question-history', (req, res) => {
   });
 });
 
-router.get("/get-faculty-subjects", (req, res) => {
+router.get("/get-faculty-subjects", verifyToken,(req, res) => {
     const query = "SELECT course_code, subject_name FROM faculty_list";
   
     db.query(query, (err, results) => {
@@ -256,7 +257,7 @@ router.get("/get-faculty-subjects", (req, res) => {
     });
 });
 
-router.post("/give-task", (req, res) => {
+router.post("/give-task",verifyToken, (req, res) => {
     const { faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date } = req.body;
     const query = `INSERT INTO task (faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     db.query(query, [faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date], (err, results) => {

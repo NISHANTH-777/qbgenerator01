@@ -11,6 +11,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { useSelector } from 'react-redux';
 
 const FacultyDashboard = () => {
+  const token = localStorage.getItem('token');
   const [view, setView] = useState("Monthly");
   const [monthlyPeriod, setMonthlyPeriod] = useState("first");
   const [courseCode, setCourseCode] = useState(false);
@@ -24,22 +25,29 @@ const FacultyDashboard = () => {
   useEffect(() => {
     
     if (email) {
+    
       axios
-        .get("http://localhost:7000/api/faculty/get-course-code", {
-          params: { email: email },
-        })
+      .get(`http://localhost:7000/api/faculty/get-course-code?email=${email}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }})
         .then((res) => {
           setCourseCode(res.data.course_code);
         })
         .catch((err) => console.error("Error fetching course code:", err));
     }
+    
   }, []);
 
   useEffect(() => {
+    
     if (courseCode) {
       axios
         .get("http://localhost:7000/api/faculty/faculty-question-stats", {
           params: { course_code: courseCode },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
         .then((res) => {
           const formattedWeekly = res.data.weekly.map(item => ({

@@ -9,19 +9,23 @@ import { Menu } from 'lucide-react';
 import { useSelector } from 'react-redux'; 
 
 const QBDetails = () => {
+  const token = localStorage.getItem('token');
   const [questionRows, setQuestionRows] = useState([]);
   const [courseCode, setCourseCode] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);    
    const email = user.email
+
+   
   useEffect(() => {
-    
     if (email) {
-      axios
-        .get("http://localhost:7000/api/faculty/get-course-code", {
-          params: { email: email },
-        })
+      axios.get("http://localhost:7000/api/faculty/get-course-code", {
+        params: { email: email },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
         .then((res) => {
           setCourseCode(res.data.course_code);
         })
@@ -32,7 +36,11 @@ const QBDetails = () => {
   useEffect(() => {
     if (courseCode) {
       axios
-        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`)
+        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add this to send the token
+          },
+        })
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
@@ -47,7 +55,8 @@ const QBDetails = () => {
           console.error("Error fetching question data:", err);
         });
     }
-  }, [courseCode]);
+  }, [courseCode, token]);  
+  
 
   const questionColumns = [
     { field: 'facultyId', headerName: 'Faculty ID', flex: 1 },

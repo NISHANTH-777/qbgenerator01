@@ -6,9 +6,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUser, removeUser } from '../../store/userSlice';
 
 export const Imagecomp = () => {
+  const token = localStorage.getItem('token')
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const user = useSelector((state) => state.user.use);  
+  const user = useSelector((state) => state.user.user);  
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const [facultyData, setFacultyData] = useState(null);
 
@@ -20,7 +21,10 @@ export const Imagecomp = () => {
   useEffect(() => {
     if (user?.email) {
       axios
-        .get(`http://localhost:7000/api/faculty/faculty-data?email=${user.email}`)
+        .get(`http://localhost:7000/api/faculty/faculty-data?email=${user.email}`,{
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }})
         .then((res) => {
           if (res.data.length > 0) {
             setFacultyData(res.data[0]);
@@ -60,7 +64,7 @@ export const Imagecomp = () => {
                 <p><span className="font-semibold">Subject:</span> {facultyData.subject_name}</p>
                 <p><span className="font-semibold">Course Code:</span> {facultyData.course_code}</p>
                 <p><span className="font-semibold">Email ID:</span> {facultyData.email}</p>
-                <p><span className="font-semibold">Phone No:</span> N/A</p>
+                {/* <p><span className="font-semibold">Phone No:</span> N/A</p> */}
               </div>
             )}
             <button

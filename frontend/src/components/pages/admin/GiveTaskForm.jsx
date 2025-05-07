@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css"; 
 
 const GiveTaskForm = () => {
+  const token = localStorage.getItem('token');
   const [formData, setFormData] = useState({
     faculty_id: "",
     unit: "",
@@ -26,7 +27,10 @@ const GiveTaskForm = () => {
   useEffect(() => {
     const fetchFaculty = async () => {
       try {
-        const res = await axios.get("http://localhost:7000/api/admin/faculty-list");
+        const res = await axios.get("http://localhost:7000/api/admin/faculty-list", {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }});
         setFacultyList(res.data);
       } catch (err) {
         toast.error("Failed to load faculty list");
@@ -46,7 +50,11 @@ const GiveTaskForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:7000/api/admin/give-task", formData);
+      const res = await axios.post("http://localhost:7000/api/admin/give-task", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       toast.success(res.data.message || "Task Assigned Successfully!");
       setFormData({
         faculty_id: "",

@@ -30,9 +30,10 @@ const LoginPage = () => {
         password,
       });
 
-      console.log("Login response:", res.data);
-
       if (res.data.success) {
+        // Store the token in localStorage
+        localStorage.setItem('token', res.data.token);
+
         // Dispatch user data to Redux store
         dispatch(setUser({
           email: res.data.user.email,
@@ -51,8 +52,8 @@ const LoginPage = () => {
         alert(res.data.message || 'Invalid credentials');
       }
     } catch (err) {
-      console.error(err);
-      alert('Login failed.');
+      console.error('Error during manual login:', err);
+      alert('Login failed. Please check your credentials and try again.');
     }
   };
 
@@ -67,6 +68,9 @@ const LoginPage = () => {
       });
 
       if (res.data.exists) {
+        // Store the token in localStorage
+        localStorage.setItem('token', res.data.token);
+
         // Dispatch user data to Redux store
         dispatch(setUser({
           email: user.email,
@@ -76,14 +80,26 @@ const LoginPage = () => {
           photoURL: user.photoURL,
         }));
 
-        navigate('/admindashboard');
+        // Navigate based on role
+        if (res.data.role === 'admin') {
+          navigate('/admindashboard');
+        } else if (res.data.role === 'faculty') {
+          navigate('/facultydashboard');
+        }
       } else {
-        alert('You are not registered.');
+        alert('You are not registered. Please contact the administrator.');
       }
     } catch (error) {
       console.error("Google sign-in error:", error);
-      alert('Google login failed.');
+      alert('Google login failed. Please try again.');
     }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    dispatch(setUser({})); // Clear user data from Redux
+    navigate('/login');
   };
 
   return (
@@ -113,7 +129,7 @@ const LoginPage = () => {
           <input
             type="text"
             className="border-2 border-gray-300 w-full p-3 rounded-lg"
-            placeholder="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

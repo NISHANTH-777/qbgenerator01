@@ -13,15 +13,26 @@ const FacultyTaskProgress = () => {
   useEffect(() => {
     const fetchProgressData = async () => {
       try {
+        const token = localStorage.getItem("token");
+  
         const res = await axios.get("http://localhost:7000/api/faculty/faculty-id", {
           params: { email: email },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-
+  
         const facultyId = res.data.faculty_id;
-
-        const progressRes = await axios.get(`http://localhost:7000/api/faculty/faculty-task-progress/${facultyId}`);
+  
+        // Second request: get progress data
+        const progressRes = await axios.get(`http://localhost:7000/api/faculty/faculty-task-progress/${facultyId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
         const progressData = progressRes.data;
-
+  
         const formattedRows = progressData.flatMap((unitData, unitIndex) =>
           [1, 2, 3, 4, 5, 6].map((mark) => ({
             id: `${unitIndex}-${mark}`,
@@ -30,20 +41,21 @@ const FacultyTaskProgress = () => {
             required: unitData[`m${mark}_required`],
             added: unitData[`m${mark}_added`],
             pending: Math.max(unitData[`m${mark}_required`] - unitData[`m${mark}_added`], 0),
-            due_date: new Date(unitData.due_date).toISOString().split('T')[0]
+            due_date: new Date(unitData.due_date).toISOString().split('T')[0],
           }))
         );
-
+  
         setRows(formattedRows);
       } catch (error) {
         console.error("Error fetching faculty task progress:", error);
       }
     };
-
+  
     if (email) {
       fetchProgressData();
     }
   }, [email]);
+  
 
   const columns = [
     { field: 'unit', headerName: 'Unit', flex:1, align: 'center', headerAlign: 'left' },

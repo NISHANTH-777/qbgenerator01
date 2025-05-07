@@ -5,6 +5,7 @@ const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
 const db = require("../db"); 
+const verifyToken = require('./jwtMiddleware');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -17,7 +18,7 @@ const storage = multer.diskStorage({
   
 const upload = multer({ storage: storage });
   
-router.get("/get-course-code", (req, res) => {
+router.get("/get-course-code",verifyToken, (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).send("Missing email");
   
@@ -34,7 +35,7 @@ router.get("/get-course-code", (req, res) => {
     });
 });
 
-router.get("/faculty-question-stats", (req, res) => {
+router.get("/faculty-question-stats",verifyToken, (req, res) => {
     const courseCode = req.query.course_code;
   
     if (!courseCode) {
@@ -72,7 +73,7 @@ router.get("/faculty-question-stats", (req, res) => {
     });
 });
 
-router.get("/faculty-data", (req, res) => {
+router.get("/faculty-data",verifyToken, (req, res) => {
     const {email} = req.query
     const query = "SELECT * FROM faculty_list WHERE email=?";
     db.query(query,[email], (err, results) => {
@@ -81,7 +82,7 @@ router.get("/faculty-data", (req, res) => {
     });
 });
   
-router.get("/question-view/:id", (req, res) => {
+router.get("/question-view/:id",verifyToken, (req, res) => {
     const { id } = req.params;
     const query = "SELECT * FROM questions WHERE id = ?";
     db.query(query, [id], (err, results) => {
@@ -90,7 +91,7 @@ router.get("/question-view/:id", (req, res) => {
     });
 });
   
-router.put("/question-edit/:id", (req, res) => {
+router.put("/question-edit/:id",verifyToken, (req, res) => {
     const { id } = req.params;
     const { exam_name, unit, topic, mark, question, answer } = req.body;
   
@@ -110,7 +111,7 @@ router.put("/question-edit/:id", (req, res) => {
     });
 });
   
-router.delete("/question-delete/:id", (req, res) => {
+router.delete("/question-delete/:id",verifyToken, (req, res) => {
     const { id } = req.params;
     const query = "DELETE FROM questions WHERE id = ?";
     db.query(query, [id], (err) => {
@@ -119,7 +120,7 @@ router.delete("/question-delete/:id", (req, res) => {
     });
 });
 
-router.get('/faculty-recently-added', (req, res) => {
+router.get('/faculty-recently-added',verifyToken, (req, res) => {
     const courseCode = req.query.course_code;
     
     if (!courseCode) {
@@ -144,7 +145,7 @@ router.get('/faculty-recently-added', (req, res) => {
     });
 });
 
-router.post("/upload", upload.single("file"), (req, res) => {
+router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
   const filePath = path.join(__dirname, "uploads", req.file.filename);
   const courseCode = req.body.course_code;
   const results = [];
@@ -200,7 +201,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
     });
 });
 
-router.post("/add-question", (req, res) => {
+router.post("/add-question",verifyToken, (req, res) => {
   const {
     exam_name,
     unit,
@@ -253,7 +254,7 @@ router.post("/add-question", (req, res) => {
   );
 });
 
-router.get("/faculty-task-progress/:faculty_id", (req, res) => {
+router.get("/faculty-task-progress/:faculty_id",verifyToken, (req, res) => {
     const facultyId = req.params.faculty_id;
     const query = `
       SELECT 
@@ -307,7 +308,7 @@ router.get("/faculty-task-progress/:faculty_id", (req, res) => {
     });
 });
 
-router.get("/faculty-id", (req, res) => {
+router.get("/faculty-id",verifyToken, (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).send("Missing email");
   

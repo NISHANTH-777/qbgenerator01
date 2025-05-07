@@ -8,6 +8,7 @@ import { Imagecomp } from "../../images/Imagecomp";
 import bitlogo from '../../images/bitlogo.png';
 
 const GenerateQuestion = () => {
+  const token = localStorage.getItem('token');
   const [paperData, setPaperData] = useState(null);
   const [formData, setFormData] = useState({
     course_code: "",
@@ -30,7 +31,10 @@ const GenerateQuestion = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/api/admin/get-faculty-subjects")
+      .get("http://localhost:7000/api/admin/get-faculty-subjects", {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }})
       .then((res) => setSubjectOptions(res.data))
       .catch((err) => console.error("Error fetching subject options:", err));
   }, []);
@@ -43,7 +47,10 @@ const GenerateQuestion = () => {
 
       const res = await axios.get(
         `http://localhost:7000/api/admin/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`
-      );
+        , {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }});
       if (res.data.error) {
         setError(res.data.error);
         setPaperData(null);

@@ -16,28 +16,40 @@ const ManageQB = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const token = localStorage.getItem('token');
 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);    
    const email = user.email
-  useEffect(() => {
-    
-    if (email) {
+
+   useEffect(() => {
+  
+    if (email && token) {
       axios
         .get("http://localhost:7000/api/faculty/get-course-code", {
           params: { email: email },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
         .then((res) => {
           setCourseCode(res.data.course_code);
         })
         .catch((err) => console.error("Error fetching course code:", err));
     }
-  }, []);
+  }, [email]); 
+  
 
   useEffect(() => {
     if (courseCode) {
+      
+  
       axios
-        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`)
+        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
@@ -53,55 +65,82 @@ const ManageQB = () => {
         });
     }
   }, [courseCode]);
-
+  
   const handleView = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
+    const token = localStorage.getItem("token");
+  
     axios
-      .get(`http://localhost:7000/question-view/${selected.facultyId}`)
+      .get(`http://localhost:7000/question-view/${selected.facultyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         setSelectedQuestion(res.data[0]);
         setViewModalOpen(true);
       })
       .catch((err) => console.error("Error viewing question:", err));
   };
-
+  
   const handleEdit = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
+    const token = localStorage.getItem("token");
+  
     axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`)
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         setSelectedQuestion(res.data[0]);
         setEditModalOpen(true);
       })
       .catch((err) => console.error("Error fetching for edit:", err));
   };
-
+  
   const handleSaveEdit = () => {
     const { id, exam_name, unit, topic, mark, question, answer } = selectedQuestion;
-
+    const token = localStorage.getItem("token");
+  
     axios
-      .put(`http://localhost:7000/api/faculty/question-edit/${id}`, {
-        exam_name, unit, topic, mark, question, answer,
-      })
+      .put(
+        `http://localhost:7000/api/faculty/question-edit/${id}`,
+        { exam_name, unit, topic, mark, question, answer },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then(() => {
         setEditModalOpen(false);
         setSelectedQuestion(null);
-        window.location.reload(); 
+        window.location.reload();
       })
       .catch((err) => console.error("Error updating question:", err));
   };
-
+  
   const handleDelete = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
+    const token = localStorage.getItem("token");
+  
     if (window.confirm("Are you sure you want to delete this question?")) {
       axios
-        .delete(`http://localhost:7000/api/faculty/question-delete/${selected.facultyId}`)
+        .delete(`http://localhost:7000/api/faculty/question-delete/${selected.facultyId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then(() => {
           setQuestionRows(prev => prev.filter(row => row.id !== rowId));
         })
         .catch((err) => console.error("Error deleting question:", err));
     }
   };
+  
+  
 
   const questionColumns = [
     { field: 'facultyId', headerName: 'Faculty ID', flex: 1 },

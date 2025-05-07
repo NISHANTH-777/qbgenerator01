@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
+const app = express({
+  allowedHeaders: ['Content-Type', 'Authorization']
+});
 app.use(cors());
 app.use(express.json());;
 

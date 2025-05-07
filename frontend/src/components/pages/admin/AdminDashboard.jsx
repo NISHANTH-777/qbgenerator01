@@ -21,17 +21,24 @@ const Admindashboard = () => {
   const [weeklyData, setWeeklyData] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [weekRangeStart, setWeekRangeStart] = useState(0);
+  const token = localStorage.getItem('token');
 
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get("http://localhost:7000/api/admin/recently-added")
+      .get("http://localhost:7000/api/admin/recently-added", {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }})
       .then((res) => setRecentQuestions(res.data))
       .catch((err) => console.error("Failed to fetch recent questions:", err));
 
     axios
-      .get("http://localhost:7000/api/admin/generated-qb-stats")
+      .get("http://localhost:7000/api/admin/generated-qb-stats", {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }})
       .then((res) => {
         const { monthly, weekly } = res.data;
 
