@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require("../db"); // Assuming db is correctly set up
+const db = require("../db"); 
 const verifyToken = require('./jwtMiddleware');
 const jwt = require('jsonwebtoken');
 
@@ -18,11 +18,10 @@ router.post('/check-user', (req, res) => {
       if (results.length > 0) {
           const user = results[0];
 
-          // Generate JWT token if user exists
           const token = jwt.sign(
               { id: user.id, email: user.email, role: user.role },
-              'your-secret-key', // Your secret key for signing the token
-              { expiresIn: '1h' } // Token expiration time
+              'your-secret-key',
+              { expiresIn: '1h' } 
           );
 
           return res.json({
@@ -32,7 +31,7 @@ router.post('/check-user', (req, res) => {
               email: user.email,
               role: user.role,
               course_code: user.course_code,
-              token: token // Return the generated token
+              token: token 
           });
       } else {
           return res.json({ exists: false });
@@ -58,7 +57,6 @@ router.post('/manual-login', (req, res) => {
 
         const user = results[0];
 
-        // Generate JWT token after successful login
         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, 'your-secret-key', { expiresIn: '1h' });
 
         return res.json({
@@ -70,7 +68,7 @@ router.post('/manual-login', (req, res) => {
                 role: user.role,
                 course_code: user.course_code
             },
-            token: token // Return the token
+            token: token 
         });
     });
 });

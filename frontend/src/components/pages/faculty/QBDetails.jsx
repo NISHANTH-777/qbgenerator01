@@ -38,7 +38,7 @@ const QBDetails = () => {
       axios
         .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
           headers: {
-            Authorization: `Bearer ${token}`, // Add this to send the token
+            Authorization: `Bearer ${token}`, 
           },
         })
         .then((res) => {

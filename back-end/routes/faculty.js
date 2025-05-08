@@ -155,7 +155,6 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
-      // Make sure all required fields are present
       if (
         data.exam_name &&
         data.unit &&

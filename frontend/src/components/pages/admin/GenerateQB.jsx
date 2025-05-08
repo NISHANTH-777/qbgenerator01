@@ -42,7 +42,6 @@ const GenerateQuestion = () => {
   const fetchPaper = async () => {
     const { from_unit, to_unit, course_code, department, exam_type } = formData;
   
-    // Validation
     if (!course_code || !from_unit || !to_unit || !department || !exam_type) {
       setError("Please fill all the fields before generating the paper.");
       return;
@@ -106,7 +105,7 @@ const GenerateQuestion = () => {
     const element = document.getElementById("question-paper");
   
     const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2], // Very small margin for compact content
+      margin: [0.2, 0.2, 0.2, 0.2],
       filename: `${paperData.course_code}_question_paper.pdf`,
       image: { type: "jpeg", quality: 1 },
       html2canvas: { scale: 2, useCORS: true },
@@ -115,7 +114,6 @@ const GenerateQuestion = () => {
         format: "a4",
         orientation: "portrait",
       },
-      // No pagebreak option here
     };
   
   

@@ -195,7 +195,6 @@ router.get("/generate-qb",verifyToken, (req, res) => {
     db.query("SELECT * FROM questions WHERE course_code = ?", [course_code], (err, results) => {
       if (err) return res.status(500).json({ error: "Database error" });
   
-      // Seed for consistent shuffle
       const randomSalt = Math.floor(Math.random() * 10000);
       const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
   
@@ -204,7 +203,6 @@ router.get("/generate-qb",verifyToken, (req, res) => {
       const paper = {};
       const usedIds = new Set();
   
-      // Logic for selecting questions for Sections A and B
       for (const section of ["A", "B"]) {
         const unit = sectionUnits[section];
         const { oneMarks, otherMarks } = groupQuestions(unit, shuffledQuestions, usedIds);
@@ -216,13 +214,10 @@ router.get("/generate-qb",verifyToken, (req, res) => {
           return res.status(400).json({ error: `Not enough questions in ${unit} for Section ${section}` });
         }
   
-        // Add questions for Section A and B
         for (let i = 1; i <= 3; i++) {
           paper[`${section}${i}`] = [...selectedOneMarks, ...selectedOtherMarks];
         }
       }
-  
-      // Logic for selecting questions for Section C
       const unitC = sectionUnits.C;
       const { oneMarks: oneMarkC, fourMarks: fourMarkC } = groupQuestions(unitC, shuffledQuestions, usedIds);
   

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
@@ -6,21 +6,21 @@ import LoginPage from './components/pages/LoginPage';
 import Admindashboard from './components/pages/admin/AdminDashboard';
 import FacultyList from './components/pages/admin/FacultyList';
 import GenerateQB from './components/pages/admin/GenerateQB';
-import QuestionDetails from './components/pages/admin/QuestionDetails';
 import FacultyDashboard from './components/pages/faculty/FacultyDashboard';
 import ManageQB from './components/pages/faculty/ManageQB';
 import QBDetails from './components/pages/faculty/QBDetails';
 import AddQuestions from './components/pages/faculty/AddQuestions';
 import GiveTaskForm from './components/pages/admin/GiveTaskForm';
 import QBHistory from './components/pages/admin/QBHistory';
+import Pageplaceholder from './components/pages/admin/PagePlaceholder'; 
+
+const QuestionDetails = lazy(() => import('./components/pages/admin/QuestionDetails'));
 
 const ProtectedRoute = ({ children, role }) => {
-  const user = useSelector((state) => state.user.user);  // Access user from Redux store
-
+  const user = useSelector((state) => state.user.user);
   if (user && user.role === role) {
     return children;
   }
-
   return <Navigate to="/" />;
 };
 
@@ -29,6 +29,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        
         <Route
           path="/admindashboard"
           element={
@@ -65,7 +66,9 @@ const App = () => {
           path="/qbdetails"
           element={
             <ProtectedRoute role="admin">
-              <QuestionDetails />
+              <Suspense fallback={<Pageplaceholder />}>
+                <QuestionDetails />
+              </Suspense>
             </ProtectedRoute>
           }
         />
@@ -77,6 +80,7 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/facultydashboard"
           element={

@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";

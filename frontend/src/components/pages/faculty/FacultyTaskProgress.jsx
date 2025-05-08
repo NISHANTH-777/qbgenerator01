@@ -23,8 +23,7 @@ const FacultyTaskProgress = () => {
         });
   
         const facultyId = res.data.faculty_id;
-  
-        // Second request: get progress data
+
         const progressRes = await axios.get(`http://localhost:7000/api/faculty/faculty-task-progress/${facultyId}`, {
           headers: {
             Authorization: `Bearer ${token}`,

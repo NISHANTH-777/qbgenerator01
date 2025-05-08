@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../../store/userSlice'; // Import the action to set user in Redux
+import { setUser } from '../../store/userSlice'; 
 import { useNavigate } from 'react-router-dom';
 import Tooltip from '@mui/material/Tooltip';
 import IconButton from '@mui/material/IconButton';
@@ -20,7 +20,6 @@ const LoginPage = () => {
     setShowPassword((prev) => !prev);
   };
 
-  // Handle manual login
   const handleManualLogin = async (e) => {
     e.preventDefault();
 
@@ -31,16 +30,13 @@ const LoginPage = () => {
       });
 
       if (res.data.success) {
-        // Store the token in localStorage
         localStorage.setItem('token', res.data.token);
 
-        // Dispatch user data to Redux store
         dispatch(setUser({
           email: res.data.user.email,
           role: res.data.user.role,
         }));
 
-        // Navigate based on user role
         if (res.data.user.role === "admin") {
           navigate('/admindashboard');
         } else if (res.data.user.role === "faculty") {
@@ -57,7 +53,6 @@ const LoginPage = () => {
     }
   };
 
-  // Handle Google login
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -68,10 +63,8 @@ const LoginPage = () => {
       });
 
       if (res.data.exists) {
-        // Store the token in localStorage
         localStorage.setItem('token', res.data.token);
 
-        // Dispatch user data to Redux store
         dispatch(setUser({
           email: user.email,
           name: user.displayName,
@@ -80,7 +73,6 @@ const LoginPage = () => {
           photoURL: user.photoURL,
         }));
 
-        // Navigate based on role
         if (res.data.role === 'admin') {
           navigate('/admindashboard');
         } else if (res.data.role === 'faculty') {
@@ -95,10 +87,9 @@ const LoginPage = () => {
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem('token');
-    dispatch(setUser({})); // Clear user data from Redux
+    dispatch(setUser({})); 
     navigate('/login');
   };
 

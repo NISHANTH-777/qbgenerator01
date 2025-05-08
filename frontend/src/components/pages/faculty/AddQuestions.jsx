@@ -146,9 +146,6 @@ const AddQuestions = () => {
             onSubmit={handleSubmit}
             className="w-full max-w-2xl bg-white/70 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
           >
-            {/* <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2 ">
-              Add a Question
-            </h3> */}
 
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
