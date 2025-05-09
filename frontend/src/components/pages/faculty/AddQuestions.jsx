@@ -11,11 +11,13 @@ import { useSelector } from 'react-redux';
 const AddQuestions = () => {
   const token = localStorage.getItem('token');
   const [formData, setFormData] = useState({
-    exam_name: "",
     unit: "",
+    portion: "",
     topic: "",
     mark: "",
     question: "",
+    cognitive: "",
+    knowledge: "",
     answer: "",
     course_code: "",
     question_type: "",
@@ -28,6 +30,7 @@ const AddQuestions = () => {
   const [file, setFile] = useState(null);
   const [openSidebar, setOpenSidebar] = useState(false);
   const [courseCode, setCourseCode] = useState("");
+
 
   const user = useSelector((state) => state.user.user);    
    const email = user.email
@@ -51,7 +54,10 @@ const AddQuestions = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile); 
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -175,30 +181,39 @@ const AddQuestions = () => {
               <>
                 <div className="space-y-1">
                   <label className="font-medium text-gray-700 flex items-center gap-2">
-                    <ListChecks size={18} /> Exam Name
-                  </label>
-                  <input
-                    type="text"
-                    name="exam_name"
-                    value={formData.exam_name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-medium text-gray-700 flex items-center gap-2">
                     <ListChecks size={18} /> Unit
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                  >
+                     <option value="">-- Select Unit --</option>
+                      <option value="Unit 1">Unit 1</option>
+                      <option value="Unit 2">Unit 2</option>
+                      <option value="Unit 3">Unit 3</option>
+                      <option value="Unit 4">Unit 4</option>
+                      <option value="Unit 5">Unit 5</option>
+                    </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-gray-700 flex items-center gap-2">
+                    <ListChecks size={18} /> Portion
+                  </label>
+                  <select
+                    name="portion"
+                    value={formData.portion}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                     <option value="">-- Select Portion --</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                    </select>
                 </div>
 
                 <div className="space-y-1">
@@ -219,14 +234,21 @@ const AddQuestions = () => {
                   <label className="font-medium text-gray-700 flex items-center gap-2">
                     <ListChecks size={18} /> Mark
                   </label>
-                  <input
-                    type="number"
+                  <select
                     name="mark"
                     value={formData.mark}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                  >
+                    <option value="">-- Select Mark --</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                      <option value="6">6</option>
+                    </select>
                 </div>
 
                 <div className="space-y-1">
@@ -244,32 +266,94 @@ const AddQuestions = () => {
 
                 <div className="space-y-1">
                   <label className="font-medium text-gray-700 flex items-center gap-2">
-                    <ListChecks size={18} /> Answer
-                  </label>
-                  <textarea
-                    name="answer"
-                    value={formData.answer}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-medium text-gray-700 flex items-center gap-2">
-                    <ListChecks size={18} /> Question Type
+                    <ListChecks size={18} /> Component
                   </label>
                   <input
-                    type="text"
-                    name="question_type"
-                    value={formData.question_type}
-                    onChange={handleChange}
-                    required
+                    type="file"
+                    name="component"
+                    onChange={handleFileChange}
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1">
+                      <label className="font-medium text-gray-700 flex items-center gap-2">
+                        <ListChecks size={18} /> Cognitive Dimension
+                      </label>
+                      <select
+                        name="cognitive"
+                        value={formData.cognitive}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">-- Select Option --</option>
+                        <option value="remember">Remember - R</option>
+                        <option value="analyse">Analyse - An</option>
+                        <option value="understand">Understand - U</option>
+                        <option value="Apply">Apply - Ap</option>
+                        <option value="create">Create - C</option>
+                        <option value="evaluate">Evaluate - E</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-medium text-gray-700 flex items-center gap-2">
+                        <ListChecks size={18} /> Knowledge Dimension
+                      </label>
+                      <select
+                        name="knowledge"
+                        value={formData.knowledge}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">-- Select Option --</option>
+                        <option value="factual">Factual - F</option>
+                        <option value="conceptual">Conceptual - C</option>
+                        <option value="procedual">Procedual - P</option>
+                        <option value="metacognitive">Metacognitive - M</option>
+                      </select>
+                    </div>
+              
+                {formData.mark === "1" ? (
+                    <div className="space-y-1">
+                      <label className="font-medium text-gray-700 flex items-center gap-2">
+                        <ListChecks size={18} /> Answer
+                      </label>
+                      <select
+                        name="answer"
+                        value={formData.answer}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">-- Select Option --</option>
+                        <option value="A">{formData.option_a}</option>
+                        <option value="B">{formData.option_b}</option>
+                        <option value="C">{formData.option_c}</option>
+                        <option value="D">{formData.option_d}</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <label className="font-medium text-gray-700 flex items-center gap-2">
+                        <ListChecks size={18} /> Answer
+                      </label>
+                      <textarea
+                        name="answer"
+                        value={formData.answer}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  )}
+               
+
+                {formData.mark === "1" && (
+                  <>
+                  <div className="space-y-1">
                   <label className="font-medium text-gray-700 flex items-center gap-2">
                     <ListChecks size={18} /> Option A
                   </label>
@@ -320,7 +404,10 @@ const AddQuestions = () => {
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
-              </>
+                  </>
+                )}
+                
+                </>
             ) : (
               <div className="space-y-1">
                 <label className="font-medium text-gray-700 flex items-center gap-2">
