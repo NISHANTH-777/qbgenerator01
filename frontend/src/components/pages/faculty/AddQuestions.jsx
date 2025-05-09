@@ -16,11 +16,10 @@ const AddQuestions = () => {
     topic: "",
     mark: "",
     question: "",
-    cognitive: "",
-    knowledge: "",
+    cognitive_dimension: "",
+    knowledge_dimension: "",
     answer: "",
     course_code: "",
-    question_type: "",
     option_a: "",
     option_b: "",
     option_c: "",
@@ -61,7 +60,7 @@ const AddQuestions = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isUpload) {
+    if (!isUpload && formData.mark === "1") {
       if (Object.values(formData).some((val) => !val)) {
         toast.error("All fields are required when submitting manually.");
         return;
@@ -82,6 +81,7 @@ const AddQuestions = () => {
         });
         toast.success("File uploaded successfully!");
       } else {
+        console.log(formData)
         await axios.post("http://localhost:7000/api/faculty/add-question", formData, {
           headers: {
             "Content-Type": "application/json",
@@ -91,13 +91,15 @@ const AddQuestions = () => {
       }
 
       setFormData({
-        exam_name: "",
         unit: "",
+        portion: "",
         topic: "",
         mark: "",
         question: "",
+        cognitive_dimension: "",
+        knowledge_dimension: "",
         answer: "",
-        question_type: "",
+        course_code: "",
         option_a: "",
         option_b: "",
         option_c: "",
@@ -281,19 +283,19 @@ const AddQuestions = () => {
                         <ListChecks size={18} /> Cognitive Dimension
                       </label>
                       <select
-                        name="cognitive"
-                        value={formData.cognitive}
+                        name="cognitive_dimension"
+                        value={formData.cognitive_dimension}
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="">-- Select Option --</option>
-                        <option value="remember">Remember - R</option>
-                        <option value="analyse">Analyse - An</option>
-                        <option value="understand">Understand - U</option>
+                        <option value="Remember">Remember - R</option>
+                        <option value="Analyse">Analyse - An</option>
+                        <option value="Understand">Understand - U</option>
                         <option value="Apply">Apply - Ap</option>
-                        <option value="create">Create - C</option>
-                        <option value="evaluate">Evaluate - E</option>
+                        <option value="Create">Create - C</option>
+                        <option value="Evaluate">Evaluate - E</option>
                       </select>
                     </div>
 
@@ -302,17 +304,17 @@ const AddQuestions = () => {
                         <ListChecks size={18} /> Knowledge Dimension
                       </label>
                       <select
-                        name="knowledge"
-                        value={formData.knowledge}
+                        name="knowledge_dimension"
+                        value={formData.knowledge_dimension}
                         onChange={handleChange}
                         required
                         className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="">-- Select Option --</option>
-                        <option value="factual">Factual - F</option>
-                        <option value="conceptual">Conceptual - C</option>
-                        <option value="procedual">Procedual - P</option>
-                        <option value="metacognitive">Metacognitive - M</option>
+                        <option value="Factual">Factual - F</option>
+                        <option value="Conceptual">Conceptual - C</option>
+                        <option value="Procedual">Procedual - P</option>
+                        <option value="Metacognitive">Metacognitive - M</option>
                       </select>
                     </div>
               
@@ -329,10 +331,10 @@ const AddQuestions = () => {
                         className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="">-- Select Option --</option>
-                        <option value="A">{formData.option_a}</option>
-                        <option value="B">{formData.option_b}</option>
-                        <option value="C">{formData.option_c}</option>
-                        <option value="D">{formData.option_d}</option>
+                        <option value={formData.option_a}>{formData.option_a}</option>
+                        <option value={formData.option_b}>{formData.option_b}</option>
+                        <option value={formData.option_c}>{formData.option_c}</option>
+                        <option value={formData.option_d}>{formData.option_d}</option>
                       </select>
                     </div>
                   ) : (
