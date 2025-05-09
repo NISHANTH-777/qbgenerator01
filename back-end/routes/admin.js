@@ -262,7 +262,7 @@ router.post('/question-history',verifyToken, (req, res) => {
   });
 });
 
-router.get("/get-faculty-subjects", verifyToken,(req, res) => {
+router.get("/get-faculty-subjects",verifyToken,(req, res) => {
     const query = "SELECT course_code, subject_name FROM faculty_list";
   
     db.query(query, (err, results) => {
@@ -275,15 +275,46 @@ router.get("/get-faculty-subjects", verifyToken,(req, res) => {
 });
 
 router.post("/give-task",verifyToken, (req, res) => {
-    const { faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date } = req.body;
-    const query = `INSERT INTO task (faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.query(query, [faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date], (err, results) => {
-      if (err) {
-        return res.status(400).json({ error: err });
-      }
-      res.status(200).json({ message: "Task added successfully", results });
+  const { unit, m1, m2, m3, m4, m5, m6, due_date } = req.body;
+
+  const getFacultyQuery = `SELECT faculty_id FROM faculty_list`;
+
+  db.query(getFacultyQuery, (err, facultyResults) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to fetch faculty list" });
+    }
+
+    if (facultyResults.length === 0) {
+      return res.status(404).json({ message: "No faculty found" });
+    }
+
+    const insertQuery = `
+      INSERT INTO task (faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const tasks = facultyResults.map((faculty) => {
+      return new Promise((resolve, reject) => {
+        db.query(
+          insertQuery,
+          [faculty.faculty_id, unit, m1, m2, m3, m4, m5, m6, due_date],
+          (err, result) => {
+            if (err) return reject(err);
+            resolve();
+          }
+        );
+      });
     });
+
+    Promise.all(tasks)
+      .then(() => {
+        res.status(200).json({ message: "Task assigned to all faculty" });
+      })
+      .catch((err) => {
+        console.error("Error assigning task:", err);
+        res.status(500).json({ error: "Failed to assign task to all faculty" });
+      });
+  });
 });
-  
 
 module.exports = router;

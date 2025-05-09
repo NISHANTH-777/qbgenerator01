@@ -315,7 +315,7 @@ router.get("/faculty-task-progress/:faculty_id",verifyToken, (req, res) => {
     });
 });
 
-router.get("/faculty-id",verifyToken, (req, res) => {
+router.get("/faculty-id", verifyToken , (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).send("Missing email");
   
@@ -333,5 +333,73 @@ router.get("/faculty-id",verifyToken, (req, res) => {
     });
 });
 
+router.post("/question-status", verifyToken, (req, res) => {
+  const { question_id, faculty_id, wetting_id } = req.body;
 
-module.exports = router;
+  if (!question_id || !faculty_id || !wetting_id) {
+    return res.status(400).send("Missing required fields: question_id, faculty_id, or wetting_id");
+  }
+
+  const query = `
+    INSERT INTO question_status (question_id, faculty_id, wetting_id, status)
+    VALUES (?, ?, ?, 'pending')
+  `;
+
+  db.query(
+    query,
+    [question_id, faculty_id, wetting_id],
+    (err, result) => {
+      if (err) {
+        console.error("Error inserting question status:", err);
+        return res.status(500).send("Failed to insert question status");
+      }
+
+      res.status(200).send("Question status added successfully");
+    }
+  );
+});
+
+router.put("/question-status/:question_id", verifyToken, (req, res) => {
+  const { question_id } = req.params;
+  const { status } = req.body;
+  const loginWettingId = req.user.id; // Assuming verifyToken sets req.user
+
+  if (!status) {
+    return res.status(400).send("Missing required field: status");
+  }
+
+  // Step 1: Verify that this user is the wetting_id for the given question
+  const checkQuery = `SELECT wetting_id FROM question_status WHERE question_id = ?`;
+
+  db.query(checkQuery, [question_id], (err, results) => {
+    if (err) {
+      console.error("Error checking wetting_id:", err);
+      return res.status(500).send("Server error");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("Question status not found");
+    }
+
+    const dbWettingId = results[0].wetting_id;
+
+    if (dbWettingId !== loginWettingId) {
+      return res.status(403).send("You are not authorized to update this question status");
+    }
+
+    // Step 2: Proceed with update
+    const updateQuery = `UPDATE question_status SET status = ? WHERE question_id = ?`;
+
+    db.query(updateQuery, [status, question_id], (err, result) => {
+      if (err) {
+        console.error("Error updating status:", err);
+        return res.status(500).send("Failed to update status");
+      }
+
+      res.status(200).send("Question status updated successfully");
+    });
+  });
+});
+
+
+module.exports = router ;
