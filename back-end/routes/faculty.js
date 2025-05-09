@@ -335,7 +335,7 @@ router.get("/faculty-id", verifyToken , (req, res) => {
 
 router.post("/question-status", verifyToken, (req, res) => {
   const { question_id, faculty_id, wetting_id } = req.body;
-
+  
   if (!question_id || !faculty_id || !wetting_id) {
     return res.status(400).send("Missing required fields: question_id, faculty_id, or wetting_id");
   }
@@ -362,13 +362,12 @@ router.post("/question-status", verifyToken, (req, res) => {
 router.put("/question-status/:question_id", verifyToken, (req, res) => {
   const { question_id } = req.params;
   const { status } = req.body;
-  const loginWettingId = req.user.id; // Assuming verifyToken sets req.user
-
+  const loginWettingEmail = req.user.email; 
+  console.log(loginWettingEmail);
   if (!status) {
     return res.status(400).send("Missing required field: status");
   }
 
-  // Step 1: Verify that this user is the wetting_id for the given question
   const checkQuery = `SELECT wetting_id FROM question_status WHERE question_id = ?`;
 
   db.query(checkQuery, [question_id], (err, results) => {
@@ -383,10 +382,19 @@ router.put("/question-status/:question_id", verifyToken, (req, res) => {
 
     const dbWettingId = results[0].wetting_id;
 
-    if (dbWettingId !== loginWettingId) {
+    const loginWettingId = `SELECT faculty_id from faculty_list where email = ?` ;
+    db.query(loginWettingId,[loginWettingEmail],(err,results)=>{
+      if(err){
+        return console.log("Cannot find loginWettingId")
+      }
+      const facultyId = results[0].faculty_id ;
+
+    if (dbWettingId != facultyId) {
       return res.status(403).send("You are not authorized to update this question status");
     }
 
+    })
+ 
     // Step 2: Proceed with update
     const updateQuery = `UPDATE question_status SET status = ? WHERE question_id = ?`;
 

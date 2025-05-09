@@ -317,4 +317,27 @@ router.post("/give-task",verifyToken, (req, res) => {
   });
 });
 
+router.post("/add-wetting", verifyToken, (req, res) => {
+  const { wetting_id, faculty_id} = req.body;
+
+  if (!wetting_id || !faculty_id ) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  const query = `
+    INSERT INTO wetting (wetting_id, faculty_id)
+    VALUES (?, ?)
+  `;
+
+  db.query(query, [wetting_id, faculty_id], (err, result) => {
+    if (err) {
+      console.error("Error inserting wetting record:", err);
+      return res.status(500).json({ message: "Failed to add wetting record" });
+    }
+
+    res.status(200).json({ message: "Wetting entry added successfully" });
+  });
+});
+
+
 module.exports = router;
