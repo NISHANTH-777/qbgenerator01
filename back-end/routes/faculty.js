@@ -93,19 +93,19 @@ router.get("/question-view/:id",verifyToken, (req, res) => {
   
 router.put("/question-edit/:id",verifyToken, (req, res) => {
     const { id } = req.params;
-    const { exam_name, unit, topic, mark, question, answer } = req.body;
+    const { unit, topic, mark, question, answer, figure } = req.body;
   
-    if (!exam_name || !unit || !topic || !mark || !question || !answer) {
+    if (!unit || !topic || !mark || !question || !answer) {
       return res.status(400).json({ message: "All fields are required!" });
     }
   
     const query = `
       UPDATE questions 
-      SET exam_name = ?, unit = ?, topic = ?, mark = ?, question = ?, answer = ?, updated_at = CURRENT_TIMESTAMP 
+      SET unit = ?, topic = ?, mark = ?, question = ?, answer = ?, figure = ?, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ?
     `;
   
-    db.query(query, [exam_name, unit, topic, mark, question, answer, id], (err) => {
+    db.query(query, [unit, topic, mark, question, answer, figure || null, id], (err) => {
       if (!err) res.status(200).send("Updated successfully");
       else res.status(400).send(err);
     });
@@ -156,7 +156,6 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
     .pipe(csv())
     .on("data", (data) => {
       if (
-        data.exam_name &&
         data.unit &&
         data.topic &&
         data.question &&
@@ -170,23 +169,26 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
       results.forEach((row) => {
         const query = `
           INSERT INTO questions 
-          (exam_name, unit, topic, question, answer, mark, course_code, type, option_a, option_b, option_c, option_d) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (unit, topic, question, answer, mark, course_code, option_a, option_b, option_c, option_d, faculty_id, cognitive_dimension, knowledge_dimension, portion, figure) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         db.query(query, [
-          row.exam_name,
           row.unit,
           row.topic,
           row.question,
           row.answer,
           parseInt(row.mark),
           courseCode,
-          row.type || "Descriptive",
           row.option_a || null,
           row.option_b || null,
           row.option_c || null,
-          row.option_d || null
+          row.option_d || null,
+          row.faculty_id || null,
+          row.cognitive_dimension || null,
+          row.knowledge_dimension || null,
+          row.portion || null,
+          row.figure || null
         ], (err) => {
           if (err) console.error("Insert error:", err);
         });
@@ -202,45 +204,51 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
 
 router.post("/add-question",verifyToken, (req, res) => {
   const {
-    exam_name,
     unit,
     topic,
     mark,
     question,
     answer,
     course_code,
-    type,
     option_a,
     option_b,
     option_c,
     option_d,
+    faculty_id,
+    cognitive_dimension,
+    knowledge_dimension,
+    portion,
+    figure
   } = req.body;
 
-  if (!exam_name || !unit || !topic || !mark || !question || !answer || !course_code) {
+  if (!unit || !topic || !mark || !question || !answer || !course_code) {
     return res.status(400).send("Missing required fields");
   }
 
   const query = `
     INSERT INTO questions 
-    (exam_name, unit, topic, mark, question, answer, course_code, type, option_a, option_b, option_c, option_d) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d, faculty_id, cognitive_dimension, knowledge_dimension, portion, figure) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
     query,
     [
-      exam_name,
       unit,
       topic,
       parseInt(mark),
       question,
       answer,
       course_code,
-      type || "Descriptive",
       option_a || null,
       option_b || null,
       option_c || null,
       option_d || null,
+      faculty_id || null,
+      cognitive_dimension || null,
+      knowledge_dimension || null,
+      portion || null,
+      figure || null
     ],
     (err, result) => {
       if (err) {
