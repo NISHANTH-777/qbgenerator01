@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from "react";
 import AdminNavbar from "../../navbar/AdminNavbar";
 import axios from "axios";
-import { Menu, CalendarDays, ListChecks } from "lucide-react";
+import { Menu, CalendarDays, User, ListChecks } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
 import { Drawer } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
 
-const GiveTaskForm = () => {
+const VettingTask = () => {
   const token = localStorage.getItem('token');
   const [formData, setFormData] = useState({
+    faculty_id: "",
+    vetting_id: "",
     unit: "",
-    m1: "",
-    m2: "",
-    m3: "",
-    m4: "",
-    m5: "",
-    m6: "",
     due_date: "",
   });
 
   const [openSidebar, setOpenSidebar] = useState(false);
+  const [facultyList, setFacultyList] = useState([]);
+
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const res = await axios.get("http://localhost:7000/api/admin/faculty-list", {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }});
+        setFacultyList(res.data);
+      } catch (err) {
+        toast.error("Failed to load faculty list");
+      }
+    };
+    fetchFaculty();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,13 +52,9 @@ const GiveTaskForm = () => {
       });
       toast.success(res.data.message || "Task Assigned Successfully!");
       setFormData({
+        faculty_id: "",
+        vetting_id: "",
         unit: "",
-        m1: "",
-        m2: "",
-        m3: "",
-        m4: "",
-        m5: "",
-        m6: "",
         due_date: "",
       });
     } catch (err) {
@@ -85,7 +93,7 @@ const GiveTaskForm = () => {
               <Menu size={28} />
             </button>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-              Task Assignment
+              Vetting Assignment
             </h2>
           </div>
           <div className="mt-4 md:mt-0">
@@ -98,6 +106,45 @@ const GiveTaskForm = () => {
             onSubmit={handleSubmit}
             className="w-full max-w-2xl bg-white/70 border border-gray-200 rounded-lg shadow-xl px-6 sm:px-10 py-8 animate-fadeIn space-y-6"
           >
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <User size={18} /> Question Faculty
+              </label>
+              <select
+                name="faculty_id"
+                value={formData.faculty_id}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Select Faculty</option>
+                {facultyList.map((faculty, idx) => (
+                  <option key={idx} value={faculty.faculty_id}>
+                    {faculty.faculty_id} — {faculty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-medium text-gray-700 flex items-center gap-2">
+                <User size={18} /> Vetting Faculty
+              </label>
+              <select
+                name="vetting_id"
+                value={formData.vetting_id}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">Select Faculty</option>
+                {facultyList.map((faculty, idx) => (
+                  <option key={idx} value={faculty.vetting_id}>
+                    {faculty.faculty_id} — {faculty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
@@ -117,23 +164,7 @@ const GiveTaskForm = () => {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {["m1", "m2", "m3", "m4", "m5", "m6"].map((m) => (
-                <div key={m}>
-                  <label className="text-sm text-gray-600 font-medium">
-                    {`${m.slice(1)}-Mark`}
-                  </label>
-                  <input
-                    type="number"
-                    name={m}
-                    value={formData[m]}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-              ))}
-            </div>
+            
 
             <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
@@ -164,4 +195,4 @@ const GiveTaskForm = () => {
   );
 };
 
-export default GiveTaskForm;
+export default VettingTask;

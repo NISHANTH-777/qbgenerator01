@@ -140,6 +140,7 @@ const Admindashboard = () => {
                   <th className="py-4 px-4">Course Code</th>
                   <th className="py-4 px-4">Unit</th>
                   <th className="py-4 px-4">Date & Time</th>
+                  <th className="py-4 px-4">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,6 +155,7 @@ const Admindashboard = () => {
                     <td className="py-4 px-4">
                       {new Date(q.created_at).toLocaleString()}
                     </td>
+                    <td className="py-4 px-4">{q.status}</td>
                   </tr>
                 ))}
               </tbody>

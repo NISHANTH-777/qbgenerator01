@@ -1,4 +1,4 @@
-import { Eye, Pencil, Trash, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid } from '@mui/x-data-grid';
@@ -9,7 +9,7 @@ import { Imagecomp } from '../../images/Imagecomp';
 import { useSelector } from 'react-redux';
 
 
-const ManageQB = () => {
+const VettingPage = () => {
   const [questionRows, setQuestionRows] = useState([]);
   const [courseCode, setCourseCode] = useState(null);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
@@ -56,6 +56,7 @@ const ManageQB = () => {
             facultyId: item.id,
             code: item.courseCode || courseCode,
             unit: item.unit,
+            status:item.status||'pending',
             datetime: new Date(item.updated_at).toLocaleString(),
           }));
           setQuestionRows(formattedRows);
@@ -71,7 +72,7 @@ const ManageQB = () => {
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/question-view/${selected.facultyId}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -83,62 +84,9 @@ const ManageQB = () => {
       .catch((err) => console.error("Error viewing question:", err));
   };
   
-  const handleEdit = (rowId) => {
-    const selected = questionRows.find(row => row.id === rowId);
-    const token = localStorage.getItem("token");
   
-    axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        setSelectedQuestion(res.data[0]);
-        setEditModalOpen(true);
-      })
-      .catch((err) => console.error("Error fetching for edit:", err));
-  };
   
-  const handleSaveEdit = () => {
-    const { id, exam_name, unit, topic, mark, question, answer } = selectedQuestion;
-    const token = localStorage.getItem("token");
   
-    axios
-      .put(
-        `http://localhost:7000/api/faculty/question-edit/${id}`,
-        { exam_name, unit, topic, mark, question, answer },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then(() => {
-        setEditModalOpen(false);
-        setSelectedQuestion(null);
-        window.location.reload();
-      })
-      .catch((err) => console.error("Error updating question:", err));
-  };
-  
-  const handleDelete = (rowId) => {
-    const selected = questionRows.find(row => row.id === rowId);
-    const token = localStorage.getItem("token");
-  
-    if (window.confirm("Are you sure you want to delete this question?")) {
-      axios
-        .delete(`http://localhost:7000/api/faculty/question-delete/${selected.facultyId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then(() => {
-          setQuestionRows(prev => prev.filter(row => row.id !== rowId));
-        })
-        .catch((err) => console.error("Error deleting question:", err));
-    }
-  };
   
   
 
@@ -147,7 +95,7 @@ const ManageQB = () => {
     { field: 'code', headerName: 'Course Code', flex: 1 },
     { field: 'unit', headerName: 'Unit', flex: 1 },
     { field: 'datetime', headerName: 'Date & Time', flex: 1.2 },
-     { field: 'status' , headerName: 'Status', flex: 1.0 },
+    { field: 'status' , headerName: 'Status', flex: 1.0 },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -155,19 +103,17 @@ const ManageQB = () => {
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <div className="flex gap-4 items-center">
-          <button onClick={() => handleView(params.row.id)} title="View">
-            <Eye className="text-blue-500 hover:scale-110 transition-transform" size={20} />
-          </button>
-          <button onClick={() => handleEdit(params.row.id)} title="Edit">
-            <Pencil className="text-green-500 hover:scale-110 transition-transform" size={20} />
-          </button>
-          <button onClick={() => handleDelete(params.row.id)} title="Delete">
-            <Trash className="text-red-500 hover:scale-110 transition-transform" size={20} />
+        <div className="flex gap-2 px-auto">
+          <button
+            className="flex items-center gap-1 px-6 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition duration-150 w-20 h-8 "
+            onClick={() => handleView(params.row.id)}
+          >
+            View
           </button>
         </div>
-      ),
-    },
+  ),
+}
+
   ];
   
 
@@ -199,7 +145,7 @@ const ManageQB = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">Manage Question Bank</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Vetting Assignments</h2>
           </div>
           <Imagecomp />
         </div>
@@ -285,4 +231,4 @@ const ManageQB = () => {
   );
 };
 
-export default ManageQB;
+export default VettingPage;

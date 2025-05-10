@@ -13,6 +13,8 @@ import AddQuestions from './components/pages/faculty/AddQuestions';
 import GiveTaskForm from './components/pages/admin/GiveTaskForm';
 import QBHistory from './components/pages/admin/QBHistory';
 import Pageplaceholder from './components/pages/admin/PagePlaceholder'; 
+import VettingPage from './components/pages/faculty/VettingPage';
+import VettingTask from './components/pages/admin/VettingTask';
 
 const QuestionDetails = lazy(() => import('./components/pages/admin/QuestionDetails'));
 
@@ -51,6 +53,14 @@ const App = () => {
           element={
             <ProtectedRoute role="admin">
               <GiveTaskForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vettingtask"
+          element={
+            <ProtectedRoute role="admin">
+              <VettingTask />
             </ProtectedRoute>
           }
         />
@@ -94,6 +104,14 @@ const App = () => {
           element={
             <ProtectedRoute role="faculty">
               <ManageQB />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vettingpage"
+          element={
+            <ProtectedRoute role="faculty">
+              <VettingPage />
             </ProtectedRoute>
           }
         />

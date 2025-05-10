@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks, MdLibraryAdd } from 'react-icons/md';
+import { MdDashboard, MdDescription, MdLogout, MdLibraryBooks, MdLibraryAdd,MdChecklist } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { removeUser } from '../../store/userSlice';
 import Logo from '../images/bitlogo.png';
@@ -14,6 +14,7 @@ const FacultyNavbar = () => {
     { to: '/qbdetailsf', label: 'QB Details', icon: <MdDescription size={20} /> },
     { to: '/manageqb', label: 'Manage QB', icon: <MdLibraryBooks size={20} /> },
     { to: '/addquestions', label: 'Add Questions', icon: <MdLibraryAdd size={20} /> },
+    { to: '/vettingpage', label: 'Vetting Page', icon: <MdChecklist size={20} /> },
   ];
 
   const handleLogout = () => {
