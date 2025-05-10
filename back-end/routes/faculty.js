@@ -81,7 +81,16 @@ router.get("/faculty-data",verifyToken, (req, res) => {
       else return res.status(400).send(err);
     });
 });
-  
+
+router.get("/get-wetting-id",verifyToken,(req,res)=>{
+  const {faculty_id} = req.query ;
+  const query = "SELECT wetting_id FROM wetting WHERE faculty_id=?";
+    db.query(query,[faculty_id], (err, results) => {
+      if (!err) res.status(200).send(results);
+      else return res.status(400).send(err);
+    });
+})
+
 router.get("/question-view/:id",verifyToken, (req, res) => {
     const { id } = req.params;
     const query = "SELECT * FROM questions WHERE id = ?";
@@ -202,65 +211,6 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
     });
 });
 
-router.post("/add-question",verifyToken, (req, res) => {
-  const {
-    unit,
-    topic,
-    mark,
-    question,
-    answer,
-    course_code,
-    option_a,
-    option_b,
-    option_c,
-    option_d,
-    faculty_id,
-    cognitive_dimension,
-    knowledge_dimension,
-    portion,
-    figure
-  } = req.body;
-
-  if (!unit || !topic || !mark || !question || !answer || !course_code) {
-    return res.status(400).send("Missing required fields");
-  }
-
-  const query = `
-    INSERT INTO questions 
-    (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d, faculty_id, cognitive_dimension, knowledge_dimension, portion, figure) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(
-    query,
-    [
-      unit,
-      topic,
-      parseInt(mark),
-      question,
-      answer,
-      course_code,
-      option_a || null,
-      option_b || null,
-      option_c || null,
-      option_d || null,
-      faculty_id || null,
-      cognitive_dimension || null,
-      knowledge_dimension || null,
-      portion || null,
-      figure || null
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting question:", err);
-        return res.status(500).send("Failed to insert question");
-      }
-
-      res.status(200).send("Question added successfully");
-    }
-  );
-});
-
 router.get("/faculty-task-progress/:faculty_id",verifyToken, (req, res) => {
     const facultyId = req.params.faculty_id;
     const query = `
@@ -333,81 +283,120 @@ router.get("/faculty-id", verifyToken , (req, res) => {
     });
 });
 
-router.post("/question-status", verifyToken, (req, res) => {
-  const { question_id, faculty_id, wetting_id } = req.body;
-  
-  if (!question_id || !faculty_id || !wetting_id) {
-    return res.status(400).send("Missing required fields: question_id, faculty_id, or wetting_id");
+router.post("/add-question", verifyToken, (req, res) => {
+  const {
+    unit, topic, mark, question, answer, course_code,
+    option_a, option_b, option_c, option_d,
+    faculty_id, wetting_id,
+    cognitive_dimension, knowledge_dimension, portion, figure
+  } = req.body;
+
+  if (!unit || !topic || !mark || !question || !answer || !course_code || !faculty_id || !wetting_id) {
+    return res.status(400).send("Missing required fields");
   }
 
   const query = `
-    INSERT INTO question_status (question_id, faculty_id, wetting_id, status)
-    VALUES (?, ?, ?, 'pending')
+    INSERT INTO question_status 
+    (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+     faculty_id, wetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `;
 
   db.query(
     query,
-    [question_id, faculty_id, wetting_id],
+    [unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+     faculty_id, wetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
     (err, result) => {
       if (err) {
         console.error("Error inserting question status:", err);
-        return res.status(500).send("Failed to insert question status");
+        return res.status(500).send("Failed to insert question");
       }
 
-      res.status(200).send("Question status added successfully");
+      res.status(200).send("Question submitted for review");
     }
   );
 });
 
-router.put("/question-status/:question_id", verifyToken, (req, res) => {
+router.put("/review-question/:question_id", verifyToken, (req, res) => {
   const { question_id } = req.params;
-  const { status } = req.body;
-  const loginWettingEmail = req.user.email; 
-  console.log(loginWettingEmail);
-  if (!status) {
-    return res.status(400).send("Missing required field: status");
+  const { status, remarks } = req.body;
+  const loginWettingEmail = req.user.email;
+
+  if (!status || (status !== "accepted" && status !== "rejected")) {
+    return res.status(400).send("Invalid or missing status");
   }
 
-  const checkQuery = `SELECT wetting_id FROM question_status WHERE question_id = ?`;
+  // Step 1: Get wetting_id from question_status
+  const getStatusQuery = `SELECT * FROM question_status WHERE question_id = ?`;
 
-  db.query(checkQuery, [question_id], (err, results) => {
+  db.query(getStatusQuery, [question_id], (err, statusResults) => {
     if (err) {
-      console.error("Error checking wetting_id:", err);
-      return res.status(500).send("Server error");
+      console.error("Error fetching question_status:", err);
+      return res.status(500).send("Error fetching question status");
     }
 
-    if (results.length === 0) {
+    if (statusResults.length === 0) {
       return res.status(404).send("Question status not found");
     }
 
-    const dbWettingId = results[0].wetting_id;
+    const question = statusResults[0];
+    const dbWettingId = question.wetting_id;
 
-    const loginWettingId = `SELECT faculty_id from faculty_list where email = ?` ;
-    db.query(loginWettingId,[loginWettingEmail],(err,results)=>{
-      if(err){
-        return console.log("Cannot find loginWettingId")
-      }
-      const facultyId = results[0].faculty_id ;
+    // Step 2: Get current logged-in wetting's faculty_id using email
+    const wettingQuery = `SELECT faculty_id FROM faculty_list WHERE email = ?`;
 
-    if (dbWettingId != facultyId) {
-      return res.status(403).send("You are not authorized to update this question status");
-    }
-
-    })
- 
-    // Step 2: Proceed with update
-    const updateQuery = `UPDATE question_status SET status = ? WHERE question_id = ?`;
-
-    db.query(updateQuery, [status, question_id], (err, result) => {
-      if (err) {
-        console.error("Error updating status:", err);
-        return res.status(500).send("Failed to update status");
+    db.query(wettingQuery, [loginWettingEmail], (err2, wettingResults) => {
+      if (err2) {
+        console.error("Error fetching wetting ID:", err2);
+        return res.status(500).send("Error verifying reviewer");
       }
 
-      res.status(200).send("Question status updated successfully");
+      const loginWettingId = wettingResults[0]?.faculty_id;
+
+      if (dbWettingId !== loginWettingId) {
+        return res.status(403).send("You are not authorized to review this question");
+      }
+
+      // Step 3: Process based on status
+      if (status === "accepted") {
+        const insertQuery = `
+          INSERT INTO questions 
+          (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+           faculty_id, cognitive_dimension, knowledge_dimension, portion, figure)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(insertQuery, [
+          question.unit, question.topic, question.mark, question.question, question.answer,
+          question.course_code, question.option_a, question.option_b, question.option_c, question.option_d,
+          question.faculty_id, question.cognitive_dimension, question.knowledge_dimension,
+          question.portion, question.figure
+        ], (err3) => {
+          if (err3) {
+            console.error("Error inserting accepted question:", err3);
+            return res.status(500).send("Error inserting accepted question");
+          }
+
+          const updateQuery = `UPDATE question_status SET status = 'accepted' WHERE question_id = ?`;
+          db.query(updateQuery, [question_id], (err4) => {
+            if (err4) return res.status(500).send("Inserted but failed to update status");
+            res.status(200).send("Question accepted and inserted successfully");
+          });
+        });
+
+      } else {
+        // Rejected path
+        const updateQuery = `UPDATE question_status SET status = 'rejected', remarks = ? WHERE question_id = ?`;
+        db.query(updateQuery, [remarks || null, question_id], (err5) => {
+          if (err5) {
+            console.error("Error updating rejected status:", err5);
+            return res.status(500).send("Failed to update rejection");
+          }
+          res.status(200).send("Question rejected with remarks");
+        });
+      }
     });
   });
 });
-
 
 module.exports = router ;
