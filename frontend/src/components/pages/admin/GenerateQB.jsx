@@ -269,6 +269,9 @@ const GenerateQuestion = () => {
             <option value="">-- Select Exam Type --</option>
             <option value="Periodical Test - I">PT-1</option>
             <option value="Periodical Test - II">PT-2</option>
+            <option value="Optional Test - II">Optional Test - 2</option>
+            <option value="Optional Test - II">Optional Test - 2</option>
+            <option value="End Semester">End Semester</option>
           </select>
 
           <select
@@ -341,45 +344,43 @@ const GenerateQuestion = () => {
                 </div>
               </div>
 
-              <div className="border border-black rounded-md p-4 mb-6 shadow-sm">
-                <div className="flex items-start justify-center gap-4">
-                  <div className="pr-4 border-r border-black flex justify-center items-center">
-                    <img
-                      src={bitlogo}
-                      alt="BIT LOGO"
-                      className="w-48 h-36 object-contain"
-                    />
-                  </div>
-
-                  <div className="flex flex-col w-full px-4">
-                    <div className="text-center pb-2 border-b border-black">
-                      <h1 className="text-lg font-bold uppercase">
-                        {paperData.college}
-                      </h1>
-                      <p className="text-sm italic">
-                        (An Autonomous Institution Affiliated to Anna University)
-                      </p>
-                      <p className="text-md font-semibold">
-                        SATHYAMANGALAM - 638 401
-                      </p>
+              <div className="border border-black rounded-md mb-6 shadow-sm">
+                  <div className="flex items-stretch justify-center ">
+                    <div className="border-r border-black flex justify-center items-center w-1/6 py-4">
+                      <img
+                        src={bitlogo}
+                        alt="BIT LOGO"
+                        className="w-48 h-36 object-contain"
+                      />
                     </div>
+                    <div className="flex flex-col w-full justify-center">
+                      <div className="text-center mb-2 border-b border-black pb-2">
+                        <h1 className="text-lg font-bold uppercase">
+                          {paperData.college}
+                        </h1>
+                        <p className="text-sm italic">
+                          (An Autonomous Institution Affiliated to Anna University)
+                        </p>
+                        <p className="text-md font-semibold">
+                          SATHYAMANGALAM - 638 401
+                        </p>
+                      </div>
 
-                    <div className="text-center pt-2">
-                    <h2 className="text-md font-semibold">
-                       {formData.exam_type && ` ${formData.exam_type}`}
-                     </h2>
+                      <div className="text-center pt-2">
+                        <h2 className="text-md font-semibold">
+                          {formData.exam_type && ` ${formData.exam_type}`}
+                        </h2>
 
-
-                     {formData.department && (
-                         <div className="text-sm font-semibold mt-2 ">
-                           Department :  <strong>{formData.department}</strong>
-                         </div>
-                       )}
-                     </div>
-
+                        {formData.department && (
+                          <div className="text-sm font-semibold my-1">
+                            Department : <strong>{formData.department}</strong>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+
 
               <div className="flex flex-col text-sm mb-4">
                 <div>
