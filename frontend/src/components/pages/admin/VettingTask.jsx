@@ -45,7 +45,7 @@ const VettingTask = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:7000/api/admin/give-task", formData, {
+      const res = await axios.post("http://localhost:7000/api/admin/add-vetting", formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -54,8 +54,8 @@ const VettingTask = () => {
       setFormData({
         faculty_id: "",
         vetting_id: "",
-        unit: "",
-        due_date: "",
+        // unit: "",
+        // due_date: "",
       });
     } catch (err) {
       toast.error("Failed to assign task");
@@ -117,10 +117,10 @@ const VettingTask = () => {
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
-                <option value="">Select Faculty</option>
+                <option value="">-- Select Faculty --</option>
                 {facultyList.map((faculty, idx) => (
                   <option key={idx} value={faculty.faculty_id}>
-                    {faculty.faculty_id} — {faculty.name}
+                    {faculty.faculty_id} — {faculty.faculty_name}
                   </option>
                 ))}
               </select>
@@ -137,16 +137,16 @@ const VettingTask = () => {
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
-                <option value="">Select Faculty</option>
+                <option value="">-- Select Faculty --</option>
                 {facultyList.map((faculty, idx) => (
-                  <option key={idx} value={faculty.vetting_id}>
-                    {faculty.faculty_id} — {faculty.name}
+                  <option key={idx} value={faculty.faculty_id}>
+                    {faculty.faculty_id} — {faculty.faculty_name}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <label className="font-medium text-gray-700 flex items-center gap-2">
                 <ListChecks size={18} /> Unit
               </label>
@@ -178,7 +178,7 @@ const VettingTask = () => {
                 required
                 className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-            </div>
+            </div> */}
 
             <button
               type="submit"

@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useSelector } from 'react-redux';
 
 const AddQuestions = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
     unit: "",
     portion: "",
@@ -24,44 +24,80 @@ const AddQuestions = () => {
     option_b: "",
     option_c: "",
     option_d: "",
+    vetting_id: "",
   });
   const [isUpload, setIsUpload] = useState(false);
   const [file, setFile] = useState(null);
   const [openSidebar, setOpenSidebar] = useState(false);
   const [courseCode, setCourseCode] = useState("");
+  const [vettingId, setVettingId] = useState("");
 
+  const user = useSelector((state) => state.user.user);
+  const email = user?.email;
 
-  const user = useSelector((state) => state.user.user);    
-   const email = user.email
-   if (!email) throw new Error("User not logged in");
   useEffect(() => {
+    if (!email) return;
     axios
       .get(`http://localhost:7000/api/faculty/get-course-code?email=${email}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-        }})
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         setCourseCode(res.data.course_code);
-        setFormData((prev) => ({ ...prev, course_code: res.data.course_code }));
+        setFormData((prev) => ({
+          ...prev,
+          course_code: res.data.course_code,
+        }));
       })
-      .catch((err) => {
+      .catch(() => {
         toast.error("Failed to load course code.");
       });
-  }, []);
+  }, [email, token]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:7000/api/faculty/get-vetting-id", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setVettingId(res.data.vetting_id);
+        setFormData((prev) => ({
+          ...prev,
+          vetting_id: res.data.vetting_id,
+        }));
+      })
+      .catch(() => {
+        toast.error("Failed to load vetting id.");
+      });
+  }, [token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile); 
+    setFile(selectedFile);
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isUpload && formData.mark === "1") {
-      if (Object.values(formData).some((val) => !val)) {
+      if (
+        !formData.unit ||
+        !formData.portion ||
+        !formData.topic ||
+        !formData.mark ||
+        !formData.question ||
+        !formData.answer ||
+        !formData.cognitive_dimension ||
+        !formData.knowledge_dimension
+      ) {
         toast.error("All fields are required when submitting manually.");
         return;
       }
@@ -69,11 +105,11 @@ const AddQuestions = () => {
 
     try {
       if (isUpload && file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("course_code", courseCode);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", file);
+        uploadFormData.append("course_code", courseCode);
 
-        await axios.post("http://localhost:7000/api/faculty/upload", formData, {
+        await axios.post("http://localhost:7000/api/faculty/upload", uploadFormData, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -81,16 +117,17 @@ const AddQuestions = () => {
         });
         toast.success("File uploaded successfully!");
       } else {
-        console.log(formData)
         await axios.post("http://localhost:7000/api/faculty/add-question", formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+        toast.success("Question added successfully!");
       }
 
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         unit: "",
         portion: "",
         topic: "",
@@ -99,12 +136,13 @@ const AddQuestions = () => {
         cognitive_dimension: "",
         knowledge_dimension: "",
         answer: "",
-        course_code: "",
         option_a: "",
         option_b: "",
         option_c: "",
         option_d: "",
-      });
+        course_code: courseCode,
+        vetting_id: vettingId,
+      }));
       setFile(null);
     } catch (error) {
       toast.error("Error adding question.");

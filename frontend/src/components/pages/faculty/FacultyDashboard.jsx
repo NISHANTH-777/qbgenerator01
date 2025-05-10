@@ -2,16 +2,20 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import FacultyNavbar from "../../navbar/FacultyNavbar";
-import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Imagecomp } from "../../images/Imagecomp";
 import FacultyTaskProgress from './FacultyTaskProgress';
 import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser, setVettingId } from '../../../store/userSlice';
 
 const FacultyDashboard = () => {
   const token = localStorage.getItem('token');
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.user);
+  const vettingId = useSelector((state) => state.user.vetting_id); // Get vetting_id from Redux
+
   const [view, setView] = useState("Monthly");
   const [monthlyPeriod, setMonthlyPeriod] = useState("first");
   const [courseCode, setCourseCode] = useState(false);
@@ -19,53 +23,98 @@ const FacultyDashboard = () => {
   const [weeklyStats, setWeeklyStats] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [openSidebar, setOpenSidebar] = useState(false);
- const user = useSelector((state) => state.user.user);  
-  const email = user.email
-  console.log(email)
+
+  // Fetch course code based on user.email
   useEffect(() => {
-    
-    if (email) {
-    
+    if (user?.email) {
       axios
-      .get(`http://localhost:7000/api/faculty/get-course-code?email=${email}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }})
+        .get(`http://localhost:7000/api/faculty/get-course-code`, {
+          params: { email: user.email },
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((res) => {
           setCourseCode(res.data.course_code);
+          console.log("Course Code:", res.data.course_code); // Log course code
         })
         .catch((err) => console.error("Error fetching course code:", err));
     }
-    
-  }, []);
+  }, [user?.email, token]);
 
+  // Fetch faculty data (including vetting_id)
   useEffect(() => {
-    
+    const fetchFacultyData = async () => {
+      const email = user?.email;
+
+      if (!email) return;
+
+      try {
+        const response = await axios.get(
+          `http://localhost:7000/api/faculty/faculty-data?email=${email}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.data.length > 0) {
+          dispatch(setUser(response.data[0]));
+        }
+      } catch (error) {
+        console.error("Error fetching faculty data:", error);
+      }
+    };
+
+    fetchFacultyData();
+  }, [dispatch, token, user?.email]);
+
+  // Fetch vetting_id and dispatch to Redux
+  useEffect(() => {
+    if (user?.email) {
+      axios
+        .get("http://localhost:7000/api/faculty/get-vetting-id", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          console.log("Vetting ID Response:", res.data); // Log vetting ID response
+          if (res.data && res.data.vetting_id) {
+            dispatch(setVettingId(res.data.vetting_id)); // Dispatch vetting_id to Redux
+          } else {
+            console.error("Vetting ID not found in response.");
+          }
+        })
+        .catch((err) => console.error("Error fetching vetting ID:", err));
+    }
+  }, [dispatch, token, user?.email]);
+
+  // Fetch weekly/monthly stats once course code is available
+  useEffect(() => {
     if (courseCode) {
       axios
         .get("http://localhost:7000/api/faculty/faculty-question-stats", {
           params: { course_code: courseCode },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
-          const formattedWeekly = res.data.weekly.map(item => ({
-            name: `W${item.week % 100}`, 
-            QB_Added: item.total_papers
-          }));
+          console.log("Stats Response:", res.data); // Log the full response
+          if (res.data) {
+            const formattedWeekly = res.data.weekly.map(item => ({
+              name: `W${item.week % 100}`,
+              QB_Added: item.total_papers,
+            }));
 
-          const formattedMonthly = res.data.monthly.map(item => ({
-            name: item.month,
-            QB_Added: item.total_papers
-          }));
+            const formattedMonthly = res.data.monthly.map(item => ({
+              name: item.month,
+              QB_Added: item.total_papers,
+            }));
 
-          setWeeklyStats(formattedWeekly);
-          setMonthlyStats(formattedMonthly);
+            setWeeklyStats(formattedWeekly);
+            setMonthlyStats(formattedMonthly);
+          } else {
+            console.error("No data returned from stats API.");
+          }
         })
         .catch((err) => console.error("Failed to fetch stats:", err));
     }
-  }, [courseCode]);
+  }, [courseCode, token]);
 
   const filteredMonthlyData =
     monthlyPeriod === "first"
@@ -151,14 +200,37 @@ const FacultyDashboard = () => {
             </div>
           )}
 
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={view === "Monthly" ? filteredMonthlyData : weeklyStats}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="QB_Added" fill="#3B82F6" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {/* Conditionally render the charts */}
+          {(view === "Monthly" && monthlyStats.length > 0) && (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={filteredMonthlyData}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="QB_Added" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+
+          {(view === "Weekly" && weeklyStats.length > 0) && (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={weeklyStats}>
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="QB_Added" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+
+          {/* Handle loading state */}
+          {(view === "Monthly" && monthlyStats.length === 0) && (
+            <p>Loading monthly stats...</p>
+          )}
+
+          {(view === "Weekly" && weeklyStats.length === 0) && (
+            <p>Loading weekly stats...</p>
+          )}
         </div>
       </div>
     </div>

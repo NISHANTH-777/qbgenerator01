@@ -82,12 +82,13 @@ router.get("/faculty-data",verifyToken, (req, res) => {
     });
 });
 
-router.get("/get-wetting-id",verifyToken,(req,res)=>{
+router.get("/get-vetting-id",verifyToken,(req,res)=>{
   const {faculty_id} = req.query ;
-  const query = "SELECT wetting_id FROM wetting WHERE faculty_id=?";
+  const query = "SELECT vetting_id FROM vetting WHERE faculty_id=?";
     db.query(query,[faculty_id], (err, results) => {
       if (!err) res.status(200).send(results);
       else return res.status(400).send(err);
+      console.log(results);
     });
 })
 
@@ -287,25 +288,25 @@ router.post("/add-question", verifyToken, (req, res) => {
   const {
     unit, topic, mark, question, answer, course_code,
     option_a, option_b, option_c, option_d,
-    faculty_id, wetting_id,
+    faculty_id, vetting_id,
     cognitive_dimension, knowledge_dimension, portion, figure
   } = req.body;
 
-  if (!unit || !topic || !mark || !question || !answer || !course_code || !faculty_id || !wetting_id) {
+  if (!unit || !topic || !mark || !question || !answer || !course_code || !faculty_id || !vetting_id) {
     return res.status(400).send("Missing required fields");
   }
 
   const query = `
     INSERT INTO question_status 
     (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
-     faculty_id, wetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
+     faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `;
 
   db.query(
     query,
     [unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
-     faculty_id, wetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
+     faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
     (err, result) => {
       if (err) {
         console.error("Error inserting question status:", err);
@@ -320,13 +321,13 @@ router.post("/add-question", verifyToken, (req, res) => {
 router.put("/review-question/:question_id", verifyToken, (req, res) => {
   const { question_id } = req.params;
   const { status, remarks } = req.body;
-  const loginWettingEmail = req.user.email;
+  const loginVettingEmail = req.user.email;
 
   if (!status || (status !== "accepted" && status !== "rejected")) {
     return res.status(400).send("Invalid or missing status");
   }
 
-  // Step 1: Get wetting_id from question_status
+  // Step 1: Get vetting_id from question_status
   const getStatusQuery = `SELECT * FROM question_status WHERE question_id = ?`;
 
   db.query(getStatusQuery, [question_id], (err, statusResults) => {
@@ -340,20 +341,20 @@ router.put("/review-question/:question_id", verifyToken, (req, res) => {
     }
 
     const question = statusResults[0];
-    const dbWettingId = question.wetting_id;
+    const dbVettingId = question.vetting_id;
 
-    // Step 2: Get current logged-in wetting's faculty_id using email
-    const wettingQuery = `SELECT faculty_id FROM faculty_list WHERE email = ?`;
+    // Step 2: Get current logged-in vetting's faculty_id using email
+    const vettingQuery = `SELECT faculty_id FROM faculty_list WHERE email = ?`;
 
-    db.query(wettingQuery, [loginWettingEmail], (err2, wettingResults) => {
+    db.query(vettingQuery, [loginVettingEmail], (err2, vettingResults) => {
       if (err2) {
-        console.error("Error fetching wetting ID:", err2);
+        console.error("Error fetching vetting ID:", err2);
         return res.status(500).send("Error verifying reviewer");
       }
 
-      const loginWettingId = wettingResults[0]?.faculty_id;
+      const loginVettingId = vettingResults[0]?.faculty_id;
 
-      if (dbWettingId !== loginWettingId) {
+      if (dbVettingId !== loginVettingId) {
         return res.status(403).send("You are not authorized to review this question");
       }
 
