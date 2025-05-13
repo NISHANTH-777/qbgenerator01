@@ -31,6 +31,7 @@ const QuestionDetails = () => {
           code: item.course_code,
           unit: item.unit,
           datetime: new Date(item.created_at).toLocaleString(),
+          status:item.status 
         }));
         setRows(formatted);
       })

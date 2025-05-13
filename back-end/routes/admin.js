@@ -104,11 +104,12 @@ router.get("/question-history",verifyToken, (req, res) => {
         fl.faculty_id,
         fl.course_code,
         q.unit,
-        q.created_at 
+        q.created_at ,
+        q.status
       FROM 
         qb.faculty_list AS fl 
       JOIN 
-        qb.questions AS q 
+        qb.question_status AS q 
       ON 
         fl.course_code = q.course_code
     `;
@@ -120,9 +121,9 @@ router.get("/question-history",verifyToken, (req, res) => {
   
 router.get("/recently-added",verifyToken, (req, res) => {
     const query = `
-      SELECT fl.course_code,fl.faculty_id, q.unit, q.created_at 
+      SELECT fl.course_code,fl.faculty_id, q.unit, q.created_at ,q.status
       FROM qb.faculty_list AS fl 
-      JOIN qb.questions AS q ON fl.course_code = q.course_code 
+      JOIN qb.question_status AS q ON fl.course_code = q.course_code 
       ORDER BY q.created_at DESC 
       LIMIT 5
     `;
