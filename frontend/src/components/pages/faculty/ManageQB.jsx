@@ -57,6 +57,7 @@ const ManageQB = () => {
             code: item.courseCode || courseCode,
             unit: item.unit,
             datetime: new Date(item.updated_at).toLocaleString(),
+            status: item.status,
           }));
           setQuestionRows(formattedRows);
         })
@@ -71,7 +72,7 @@ const ManageQB = () => {
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/question-view/${selected.facultyId}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

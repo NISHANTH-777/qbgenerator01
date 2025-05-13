@@ -25,6 +25,7 @@ const AddQuestions = () => {
     option_c: "",
     option_d: "",
     vetting_id: "",
+    faculty_id:""
   });
   const [isUpload, setIsUpload] = useState(false);
   const [file, setFile] = useState(null);
@@ -33,7 +34,10 @@ const AddQuestions = () => {
   const [vettingId, setVettingId] = useState("");
 
   const user = useSelector((state) => state.user.user);
+  // console.log(user)
   const email = user?.email;
+  const facultyId = user?.faculty_id;
+  console.log(facultyId)
 
   useEffect(() => {
     if (!email) return;
@@ -56,11 +60,9 @@ const AddQuestions = () => {
   }, [email, token]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:7000/api/faculty/get-vetting-id", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      axios.get("http://localhost:7000/api/faculty/get-vetting-id", {
+        params: { faculty_id: user.faculty_id },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
         setVettingId(res.data.vetting_id);
@@ -72,7 +74,7 @@ const AddQuestions = () => {
       .catch(() => {
         toast.error("Failed to load vetting id.");
       });
-  }, [token]);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,6 +88,23 @@ const AddQuestions = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Ensure vetting_id is set before submission
+    if (!formData.vetting_id && vettingId) {
+      setFormData(prev => ({
+        ...prev,
+        vetting_id: vettingId
+      }));
+    }
+    
+    // Log the form data for debugging
+    console.log(formData);
+
+    // Check if vetting_id is missing
+    if (!formData.vetting_id && !isUpload) {
+      toast.error("Vetting ID is missing. Please try again in a moment.");
+      return;
+    }
 
     if (!isUpload && formData.mark === "1") {
       if (
@@ -108,6 +127,10 @@ const AddQuestions = () => {
         const uploadFormData = new FormData();
         uploadFormData.append("file", file);
         uploadFormData.append("course_code", courseCode);
+        // Add vetting_id to file upload if available
+        if (vettingId) {
+          uploadFormData.append("vetting_id", vettingId);
+        }
 
         await axios.post("http://localhost:7000/api/faculty/upload", uploadFormData, {
           headers: {
@@ -117,7 +140,13 @@ const AddQuestions = () => {
         });
         toast.success("File uploaded successfully!");
       } else {
-        await axios.post("http://localhost:7000/api/faculty/add-question", formData, {
+        // Create a copy of formData with the latest vetting_id
+        const submissionData = {
+          ...formData,
+          vetting_id: formData.vetting_id || vettingId
+        };
+        
+        await axios.post("http://localhost:7000/api/faculty/add-question", submissionData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -142,10 +171,11 @@ const AddQuestions = () => {
         option_d: "",
         course_code: courseCode,
         vetting_id: vettingId,
+        faculty_id:facultyId,
       }));
       setFile(null);
     } catch (error) {
-      toast.error("Error adding question.");
+      toast.error("Error adding question: " + (error.response?.data?.message || error.message));
       console.error(error);
     }
   };
@@ -375,7 +405,7 @@ const AddQuestions = () => {
                         <option value={formData.option_d}>{formData.option_d}</option>
                       </select>
                     </div>
-                  ) : (
+                    ) : (
                     <div className="space-y-1">
                       <label className="font-medium text-gray-700 flex items-center gap-2">
                         <ListChecks size={18} /> Answer

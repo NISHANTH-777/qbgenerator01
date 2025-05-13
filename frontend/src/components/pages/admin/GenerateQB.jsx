@@ -12,6 +12,7 @@ const GenerateQuestion = () => {
   const [paperData, setPaperData] = useState(null);
   const [formData, setFormData] = useState({
     course_code: "",
+    semester: "",
     from_unit: "",
     to_unit: "",
     department: "", 
@@ -272,6 +273,26 @@ const GenerateQuestion = () => {
             <option value="Optional Test - II">Optional Test - 2</option>
             <option value="Optional Test - II">Optional Test - 2</option>
             <option value="End Semester">End Semester</option>
+          </select>
+
+          <select
+            name="semester"
+            value={formData.semester}
+            onChange={(e) =>
+              setFormData({ ...formData, exam_type: e.target.value })
+            }
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+          >
+            <option value="">-- Select Semester --</option>
+            <option value="I">1</option>
+            <option value="II">2</option>
+            <option value="III">3</option>
+            <option value="IV">4</option>
+            <option value="V">5</option>
+            <option value="VI">6</option>
+            <option value="VII">7</option>
+            <option value="VIII">8</option>
+           
           </select>
 
           <select

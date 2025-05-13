@@ -56,7 +56,32 @@ const FacultyDashboard = () => {
         );
 
         if (response.data.length > 0) {
-          dispatch(setUser(response.data[0]));
+          const facultyData = response.data[0];
+          dispatch(setUser({
+            ...user,
+            ...facultyData
+          }));
+          
+          // Fetch vetting ID after faculty data is loaded
+          if (facultyData.faculty_id) {
+            try {
+              const vettingResponse = await axios.get(
+                "http://localhost:7000/api/faculty/get-vetting-id",
+                {
+                  params: { faculty_id: facultyData.faculty_id },
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+              
+              if (vettingResponse.data && vettingResponse.data.length > 0 && vettingResponse.data[0].vetting_id) {
+                dispatch(setVettingId(vettingResponse.data[0].vetting_id));
+              } else {
+                console.error("Vetting ID not found in response.");
+              }
+            } catch (vettingError) {
+              console.error("Error fetching vetting ID:", vettingError);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching faculty data:", error);
@@ -66,24 +91,7 @@ const FacultyDashboard = () => {
     fetchFacultyData();
   }, [dispatch, token, user?.email]);
 
-  // Fetch vetting_id and dispatch to Redux
-  useEffect(() => {
-    if (user?.email) {
-      axios
-        .get("http://localhost:7000/api/faculty/get-vetting-id", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((res) => {
-          console.log("Vetting ID Response:", res.data); // Log vetting ID response
-          if (res.data && res.data.vetting_id) {
-            dispatch(setVettingId(res.data.vetting_id)); // Dispatch vetting_id to Redux
-          } else {
-            console.error("Vetting ID not found in response.");
-          }
-        })
-        .catch((err) => console.error("Error fetching vetting ID:", err));
-    }
-  }, [dispatch, token, user?.email]);
+  // Vetting ID is now fetched in the faculty data useEffect
 
   // Fetch weekly/monthly stats once course code is available
   useEffect(() => {
