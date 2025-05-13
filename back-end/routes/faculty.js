@@ -86,15 +86,15 @@ router.get("/get-vetting-id",verifyToken,(req,res)=>{
   const {faculty_id} = req.query ;
   const query = "SELECT vetting_id FROM vetting WHERE faculty_id=?";
     db.query(query,[faculty_id], (err, results) => {
-      if (!err) res.status(200).send(results);
+      if (!err) res.status(200).send(results[0]);
       else return res.status(400).send(err);
-      console.log(results);
+      console.log(results[0]);
     });
 })
 
 router.get("/question-view/:id",verifyToken, (req, res) => {
     const { id } = req.params;
-    const query = "SELECT * FROM questions WHERE id = ?";
+    const query = "SELECT * FROM question_status WHERE id = ?";
     db.query(query, [id], (err, results) => {
       if (!err) res.status(200).send(results);
       else return res.status(400).send(err);
@@ -110,7 +110,7 @@ router.put("/question-edit/:id",verifyToken, (req, res) => {
     }
   
     const query = `
-      UPDATE questions 
+      UPDATE question_status 
       SET unit = ?, topic = ?, mark = ?, question = ?, answer = ?, figure = ?, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ?
     `;
@@ -123,7 +123,7 @@ router.put("/question-edit/:id",verifyToken, (req, res) => {
   
 router.delete("/question-delete/:id",verifyToken, (req, res) => {
     const { id } = req.params;
-    const query = "DELETE FROM questions WHERE id = ?";
+    const query = "DELETE FROM question_status WHERE id = ?";
     db.query(query, [id], (err) => {
       if (!err) res.status(200).send("Deleted successfully");
       else return res.status(400).send(err);
@@ -285,7 +285,7 @@ router.get("/faculty-id", verifyToken , (req, res) => {
 });
 
 router.post("/add-question", verifyToken, (req, res) => {
-  const {
+  let {
     unit, topic, mark, question, answer, course_code,
     option_a, option_b, option_c, option_d,
     faculty_id, vetting_id,
@@ -294,6 +294,21 @@ router.post("/add-question", verifyToken, (req, res) => {
 
   if (!unit || !topic || !mark || !question || !answer || !course_code || !faculty_id || !vetting_id) {
     return res.status(400).send("Missing required fields");
+  }
+
+  const markInt = parseInt(mark);
+
+  // 🟡 Validate MCQs for 1-mark questions
+  if (markInt === 1) {
+    if (!option_a || !option_b || !option_c || !option_d) {
+      return res.status(400).send("MCQ options are required for 1-mark questions");
+    }
+  } else {
+    // Set options to null for non-1-mark questions
+    option_a = "";
+    option_b = "";
+    option_c = "";
+    option_d = "";
   }
 
   const query = `
@@ -305,7 +320,7 @@ router.post("/add-question", verifyToken, (req, res) => {
 
   db.query(
     query,
-    [unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+    [unit, topic, markInt, question, answer, course_code, option_a, option_b, option_c, option_d,
      faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
     (err, result) => {
       if (err) {
@@ -317,6 +332,7 @@ router.post("/add-question", verifyToken, (req, res) => {
     }
   );
 });
+
 
 router.put("/review-question/:question_id", verifyToken, (req, res) => {
   const { question_id } = req.params;
@@ -342,7 +358,6 @@ router.put("/review-question/:question_id", verifyToken, (req, res) => {
 
     const question = statusResults[0];
     const dbVettingId = question.vetting_id;
-
     // Step 2: Get current logged-in vetting's faculty_id using email
     const vettingQuery = `SELECT faculty_id FROM faculty_list WHERE email = ?`;
 

@@ -63,11 +63,11 @@ router.get("/faculty-list",verifyToken, (req, res) => {
     });
 });
 
-router.get("/faculty-question-list",verifyToken, (req, res) => {
+router.get("/faculty-question-list", verifyToken, (req, res) => {
     const { course_code } = req.query;
     if (!course_code) return res.status(400).json({ error: "Course code is required" });
   
-    const query = "SELECT id, course_code,unit, updated_at FROM questions WHERE course_code = ?";
+    const query = "SELECT id, course_code,unit,updated_at,status  FROM question_status WHERE course_code = ?";
     db.query(query, [course_code], (err, results) => {
       if (!err) res.status(200).json(results);
       else res.status(400).json({ error: err.message });
@@ -133,104 +133,115 @@ router.get("/recently-added",verifyToken, (req, res) => {
 }); 
 
 function normalizeUnit(unit) {
-    return unit
-      .replace("Unit ", "")
-      .replace(/([A-Za-z]+)/g, ".$1")
-      .split(".")
-      .map((v) => (isNaN(v) ? v : parseInt(v)));
+  return unit
+    .replace("Unit ", "")
+    .replace(/([A-Za-z]+)/g, ".$1")
+    .split(".")
+    .map((v) => (isNaN(v) ? v : parseInt(v)));
 }
 
 function compareUnits(u1, u2) {
-    const a = normalizeUnit(u1);
-    const b = normalizeUnit(u2);
-  
-    for (let i = 0; i < Math.max(a.length, b.length); i++) {
-      const valA = a[i] !== undefined ? a[i] : 0;
-      const valB = b[i] !== undefined ? b[i] : 0;
-  
-      if (valA < valB) return -1;
-      if (valA > valB) return 1;
-    }
-    return 0;
+  const a = normalizeUnit(u1);
+  const b = normalizeUnit(u2);
+
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const valA = a[i] !== undefined ? a[i] : 0;
+    const valB = b[i] !== undefined ? b[i] : 0;
+
+    if (valA < valB) return -1;
+    if (valA > valB) return 1;
+  }
+  return 0;
 }
-  
+
 function shuffleArray(arr, seed) {
-    let rng = new seedrandom(seed);
-    let shuffled = arr.slice();
-  
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
-    }
-  
-    return shuffled;
+  let rng = new seedrandom(seed);
+  let shuffled = arr.slice();
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
 }
-  
+
 function groupQuestions(unit, results, usedIds) {
-    return {
-      oneMarks: results.filter((q) => q.unit === unit && q.mark === 1 && !usedIds.has(q.id)),
-      fourMarks: results.filter((q) => q.unit === unit && q.mark === 4 && !usedIds.has(q.id)),
-      otherMarks: results.filter((q) => q.unit === unit && q.mark !== 1 && q.mark !== 4 && !usedIds.has(q.id)),
-    };
+  return {
+    oneMarks: results.filter((q) => q.unit === unit && q.mark === 1 && !usedIds.has(q.id)),
+    fourMarks: results.filter((q) => q.unit === unit && q.mark === 4 && !usedIds.has(q.id)),
+    otherMarks: results.filter((q) => q.unit === unit && q.mark !== 1 && q.mark !== 4 && !usedIds.has(q.id)),
+  };
 }
-  
+
 router.get("/generate-qb",verifyToken, (req, res) => {
-    const { course_code, from_unit, to_unit } = req.query;
-  
-    if (!course_code || !from_unit || !to_unit) {
-      return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
-    }
-  
-    const validRange1 = compareUnits(from_unit, "Unit 1") === 0 && compareUnits(to_unit, "Unit 3A") === 0;
-    const validRange2 = compareUnits(from_unit, "Unit 3B") === 0 && compareUnits(to_unit, "Unit 5") === 0;
-  
-    if (!validRange1 && !validRange2) {
-      return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
-    }
-  
-    const sectionUnits = validRange1
-      ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
-      : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
-  
-    db.query("SELECT * FROM questions WHERE course_code = ?", [course_code], (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
-  
-      const randomSalt = Math.floor(Math.random() * 10000);
-      const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
-  
-      const shuffledQuestions = shuffleArray(results, seed);
-  
-      const paper = {};
-      const usedIds = new Set();
-  
-      for (const section of ["A", "B"]) {
-        const unit = sectionUnits[section];
-        const { oneMarks, otherMarks } = groupQuestions(unit, shuffledQuestions, usedIds);
-  
-        const selectedOneMarks = oneMarks.slice(0, 2);
-        const selectedOtherMarks = otherMarks.slice(0, 2);
-  
-        if (selectedOneMarks.length < 2 || selectedOtherMarks.length < 2) {
-          return res.status(400).json({ error: `Not enough questions in ${unit} for Section ${section}` });
-        }
-  
-        for (let i = 1; i <= 3; i++) {
-          paper[`${section}${i}`] = [...selectedOneMarks, ...selectedOtherMarks];
-        }
+  const { course_code, from_unit, to_unit } = req.query;
+
+  if (!course_code || !from_unit || !to_unit) {
+    return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
+  }
+
+  const validRange1 = compareUnits(from_unit, "Unit 1") === 0 && compareUnits(to_unit, "Unit 3A") === 0;
+  const validRange2 = compareUnits(from_unit, "Unit 3B") === 0 && compareUnits(to_unit, "Unit 5") === 0;
+
+  if (!validRange1 && !validRange2) {
+    return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
+  }
+
+  const sectionUnits = validRange1
+    ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
+    : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
+
+  db.query("SELECT * FROM questions WHERE course_code = ?", [course_code], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+
+    const randomSalt = Math.floor(Math.random() * 10000);
+    const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
+    const shuffledQuestions = shuffleArray(results, seed);
+
+    const paper = {};
+    const usedIds = new Set();
+
+    // Sections A1–A3 and B1–B3
+    for (const section of ["A", "B"]) {
+      const unit = sectionUnits[section];
+      const { oneMarks, otherMarks } = groupQuestions(unit, shuffledQuestions, usedIds);
+
+      if (oneMarks.length < 6 || otherMarks.length < 6) {
+        return res.status(400).json({ error: `Not enough questions in ${unit} for Section ${section}` });
       }
-      const unitC = sectionUnits.C;
-      const { oneMarks: oneMarkC, fourMarks: fourMarkC } = groupQuestions(unitC, shuffledQuestions, usedIds);
-  
-      if (oneMarkC.length < 3 || fourMarkC.length < 3) {
-        return res.status(400).json({ error: `Not enough questions in ${unitC} for Section C` });
-      }
-  
+
       for (let i = 1; i <= 3; i++) {
-        paper[`C${i}`] = [oneMarkC[i - 1], fourMarkC[i - 1]];
+        const selectedOneMarks = oneMarks.splice(0, 2);
+        const selectedOtherMarks = otherMarks.splice(0, 2);
+
+        const sectionKey = `${section}${i}`;
+        paper[sectionKey] = [...selectedOneMarks, ...selectedOtherMarks];
+
+        selectedOneMarks.forEach(q => usedIds.add(q.id));
+        selectedOtherMarks.forEach(q => usedIds.add(q.id));
       }
-  
-      return res.json(paper);
-    });
+    }
+
+    // Sections C1–C3 (1 MCQ + 4-mark per section)
+    const unitC = sectionUnits.C;
+    const { oneMarks: oneMarkC, fourMarks: fourMarkC } = groupQuestions(unitC, shuffledQuestions, usedIds);
+
+    if (oneMarkC.length < 3 || fourMarkC.length < 3) {
+      return res.status(400).json({ error: `Not enough questions in ${unitC} for Section C` });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      const one = oneMarkC.shift();
+      const four = fourMarkC.shift();
+      paper[`C${i}`] = [one, four];
+
+      usedIds.add(one.id);
+      usedIds.add(four.id);
+    }
+
+    return res.json(paper);
+  });
 });
 
 router.get('/qb-history', verifyToken,(req, res) => {
