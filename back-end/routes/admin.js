@@ -54,7 +54,6 @@ router.get('/generate-history',verifyToken, (req, res) => {
   });
 });
 
-
 router.get("/faculty-list",verifyToken, (req, res) => {
     const query = "SELECT * FROM faculty_list";
     db.query(query, (err, results) => {
@@ -67,7 +66,7 @@ router.get("/faculty-question-list", verifyToken, (req, res) => {
     const { course_code } = req.query;
     if (!course_code) return res.status(400).json({ error: "Course code is required" });
   
-    const query = "SELECT id, course_code,unit,updated_at,status  FROM question_status WHERE course_code = ?";
+    const query = "SELECT faculty_id,question_id,course_code,unit,updated_at,status  FROM question_status WHERE course_code = ?";
     db.query(query, [course_code], (err, results) => {
       if (!err) res.status(200).json(results);
       else res.status(400).json({ error: err.message });
@@ -319,7 +318,6 @@ router.get("/generate-qb", verifyToken, (req, res) => {
     }
   );
 });
-
 
 router.get("/generate-qb", verifyToken, (req, res) => {
   const { course_code, from_unit, to_unit } = req.query;

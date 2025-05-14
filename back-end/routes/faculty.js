@@ -9,7 +9,7 @@ const verifyToken = require('./jwtMiddleware');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, "uploads/");
+      cb(null, path.join(__dirname, "../uploads/"));
     },
     filename: (req, file, cb) => {
       cb(null, file.originalname);
@@ -156,7 +156,7 @@ router.get('/faculty-recently-added',verifyToken, (req, res) => {
 });
 
 router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
-  const filePath = path.join(__dirname, "uploads", req.file.filename);
+   const filePath = path.join(__dirname, "../uploads", req.file.filename);
   const courseCode = req.body.course_code;
   const results = [];
 
@@ -178,28 +178,30 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
     .on("end", () => {
       results.forEach((row) => {
         const query = `
-          INSERT INTO questions 
-          (unit, topic, question, answer, mark, course_code, option_a, option_b, option_c, option_d, faculty_id, cognitive_dimension, knowledge_dimension, portion, figure) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO question_status 
+          (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+          faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
         `;
 
         db.query(query, [
-          row.unit,
-          row.topic,
-          row.question,
-          row.answer,
-          parseInt(row.mark),
-          courseCode,
-          row.option_a || null,
-          row.option_b || null,
-          row.option_c || null,
-          row.option_d || null,
-          row.faculty_id || null,
-          row.cognitive_dimension || null,
-          row.knowledge_dimension || null,
-          row.portion || null,
-          row.figure || null
-        ], (err) => {
+            row.unit,
+            row.topic,
+            parseInt(row.mark),
+            row.question,
+            row.answer,
+            courseCode,
+            row.option_a || null,
+            row.option_b || null,
+            row.option_c || null,
+            row.option_d || null,
+            row.faculty_id || null,
+            row.vetting_id || null,  // ← Add this line
+            row.cognitive_dimension || null,
+            row.knowledge_dimension || null,
+            row.portion || null,
+            row.figure || null
+          ], (err) => {
           if (err) console.error("Insert error:", err);
         });
       });
@@ -334,85 +336,5 @@ router.post("/add-question", verifyToken, (req, res) => {
 });
 
 
-router.put("/review-question/:question_id", verifyToken, (req, res) => {
-  const { question_id } = req.params;
-  const { status, remarks } = req.body;
-  const loginVettingEmail = req.user.email;
-
-  if (!status || (status !== "accepted" && status !== "rejected")) {
-    return res.status(400).send("Invalid or missing status");
-  }
-
-  // Step 1: Get vetting_id from question_status
-  const getStatusQuery = `SELECT * FROM question_status WHERE question_id = ?`;
-
-  db.query(getStatusQuery, [question_id], (err, statusResults) => {
-    if (err) {
-      console.error("Error fetching question_status:", err);
-      return res.status(500).send("Error fetching question status");
-    }
-
-    if (statusResults.length === 0) {
-      return res.status(404).send("Question status not found");
-    }
-
-    const question = statusResults[0];
-    const dbVettingId = question.vetting_id;
-    // Step 2: Get current logged-in vetting's faculty_id using email
-    const vettingQuery = `SELECT faculty_id FROM faculty_list WHERE email = ?`;
-
-    db.query(vettingQuery, [loginVettingEmail], (err2, vettingResults) => {
-      if (err2) {
-        console.error("Error fetching vetting ID:", err2);
-        return res.status(500).send("Error verifying reviewer");
-      }
-
-      const loginVettingId = vettingResults[0]?.faculty_id;
-
-      if (dbVettingId !== loginVettingId) {
-        return res.status(403).send("You are not authorized to review this question");
-      }
-
-      // Step 3: Process based on status
-      if (status === "accepted") {
-        const insertQuery = `
-          INSERT INTO questions 
-          (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
-           faculty_id, cognitive_dimension, knowledge_dimension, portion, figure)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        db.query(insertQuery, [
-          question.unit, question.topic, question.mark, question.question, question.answer,
-          question.course_code, question.option_a, question.option_b, question.option_c, question.option_d,
-          question.faculty_id, question.cognitive_dimension, question.knowledge_dimension,
-          question.portion, question.figure
-        ], (err3) => {
-          if (err3) {
-            console.error("Error inserting accepted question:", err3);
-            return res.status(500).send("Error inserting accepted question");
-          }
-
-          const updateQuery = `UPDATE question_status SET status = 'accepted' WHERE question_id = ?`;
-          db.query(updateQuery, [question_id], (err4) => {
-            if (err4) return res.status(500).send("Inserted but failed to update status");
-            res.status(200).send("Question accepted and inserted successfully");
-          });
-        });
-
-      } else {
-        // Rejected path
-        const updateQuery = `UPDATE question_status SET status = 'rejected', remarks = ? WHERE question_id = ?`;
-        db.query(updateQuery, [remarks || null, question_id], (err5) => {
-          if (err5) {
-            console.error("Error updating rejected status:", err5);
-            return res.status(500).send("Failed to update rejection");
-          }
-          res.status(200).send("Question rejected with remarks");
-        });
-      }
-    });
-  });
-});
 
 module.exports = router ;
