@@ -46,14 +46,12 @@ const GenerateQuestion = () => {
   const hasAll = selectedOptions.find(opt => opt.value === 'ALL');
 
   if (hasAll) {
-    // "All" was selected — merge it with all other options except 'ALL'
     const allDepartments = departmentOptions
       .filter(opt => opt.value !== 'ALL')
       .map(opt => opt.value);
 
     setFormData({ ...formData, department: allDepartments });
   } else {
-    // Normal selection
     const selectedValues = selectedOptions.map(opt => opt.value);
     setFormData({ ...formData, department: selectedValues });
   }
@@ -369,14 +367,47 @@ return (
             name="department"
             options={departmentOptions}
            value={departmentOptions
-  .filter(option =>
-    formData.department.includes(option.value)
-  )}
-
-
+                .filter(option =>
+                formData.department.includes(option.value)
+             )}
             onChange={handleDepartmentChange}
             className="w-full mb-4"
             placeholder="-- Select Department --"
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                backgroundColor: '#f0f0f0', 
+                borderColor: '#ccc', 
+                borderRadius: '8px', 
+                padding: '5px', // change padding
+              }),
+              option: (provided) => ({
+                ...provided,
+                backgroundColor: '#fff', // option background color
+                color: '#333', // option text color
+                ':hover': {
+                  backgroundColor: '#f5f5f5', // hover effect
+                  color: '#000',
+                },
+              }),
+              multiValue: (provided) => ({
+                ...provided,
+                backgroundColor: 'white', // background for selected values
+                color: 'black',
+              }),
+              multiValueLabel: (provided) => ({
+                ...provided,
+                color: 'black', // text color for selected items
+              }),
+              multiValueRemove: (provided) => ({
+                ...provided,
+                color: 'black', // close button color
+                ':hover': {
+                  backgroundColor: 'black', // close button hover color
+                  color: 'white',
+                },
+              }),
+            }}
           />
 
           <select 
