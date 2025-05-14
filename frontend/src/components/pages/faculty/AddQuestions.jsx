@@ -25,20 +25,19 @@ const AddQuestions = () => {
     option_c: "",
     option_d: "",
     vetting_id: "",
-    faculty_id:""
+    faculty_id: "",
   });
   const [isUpload, setIsUpload] = useState(false);
   const [file, setFile] = useState(null);
-  const [openSidebar, setOpenSidebar] = useState(false);
   const [courseCode, setCourseCode] = useState("");
   const [vettingId, setVettingId] = useState("");
+   const [openSidebar, setOpenSidebar] = useState(false);
 
   const user = useSelector((state) => state.user.user);
-  // console.log(user)
   const email = user?.email;
   const facultyId = user?.faculty_id;
-  console.log(facultyId)
 
+  // Fetch course code
   useEffect(() => {
     if (!email) return;
     axios
@@ -59,78 +58,99 @@ const AddQuestions = () => {
       });
   }, [email, token]);
 
-  useEffect(() => {
-      axios.get("http://localhost:7000/api/faculty/get-vetting-id", {
-        params: { faculty_id: user.faculty_id },
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setVettingId(res.data.vetting_id);
-        setFormData((prev) => ({
-          ...prev,
-          vetting_id: res.data.vetting_id,
-        }));
-      })
-      .catch(() => {
-        toast.error("Failed to load vetting id.");
-      });
-  }, []);
+  // Fetch vetting ID
+   useEffect(() => {
+  if (!facultyId) return;
 
+  setFormData((prev) => ({ ...prev, faculty_id: facultyId }));
+
+  axios
+    .get("http://localhost:7000/api/faculty/get-vetting-id", {
+      params: { faculty_id: facultyId },
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => {
+      setVettingId(res.data.vetting_id);
+      setFormData((prev) => ({
+        ...prev,
+        vetting_id: res.data.vetting_id,
+      }));
+    })
+    .catch(() => {
+      toast.error("Failed to load vetting ID.");
+    });
+}, [facultyId, token]);
+
+
+  // Handle form data changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle file input change
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Ensure vetting_id is set before submission
+
     if (!formData.vetting_id && vettingId) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        vetting_id: vettingId
+        vetting_id: vettingId,
       }));
     }
-    
-    // Log the form data for debugging
-    console.log(formData);
 
-    // Check if vetting_id is missing
-    if (!formData.vetting_id && !isUpload) {
-      toast.error("Vetting ID is missing. Please try again in a moment.");
+    if (!formData.faculty_id && facultyId) {
+      setFormData((prev) => ({
+        ...prev,
+        faculty_id: facultyId,
+      }));
+    }
+
+    if (!formData.vetting_id || !formData.faculty_id) {
+      toast.error("Missing vetting or faculty ID. Try again.");
       return;
     }
 
-    if (!isUpload && formData.mark === "1") {
-      if (
-        !formData.unit ||
-        !formData.portion ||
-        !formData.topic ||
-        !formData.mark ||
-        !formData.question ||
-        !formData.answer ||
-        !formData.cognitive_dimension ||
-        !formData.knowledge_dimension
-      ) {
-        toast.error("All fields are required when submitting manually.");
-        return;
+    if (!isUpload) {
+      // Validation for non-upload questions
+      const requiredFields = [
+        "unit",
+        "portion",
+        "topic",
+        "mark",
+        "question",
+        "answer",
+        "cognitive_dimension",
+        "knowledge_dimension",
+      ];
+      for (let field of requiredFields) {
+        if (!formData[field]) {
+          toast.error(`Please fill in ${field.replace("_", " ")}.`);
+          return;
+        }
+      }
+
+      if (formData.mark === "1") {
+        if (!formData.option_a || !formData.option_b || !formData.option_c || !formData.option_d) {
+          toast.error("All MCQ options are required for 1-mark questions.");
+          return;
+        }
       }
     }
 
     try {
       if (isUpload && file) {
+        // Handle file upload
         const uploadFormData = new FormData();
         uploadFormData.append("file", file);
         uploadFormData.append("course_code", courseCode);
-        // Add vetting_id to file upload if available
-        if (vettingId) {
-          uploadFormData.append("vetting_id", vettingId);
-        }
+        if (vettingId) uploadFormData.append("vetting_id", vettingId);
 
         await axios.post("http://localhost:7000/api/faculty/upload", uploadFormData, {
           headers: {
@@ -138,25 +158,29 @@ const AddQuestions = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+
         toast.success("File uploaded successfully!");
       } else {
-        // Create a copy of formData with the latest vetting_id
+        // Handle question form submission
         const submissionData = {
           ...formData,
-          vetting_id: formData.vetting_id || vettingId
+          vetting_id: formData.vetting_id || vettingId,
+          faculty_id: formData.faculty_id || facultyId,
         };
-        
+
         await axios.post("http://localhost:7000/api/faculty/add-question", submissionData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
+      
         toast.success("Question added successfully!");
       }
+        // console.log(formData)
 
-      setFormData((prev) => ({
-        ...prev,
+      // Reset form after submission
+      setFormData({
         unit: "",
         portion: "",
         topic: "",
@@ -165,14 +189,14 @@ const AddQuestions = () => {
         cognitive_dimension: "",
         knowledge_dimension: "",
         answer: "",
+        course_code: courseCode,
         option_a: "",
         option_b: "",
         option_c: "",
         option_d: "",
-        course_code: courseCode,
         vetting_id: vettingId,
-        faculty_id:facultyId,
-      }));
+        faculty_id: facultyId,
+      });
       setFile(null);
     } catch (error) {
       toast.error("Error adding question: " + (error.response?.data?.message || error.message));

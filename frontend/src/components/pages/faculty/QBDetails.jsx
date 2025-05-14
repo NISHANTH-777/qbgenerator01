@@ -48,6 +48,7 @@ const QBDetails = () => {
             code: item.courseCode || courseCode,
             unit: item.unit,
             datetime: new Date(item.updated_at).toLocaleString(),
+            status: item.status,
           }));
           setQuestionRows(formattedRows);
         })
@@ -63,6 +64,7 @@ const QBDetails = () => {
     { field: 'code', headerName: 'Course Code', flex: 1 },
     { field: 'unit', headerName: 'Unit', flex: 1 },
     { field: 'datetime', headerName: 'Date & Time', flex: 1.2 },
+    { field: 'status' , headerName: 'Status', flex: 0.8}
   ];
   
 

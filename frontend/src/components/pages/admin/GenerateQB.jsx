@@ -17,6 +17,7 @@ const GenerateQuestion = () => {
     to_unit: "",
     department: "", 
     exam_type: "",
+    exam_month: "",
   });
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [departmentOptions, setDepartmentOptions] = useState([ 
@@ -129,9 +130,9 @@ const GenerateQuestion = () => {
       <table className="w-full border border-gray-400 text-sm mt-4 mb-6">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border border-gray-400 px-2 py-2" style={{ width: '15%' }}>Section</th>
-            <th className="border border-gray-400 px-2 py-2" style={{ width: '15%' }}>Q. No</th>
-            <th className="border border-gray-400 px-2 py-2" style={{ width: '70%' }}>Question</th>
+            <th className="border border-black px-2 py-2" style={{ width: '15%' }}>Section</th>
+            <th className="border border-black px-2 py-2" style={{ width: '15%' }}>Q. No</th>
+            <th className="border border-black px-2 py-2" style={{ width: '70%' }}>Question</th>
           </tr>
         </thead>
         <tbody>
@@ -139,16 +140,16 @@ const GenerateQuestion = () => {
             <tr key={q.id || idx} className="align-top">
               {idx === 0 && (
                 <td
-                  className="border border-gray-400 px-2 py-3 text-center"
+                  className="border border-black px-2 py-3 text-center"
                   rowSpan={sectionData.length}
                 >
                   {sectionLabel}
                 </td>
               )}
-              <td className="border border-gray-400 px-2 py-3 text-center">
-                ({String.fromCharCode(97 + idx)})
+              <td className="border border-black px-2 py-3 text-center">
+                ({toRoman(1 + idx)})
               </td>
-              <td className="border border-gray-400 px-3 py-3 whitespace-pre-line">
+              <td className="border border-black px-3 py-3 whitespace-pre-line">
                 <div>{q.question}</div>
                 {q.mark === 1 && (
                   <div className="mt-2">
@@ -166,6 +167,34 @@ const GenerateQuestion = () => {
       </table>
     </div>
   );
+
+  function toRoman(num) {
+  const romans = [
+    ["M", 1000],
+    ["CM", 900],
+    ["D", 500],
+    ["CD", 400],
+    ["C", 100],
+    ["XC", 90],
+    ["L", 50],
+    ["XL", 40],
+    ["X", 10],
+    ["IX", 9],
+    ["V", 5],
+    ["IV", 4],
+    ["I", 1],
+  ];
+
+  let result = "";
+  for (const [roman, value] of romans) {
+    while (num >= value) {
+      result += roman;
+      num -= value;
+    }
+  }
+  return result.toLowerCase(); 
+}
+
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -270,16 +299,28 @@ const GenerateQuestion = () => {
             <option value="">-- Select Exam Type --</option>
             <option value="Periodical Test - I">PT-1</option>
             <option value="Periodical Test - II">PT-2</option>
-            <option value="Optional Test - II">Optional Test - 2</option>
+            <option value="Optional Test - I">Optional Test - 1</option>
             <option value="Optional Test - II">Optional Test - 2</option>
             <option value="End Semester">End Semester</option>
           </select>
 
+            <input 
+            type="text"
+            name="exam_month"
+            placeholder="-- Exam Month --"
+            required
+            value={formData.exam_month}
+            onChange={(e) =>
+              setFormData({ ...formData, exam_month: e.target.value })
+            }
+            className="w-full p-3 border border-gray-300 rounded mb-4"
+          />
+         
           <select
             name="semester"
             value={formData.semester}
             onChange={(e) =>
-              setFormData({ ...formData, exam_type: e.target.value })
+              setFormData({ ...formData, semester: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded mb-4"
           >
@@ -339,8 +380,13 @@ const GenerateQuestion = () => {
 
             <div
               id="question-paper"
-              className="mt-6 p-12 bg-white text-black font-serif leading-relaxed border rounded shadow"
-              style={{ paddingTop: "60px", paddingBottom: "60px" }}
+              className="mt-6 p-12 bg-white text-black leading-relaxed border rounded shadow"
+              style={{ 
+                paddingTop: "60px",
+                paddingBottom: "60px",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "16px",
+               }}
             >
               <div className="flex justify-between mb-6">
                 <div className="border border-black px-4 py-3 text-md font-semibold">
@@ -389,12 +435,12 @@ const GenerateQuestion = () => {
 
                       <div className="text-center pt-2">
                         <h2 className="text-md font-semibold">
-                          {formData.exam_type && ` ${formData.exam_type}`}
+                          {formData.exam_type && ` ${formData.exam_type}`} - {formData.exam_month}
                         </h2>
 
                         {formData.department && (
                           <div className="text-sm font-semibold my-1">
-                            Department : <strong>{formData.department}</strong>
+                           <strong>{formData.semester}</strong> Semester
                           </div>
                         )}
                       </div>
@@ -405,7 +451,7 @@ const GenerateQuestion = () => {
 
               <div className="flex flex-col text-sm mb-4">
                 <div>
-                  <strong>Subject:</strong> {paperData.subject_name} (
+                  <strong>Degree & Branch : </strong> {paperData.subject_name} (
                   {paperData.course_code})
                 </div>
                 <div className="flex mt-2 justify-between">

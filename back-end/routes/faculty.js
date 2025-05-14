@@ -94,7 +94,7 @@ router.get("/get-vetting-id",verifyToken,(req,res)=>{
 
 router.get("/question-view/:id",verifyToken, (req, res) => {
     const { id } = req.params;
-    const query = "SELECT * FROM question_status WHERE id = ?";
+    const query = "SELECT * FROM question_status WHERE question_id = ?";
     db.query(query, [id], (err, results) => {
       if (!err) res.status(200).send(results);
       else return res.status(400).send(err);
