@@ -312,10 +312,3 @@ const handleReject = async () => {
 };
 
 export default VettingPage;
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default VettingPage;
