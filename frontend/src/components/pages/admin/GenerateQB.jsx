@@ -6,6 +6,7 @@ import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Imagecomp } from "../../images/Imagecomp";
 import bitlogo from '../../images/bitlogo.png';
+import Select from 'react-select';
 
 const GenerateQuestion = () => {
   const token = localStorage.getItem('token');
@@ -13,23 +14,51 @@ const GenerateQuestion = () => {
   const [formData, setFormData] = useState({
     course_code: "",
     semester: "",
+    set:"",
     from_unit: "",
     to_unit: "",
-    department: "", 
+    department: [], 
     exam_type: "",
     exam_month: "",
   });
   const [subjectOptions, setSubjectOptions] = useState([]);
-  const [departmentOptions, setDepartmentOptions] = useState([ 
-    { id: 1, name: "C.S.E" },
-    { id: 2, name: "E.E.E" },
-    { id: 3, name: "A.I.M.L" },
-    { id: 4, name: "C.S.B.S" },
-    { id: 5, name: "I.T" },
-    { id: 6, name: "A.I.D.S" },
-  ]);
   const [error, setError] = useState("");
   const [openSidebar, setOpenSidebar] = useState(false);
+
+   const departmentOptions = [
+    { value: 'ALL', label: 'All Departments' },
+    { value: 'C.S.E', label: 'C.S.E' },
+    { value: 'C.S.B.S', label: 'C.S.B.S' },
+    { value: 'E.E.E', label: 'E.E.E' },
+    { value: 'M.E', label: 'M.E' },
+    { value: 'I.T', label: 'I.T' },
+    { value: 'A.I.D.S', label: 'A.I.D.S' },
+    { value: 'A.I.M.L', label: 'A.I.M.L' },
+    { value: 'B.T', label: 'B.T' },
+  ];
+
+  const handleDepartmentChange = (selectedOptions) => {
+  if (!selectedOptions) {
+    setFormData({ ...formData, department: [] });
+    return;
+  }
+
+  const hasAll = selectedOptions.find(opt => opt.value === 'ALL');
+
+  if (hasAll) {
+    // "All" was selected — merge it with all other options except 'ALL'
+    const allDepartments = departmentOptions
+      .filter(opt => opt.value !== 'ALL')
+      .map(opt => opt.value);
+
+    setFormData({ ...formData, department: allDepartments });
+  } else {
+    // Normal selection
+    const selectedValues = selectedOptions.map(opt => opt.value);
+    setFormData({ ...formData, department: selectedValues });
+  }
+};
+
 
   useEffect(() => {
     axios
@@ -195,8 +224,7 @@ const GenerateQuestion = () => {
   return result.toLowerCase(); 
 }
 
-
-  return (
+return (
     <div className="flex min-h-screen bg-gray-50">
       <div className="hidden lg:flex flex-col fixed top-0 left-0 w-56 h-screen bg-white shadow-md z-50">
         <AdminNavbar />
@@ -336,21 +364,33 @@ const GenerateQuestion = () => {
            
           </select>
 
-          <select
+          <Select
+            isMulti
             name="department"
-            value={formData.department}
-            onChange={(e) =>
-              setFormData({ ...formData, department: e.target.value })
+            options={departmentOptions}
+           value={departmentOptions
+  .filter(option =>
+    formData.department.includes(option.value)
+  )}
+
+
+            onChange={handleDepartmentChange}
+            className="w-full mb-4"
+            placeholder="-- Select Department --"
+          />
+
+          <select 
+          name="set"
+          value={formData.set}
+          onChange={(e) =>
+              setFormData({ ...formData, set: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded mb-4"
             required
           >
-            <option value="">-- Select Department --</option>
-            {departmentOptions.map((dept) => (
-              <option key={dept.id} value={dept.name}>
-                {dept.name}
-              </option>
-            ))}
+            <option value="">-- Select Set --</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
           </select>
 
           <button
@@ -393,7 +433,7 @@ const GenerateQuestion = () => {
                   Regulation: 2022
                 </div>
                 <div className="border border-black px-4 py-3 text-lg font-semibold">
-                  A
+                  {formData.set}
                 </div>
               </div>
 
@@ -451,8 +491,7 @@ const GenerateQuestion = () => {
 
               <div className="flex flex-col text-sm mb-4">
                 <div>
-                  <strong>Degree & Branch : </strong> {paperData.subject_name} (
-                  {paperData.course_code})
+                  <strong>Degree & Branch : </strong> B.E/B.Tech - {formData.department.join(", ")} 
                 </div>
                 <div className="flex mt-2 justify-between">
                   <div className="mr-4">
