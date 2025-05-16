@@ -140,7 +140,6 @@ function normalizeUnit(unit) {
     .map((v) => (isNaN(v) ? v : parseInt(v)));
 }
 
-// Compare two unit strings (e.g., "Unit 1" and "Unit 2")
 function compareUnits(u1, u2) {
   const a = normalizeUnit(u1);
   const b = normalizeUnit(u2);
@@ -155,7 +154,6 @@ function compareUnits(u1, u2) {
   return 0;
 }
 
-// Shuffle array with seeded RNG
 function shuffleArray(arr, seed) {
   let rng = new seedrandom(seed);
   let shuffled = arr.slice();
@@ -168,7 +166,6 @@ function shuffleArray(arr, seed) {
   return shuffled;
 }
 
-// Portion filter by section
 function getPortionFilter(sectionName) {
   const index = sectionName[1]; // "1", "2", or "3"
 
@@ -178,7 +175,6 @@ function getPortionFilter(sectionName) {
   return ["A", "B"];
 }
 
-// Check if question's portion is allowed
 function isPortionAllowed(portion, allowedPortions) {
   if (!portion) return false;
   const normalized = portion.toUpperCase();
@@ -189,7 +185,6 @@ function isPortionAllowed(portion, allowedPortions) {
   return allowedPortions.includes(normalized);
 }
 
-// Check if question is 1-mark MCQ
 function isMCQ(q) {
   return (
     q.mark === 1 &&
@@ -197,7 +192,6 @@ function isMCQ(q) {
   );
 }
 
-// Group questions into one-mark MCQs and others by unit, portion, and used IDs
 function groupQuestions(unit, questions, usedIds, sectionName) {
   const allowedPortions = getPortionFilter(sectionName);
   const unitArray = Array.isArray(unit) ? unit : [unit];
@@ -221,17 +215,14 @@ function groupQuestions(unit, questions, usedIds, sectionName) {
   };
 }
 
-// Find subset of questions summing exactly to target marks (simple recursive)
 function findSubsetForSum(questions, target) {
   function helper(i, currentSum, path) {
     if (currentSum === target) return path;
     if (i >= questions.length || currentSum > target) return null;
 
-    // Include questions[i]
     let withCurrent = helper(i + 1, currentSum + questions[i].mark, [...path, questions[i]]);
     if (withCurrent) return withCurrent;
 
-    // Exclude questions[i]
     return helper(i + 1, currentSum, path);
   }
 
@@ -279,7 +270,6 @@ router.get("/generate-semester-qb", (req, res) => {
       for (const sectionName of Object.keys(sectionUnits)) {
         const unit = sectionUnits[sectionName];
 
-        // Get questions filtered by unit, portions, and usedIds
         const { oneMarks, otherMarks } = groupQuestions(
           unit,
           shuffledQuestions,
@@ -293,11 +283,9 @@ router.get("/generate-semester-qb", (req, res) => {
           });
         }
 
-        // Pick exactly 2 one-mark MCQs
         const selectedOneMarks = oneMarks.slice(0, 2);
         selectedOneMarks.forEach((q) => usedIds.add(q.id));
 
-        // Find subset of other questions summing to 8 marks
         const subset = findSubsetForSum(otherMarks, 8);
 
         if (!subset) {
@@ -308,7 +296,6 @@ router.get("/generate-semester-qb", (req, res) => {
 
         subset.forEach((q) => usedIds.add(q.id));
 
-        // Assign questions to section
         paper[sectionName] = [...selectedOneMarks, ...subset];
       }
 
@@ -317,24 +304,17 @@ router.get("/generate-semester-qb", (req, res) => {
   );
 });
 
-
-
-
-// Helper to parse unit and portion from a unit string like "Unit 3A" or "Unit 3B"
 function parseUnitPortion(unitStr) {
-  // Matches "Unit <number>" optionally followed by A or B suffix
   const match = unitStr.match(/(Unit \d+)([AB])?$/i);
   if (!match) {
-    // If no match, treat entire string as base unit, no portion
     return { baseUnit: unitStr, portion: null };
   }
   return {
-    baseUnit: match[1],          // e.g. "Unit 3"
-    portion: match[2] ? match[2].toUpperCase() : null,  // "A" or "B" or null
+    baseUnit: match[1],       
+    portion: match[2] ? match[2].toUpperCase() : null,
   };
 }
 
-// Normalizes unit strings into arrays of parts for comparison
 function pnormalizeUnit(unit) {
   return unit
     .replace("Unit ", "")
@@ -343,7 +323,6 @@ function pnormalizeUnit(unit) {
     .map((v) => (isNaN(v) ? v : parseInt(v)));
 }
 
-// Compares two units (e.g. "Unit 3A" vs "Unit 3B") by their parts
 function pcompareUnits(u1, u2) {
   const a = pnormalizeUnit(u1);
   const b = pnormalizeUnit(u2);
@@ -358,7 +337,6 @@ function pcompareUnits(u1, u2) {
   return 0;
 }
 
-// Shuffle array deterministically by seed
 function pshuffleArray(arr, seed) {
   let rng = new seedrandom(seed);
   let shuffled = arr.slice();
@@ -371,10 +349,9 @@ function pshuffleArray(arr, seed) {
   return shuffled;
 }
 
-// Get allowed portions filter for a given section name (e.g. "A1", "B2", "C3")
 function pgetPortionFilter(sectionName) {
-  const section = sectionName[0]; // A, B, C
-  const index = sectionName[1];   // 1, 2, 3
+  const section = sectionName[0]; 
+  const index = sectionName[1];  
 
   if (section === "C") return ["A"];
   if (index === "1") return ["A"];
@@ -383,7 +360,6 @@ function pgetPortionFilter(sectionName) {
   return ["A", "B"];
 }
 
-// Check if question's portion is allowed based on allowedPortions array
 function pisPortionAllowed(portion, allowedPortions) {
   if (!portion) return false;
   const normalized = portion.toUpperCase();
@@ -395,7 +371,6 @@ function pisPortionAllowed(portion, allowedPortions) {
   return allowedPortions.includes(normalized);
 }
 
-// Check if question is a 1-mark MCQ
 function pisMCQ(q) {
   return (
     q.mark === 1 &&
@@ -403,14 +378,8 @@ function pisMCQ(q) {
   );
 }
 
-/**
- * Group questions by marks with filtering:
- * - baseUnit: unit string without portion suffix (e.g. "Unit 3")
- * - portionFilter: if specified (e.g. "A" or "B"), filter questions only from this portion
- */
 function pgroupQuestions(baseUnit, questions, usedIds, sectionName, portionFilter = null) {
   const allowedPortions = pgetPortionFilter(sectionName);
-  // Use portionFilter if provided, otherwise use allowedPortions from section
   const portionsToCheck = portionFilter ? [portionFilter] : allowedPortions;
 
   return {
@@ -440,7 +409,6 @@ function pgroupQuestions(baseUnit, questions, usedIds, sectionName, portionFilte
   };
 }
 
-// The main route handler
 router.get("/generate-qb", (req, res) => {
   const { course_code, from_unit, to_unit } = req.query;
 
@@ -546,10 +514,6 @@ router.get("/generate-qb", (req, res) => {
     }
   );
 });
-
-module.exports = router;
-
-
 
 router.get('/qb-history', verifyToken,(req, res) => {
     const query = "SELECT course_code, subject_name,exam_name,date_time FROM generated_papers";
