@@ -57,6 +57,21 @@ const GenerateQuestion = () => {
   }
 };
 
+useEffect(() => {
+  if (formData.exam_type === "End Semester") {
+    setFormData((prev) => ({
+      ...prev,
+      from_unit: "Unit 1",
+      to_unit: "Unit 5",
+    }));
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      from_unit: "",
+      to_unit: "",
+    }));
+  }
+}, [formData.exam_type]);
 
   useEffect(() => {
     axios
@@ -280,48 +295,14 @@ return (
             ))}
           </select>
 
-          <div className="flex gap-3">
-            <select
-              name="from_unit"
-              value={formData.from_unit}
-              onChange={(e) =>
-                setFormData({ ...formData, from_unit: e.target.value })
-              }
-              className="w-1/2 p-3 border border-gray-300 rounded mb-4"
-            >
-              <option value="">From Unit</option>
-              {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
-                <option key={idx} value={unit}>
-                  {unit}
-                </option>
-              ))}
-            </select>
-
-            <select
-              name="to_unit"
-              value={formData.to_unit}
-              onChange={(e) =>
-                setFormData({ ...formData, to_unit: e.target.value })
-              }
-              className="w-1/2 p-3 border border-gray-300 rounded mb-4"
-            >
-              <option value="">To Unit</option>
-              {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
-                <option key={idx} value={unit}>
-                  {unit}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <select
             name="exam_type"
             value={formData.exam_type}
             onChange={(e) =>
-              setFormData({ ...formData, exam_type: e.target.value })
+            setFormData({ ...formData, exam_type: e.target.value })
             }
             className="w-full p-3 border border-gray-300 rounded mb-4"
-          >
+            >
             <option value="">-- Select Exam Type --</option>
             <option value="Periodical Test - I">PT-1</option>
             <option value="Periodical Test - II">PT-2</option>
@@ -329,6 +310,42 @@ return (
             <option value="Optional Test - II">Optional Test - 2</option>
             <option value="End Semester">End Semester</option>
           </select>
+
+          {formData.exam_type !== "End Semester" && (
+            <div className="flex gap-3">
+              <select
+                name="from_unit"
+                value={formData.from_unit}
+                onChange={(e) =>
+                  setFormData({ ...formData, from_unit: e.target.value })
+                }
+                className="w-1/2 p-3 border border-gray-300 rounded mb-4"
+              >
+                <option value="">From Unit</option>
+                {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
+                  <option key={idx} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="to_unit"
+                value={formData.to_unit}
+                onChange={(e) =>
+                  setFormData({ ...formData, to_unit: e.target.value })
+                }
+                className="w-1/2 p-3 border border-gray-300 rounded mb-4"
+              >
+                <option value="">To Unit</option>
+                {["Unit 1", "Unit 2", "Unit 3", "Unit 3A", "Unit 3B", "Unit 4", "Unit 5"].map((unit, idx) => (
+                  <option key={idx} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
             <input 
             type="text"
