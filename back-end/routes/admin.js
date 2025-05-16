@@ -140,6 +140,7 @@ function normalizeUnit(unit) {
     .map((v) => (isNaN(v) ? v : parseInt(v)));
 }
 
+// Compare two unit strings (e.g., "Unit 1" and "Unit 2")
 function compareUnits(u1, u2) {
   const a = normalizeUnit(u1);
   const b = normalizeUnit(u2);
@@ -154,6 +155,7 @@ function compareUnits(u1, u2) {
   return 0;
 }
 
+// Shuffle array with seeded RNG
 function shuffleArray(arr, seed) {
   let rng = new seedrandom(seed);
   let shuffled = arr.slice();
@@ -166,7 +168,211 @@ function shuffleArray(arr, seed) {
   return shuffled;
 }
 
+// Portion filter by section
 function getPortionFilter(sectionName) {
+  const index = sectionName[1]; // "1", "2", or "3"
+
+  if (index === "1") return ["A"];
+  if (index === "2") return ["A", "B"];
+  if (index === "3") return ["B"];
+  return ["A", "B"];
+}
+
+// Check if question's portion is allowed
+function isPortionAllowed(portion, allowedPortions) {
+  if (!portion) return false;
+  const normalized = portion.toUpperCase();
+
+  if (normalized === "A&B" || normalized === "A AND B") {
+    return allowedPortions.some((p) => ["A", "B"].includes(p));
+  }
+  return allowedPortions.includes(normalized);
+}
+
+// Check if question is 1-mark MCQ
+function isMCQ(q) {
+  return (
+    q.mark === 1 &&
+    q.option_a && q.option_b && q.option_c && q.option_d
+  );
+}
+
+// Group questions into one-mark MCQs and others by unit, portion, and used IDs
+function groupQuestions(unit, questions, usedIds, sectionName) {
+  const allowedPortions = getPortionFilter(sectionName);
+  const unitArray = Array.isArray(unit) ? unit : [unit];
+
+  return {
+    oneMarks: questions.filter(
+      (q) =>
+        unitArray.includes(q.unit) &&
+        q.mark === 1 &&
+        isMCQ(q) &&
+        !usedIds.has(q.id) &&
+        isPortionAllowed(q.portion, allowedPortions)
+    ),
+    otherMarks: questions.filter(
+      (q) =>
+        unitArray.includes(q.unit) &&
+        q.mark !== 1 &&
+        !usedIds.has(q.id) &&
+        isPortionAllowed(q.portion, allowedPortions)
+    ),
+  };
+}
+
+// Find subset of questions summing exactly to target marks (simple recursive)
+function findSubsetForSum(questions, target) {
+  function helper(i, currentSum, path) {
+    if (currentSum === target) return path;
+    if (i >= questions.length || currentSum > target) return null;
+
+    // Include questions[i]
+    let withCurrent = helper(i + 1, currentSum + questions[i].mark, [...path, questions[i]]);
+    if (withCurrent) return withCurrent;
+
+    // Exclude questions[i]
+    return helper(i + 1, currentSum, path);
+  }
+
+  return helper(0, 0, []);
+}
+
+const sectionUnits = {
+  A1: "Unit 1",
+  A2: "Unit 1",
+  A3: "Unit 1",
+  B1: "Unit 2",
+  B2: "Unit 2",
+  B3: "Unit 2",
+  C1: "Unit 3",
+  C2: "Unit 3",
+  C3: "Unit 3",
+  D1: "Unit 4",
+  D2: "Unit 4",
+  D3: "Unit 4",
+  E1: "Unit 5",
+  E2: "Unit 5",
+  E3: "Unit 5",
+};
+
+router.get("/generate-semester-qb", (req, res) => {
+  const { course_code } = req.query;
+
+  if (!course_code) {
+    return res.status(400).json({ error: "Missing course_code" });
+  }
+
+  db.query(
+    "SELECT * FROM question_status WHERE course_code = ?",
+    [course_code],
+    (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+
+      const randomSalt = Math.floor(Math.random() * 10000);
+      const seed = `${course_code}-semester-${randomSalt}`;
+      const shuffledQuestions = shuffleArray(results, seed);
+
+      const paper = {};
+      const usedIds = new Set();
+
+      for (const sectionName of Object.keys(sectionUnits)) {
+        const unit = sectionUnits[sectionName];
+
+        // Get questions filtered by unit, portions, and usedIds
+        const { oneMarks, otherMarks } = groupQuestions(
+          unit,
+          shuffledQuestions,
+          usedIds,
+          sectionName
+        );
+
+        if (oneMarks.length < 2) {
+          return res.status(400).json({
+            error: `Not enough 1-mark MCQs in ${unit} for section ${sectionName}. Required: 2, Found: ${oneMarks.length}`,
+          });
+        }
+
+        // Pick exactly 2 one-mark MCQs
+        const selectedOneMarks = oneMarks.slice(0, 2);
+        selectedOneMarks.forEach((q) => usedIds.add(q.id));
+
+        // Find subset of other questions summing to 8 marks
+        const subset = findSubsetForSum(otherMarks, 8);
+
+        if (!subset) {
+          return res.status(400).json({
+            error: `Not enough valid questions in ${unit} to complete Section ${sectionName} (need 8 marks from other questions).`,
+          });
+        }
+
+        subset.forEach((q) => usedIds.add(q.id));
+
+        // Assign questions to section
+        paper[sectionName] = [...selectedOneMarks, ...subset];
+      }
+
+      return res.json(paper);
+    }
+  );
+});
+
+
+
+
+// Helper to parse unit and portion from a unit string like "Unit 3A" or "Unit 3B"
+function parseUnitPortion(unitStr) {
+  // Matches "Unit <number>" optionally followed by A or B suffix
+  const match = unitStr.match(/(Unit \d+)([AB])?$/i);
+  if (!match) {
+    // If no match, treat entire string as base unit, no portion
+    return { baseUnit: unitStr, portion: null };
+  }
+  return {
+    baseUnit: match[1],          // e.g. "Unit 3"
+    portion: match[2] ? match[2].toUpperCase() : null,  // "A" or "B" or null
+  };
+}
+
+// Normalizes unit strings into arrays of parts for comparison
+function pnormalizeUnit(unit) {
+  return unit
+    .replace("Unit ", "")
+    .replace(/([A-Za-z]+)/g, ".$1")
+    .split(".")
+    .map((v) => (isNaN(v) ? v : parseInt(v)));
+}
+
+// Compares two units (e.g. "Unit 3A" vs "Unit 3B") by their parts
+function pcompareUnits(u1, u2) {
+  const a = pnormalizeUnit(u1);
+  const b = pnormalizeUnit(u2);
+
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const valA = a[i] !== undefined ? a[i] : 0;
+    const valB = b[i] !== undefined ? b[i] : 0;
+
+    if (valA < valB) return -1;
+    if (valA > valB) return 1;
+  }
+  return 0;
+}
+
+// Shuffle array deterministically by seed
+function pshuffleArray(arr, seed) {
+  let rng = new seedrandom(seed);
+  let shuffled = arr.slice();
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
+
+// Get allowed portions filter for a given section name (e.g. "A1", "B2", "C3")
+function pgetPortionFilter(sectionName) {
   const section = sectionName[0]; // A, B, C
   const index = sectionName[1];   // 1, 2, 3
 
@@ -177,7 +383,8 @@ function getPortionFilter(sectionName) {
   return ["A", "B"];
 }
 
-function isPortionAllowed(portion, allowedPortions) {
+// Check if question's portion is allowed based on allowedPortions array
+function pisPortionAllowed(portion, allowedPortions) {
   if (!portion) return false;
   const normalized = portion.toUpperCase();
 
@@ -188,65 +395,84 @@ function isPortionAllowed(portion, allowedPortions) {
   return allowedPortions.includes(normalized);
 }
 
-function isMCQ(q) {
+// Check if question is a 1-mark MCQ
+function pisMCQ(q) {
   return (
     q.mark === 1 &&
     q.option_a && q.option_b && q.option_c && q.option_d
   );
 }
 
-function groupQuestions(unit, questions, usedIds, sectionName) {
-  const allowedPortions = getPortionFilter(sectionName);
+/**
+ * Group questions by marks with filtering:
+ * - baseUnit: unit string without portion suffix (e.g. "Unit 3")
+ * - portionFilter: if specified (e.g. "A" or "B"), filter questions only from this portion
+ */
+function pgroupQuestions(baseUnit, questions, usedIds, sectionName, portionFilter = null) {
+  const allowedPortions = pgetPortionFilter(sectionName);
+  // Use portionFilter if provided, otherwise use allowedPortions from section
+  const portionsToCheck = portionFilter ? [portionFilter] : allowedPortions;
+
   return {
     oneMarks: questions.filter(
       (q) =>
-        q.unit === unit &&
+        q.unit === baseUnit &&
         q.mark === 1 &&
-        isMCQ(q) &&
+        pisMCQ(q) &&
         !usedIds.has(q.id) &&
-        isPortionAllowed(q.portion, allowedPortions)
+        pisPortionAllowed(q.portion, portionsToCheck)
     ),
     fourMarks: questions.filter(
       (q) =>
-        q.unit === unit &&
+        q.unit === baseUnit &&
         q.mark === 4 &&
         !usedIds.has(q.id) &&
-        isPortionAllowed(q.portion, allowedPortions)
+        pisPortionAllowed(q.portion, portionsToCheck)
     ),
     otherMarks: questions.filter(
       (q) =>
-        q.unit === unit &&
+        q.unit === baseUnit &&
         q.mark !== 1 &&
         q.mark !== 4 &&
         !usedIds.has(q.id) &&
-        isPortionAllowed(q.portion, allowedPortions)
+        pisPortionAllowed(q.portion, portionsToCheck)
     ),
   };
 }
 
-router.get("/generate-qb", verifyToken, (req, res) => {
+// The main route handler
+router.get("/generate-qb", (req, res) => {
   const { course_code, from_unit, to_unit } = req.query;
 
   if (!course_code || !from_unit || !to_unit) {
     return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
   }
 
+  // Only allow two specific ranges (with possible suffixes)
   const validRange1 =
-    compareUnits(from_unit, "Unit 1") === 0 &&
-    compareUnits(to_unit, "Unit 3A") === 0;
+    pcompareUnits(from_unit, "Unit 1") === 0 &&
+    pcompareUnits(to_unit, "Unit 3A") === 0;
 
   const validRange2 =
-    compareUnits(from_unit, "Unit 3B") === 0 &&
-    compareUnits(to_unit, "Unit 5") === 0;
+    pcompareUnits(from_unit, "Unit 3B") === 0 &&
+    pcompareUnits(to_unit, "Unit 5") === 0;
 
   if (!validRange1 && !validRange2) {
     return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
   }
 
-  const sectionUnits = validRange1
+  // Define raw section units as strings (with suffixes allowed)
+  const rawSectionUnits = validRange1
     ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
     : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
 
+  // Parse units to separate base unit and portion
+  const sectionUnits = {};
+  for (const [section, unitStr] of Object.entries(rawSectionUnits)) {
+    sectionUnits[section] = parseUnitPortion(unitStr);
+  }
+
+  // Query all questions for the course_code
   db.query(
     "SELECT * FROM question_status WHERE course_code = ?",
     [course_code],
@@ -255,27 +481,28 @@ router.get("/generate-qb", verifyToken, (req, res) => {
 
       const randomSalt = Math.floor(Math.random() * 10000);
       const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
-      const shuffledQuestions = shuffleArray(results, seed);
+      const shuffledQuestions = pshuffleArray(results, seed);
 
       const paper = {};
       const usedIds = new Set();
 
-      // A1–A3 and B1–B3
+      // Handle sections A1–A3 and B1–B3
       for (const section of ["A", "B"]) {
-        const unit = sectionUnits[section];
+        const { baseUnit, portion } = sectionUnits[section];
         for (let i = 1; i <= 3; i++) {
           const sectionKey = `${section}${i}`;
-          const { oneMarks, otherMarks } = groupQuestions(
-            unit,
+          const { oneMarks, otherMarks } = pgroupQuestions(
+            baseUnit,
             shuffledQuestions,
             usedIds,
-            sectionKey
+            sectionKey,
+            portion
           );
 
           if (oneMarks.length < 2 || otherMarks.length < 2) {
-            return res
-              .status(400)
-              .json({ error: `Not enough valid questions in ${unit} for Section ${sectionKey}` });
+            return res.status(400).json({
+              error: `Not enough valid questions in ${baseUnit} portion ${portion || "Any"} for Section ${sectionKey}`,
+            });
           }
 
           const selectedOneMarks = oneMarks.splice(0, 2);
@@ -288,21 +515,22 @@ router.get("/generate-qb", verifyToken, (req, res) => {
         }
       }
 
-      // C1–C3
-      const unitC = sectionUnits.C;
+      // Handle sections C1–C3
+      const { baseUnit: baseUnitC, portion: portionC } = sectionUnits.C;
       for (let i = 1; i <= 3; i++) {
         const sectionKey = `C${i}`;
-        const { oneMarks, fourMarks } = groupQuestions(
-          unitC,
+        const { oneMarks, fourMarks } = pgroupQuestions(
+          baseUnitC,
           shuffledQuestions,
           usedIds,
-          sectionKey
+          sectionKey,
+          portionC
         );
 
         if (oneMarks.length < 1 || fourMarks.length < 1) {
-          return res
-            .status(400)
-            .json({ error: `Not enough valid questions in ${unitC} for Section ${sectionKey}` });
+          return res.status(400).json({
+            error: `Not enough valid questions in ${baseUnitC} portion ${portionC || "Any"} for Section ${sectionKey}`,
+          });
         }
 
         const one = oneMarks.shift();
@@ -319,79 +547,9 @@ router.get("/generate-qb", verifyToken, (req, res) => {
   );
 });
 
-router.get("/generate-qb", verifyToken, (req, res) => {
-  const { course_code, from_unit, to_unit } = req.query;
+module.exports = router;
 
-  if (!course_code || !from_unit || !to_unit) {
-    return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
-  }
 
-  const validRange1 = compareUnits(from_unit, "Unit 1") === 0 && compareUnits(to_unit, "Unit 3A") === 0;
-  const validRange2 = compareUnits(from_unit, "Unit 3B") === 0 && compareUnits(to_unit, "Unit 5") === 0;
-
-  if (!validRange1 && !validRange2) {
-    return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
-  }
-
-  const sectionUnits = validRange1
-    ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
-    : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
-
-  db.query("SELECT * FROM question_status WHERE course_code = ?", [course_code], (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
-
-    const randomSalt = Math.floor(Math.random() * 10000);
-    const seed = `${course_code}-${from_unit}-${to_unit}-${randomSalt}`;
-    const shuffledQuestions = shuffleArray(results, seed);
-
-    const paper = {};
-    const usedIds = new Set();
-
-    // Sections A1–A3 and B1–B3
-    for (const section of ["A", "B"]) {
-      const unit = sectionUnits[section];
-
-      for (let i = 1; i <= 3; i++) {
-        const sectionKey = `${section}${i}`;
-        const { oneMarks, otherMarks } = groupQuestions(unit, shuffledQuestions, usedIds, sectionKey);
-
-        if (oneMarks.length < 2 || otherMarks.length < 2) {
-          return res.status(400).json({ error: `Not enough valid questions in ${unit} for Section ${sectionKey}` });
-        }
-
-        const selectedOneMarks = oneMarks.splice(0, 2);
-        const selectedOtherMarks = otherMarks.splice(0, 2);
-
-        paper[sectionKey] = [...selectedOneMarks, ...selectedOtherMarks];
-
-        selectedOneMarks.forEach(q => usedIds.add(q.id));
-        selectedOtherMarks.forEach(q => usedIds.add(q.id));
-      }
-    }
-
-    // Sections C1–C3
-    const unitC = sectionUnits.C;
-
-    for (let i = 1; i <= 3; i++) {
-      const sectionKey = `C${i}`;
-      const { oneMarks, fourMarks } = groupQuestions(unitC, shuffledQuestions, usedIds, sectionKey);
-
-      if (oneMarks.length < 1 || fourMarks.length < 1) {
-        return res.status(400).json({ error: `Not enough valid questions in ${unitC} for Section ${sectionKey}` });
-      }
-
-      const one = oneMarks.shift();
-      const four = fourMarks.shift();
-
-      paper[sectionKey] = [one, four];
-
-      usedIds.add(one.id);
-      usedIds.add(four.id);
-    }
-
-    return res.json(paper);
-  });
-});
 
 router.get('/qb-history', verifyToken,(req, res) => {
     const query = "SELECT course_code, subject_name,exam_name,date_time FROM generated_papers";
