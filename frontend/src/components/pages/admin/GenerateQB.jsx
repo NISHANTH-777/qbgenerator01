@@ -83,19 +83,36 @@ useEffect(() => {
       .catch((err) => console.error("Error fetching subject options:", err));
   }, []);
 
-  const fetchPaper = async () => {
-    const { from_unit, to_unit, course_code, department, exam_type } = formData;
-  
-    if (!course_code || !from_unit || !to_unit || !department || !exam_type) {
-      setError("Please fill all the fields before generating the paper.");
-      return;
-    }
-  
-    try {
+ const fetchPaper = async () => {
+  const { from_unit, to_unit, course_code, department, exam_type } = formData;
+
+  if (!course_code || !department || !exam_type) {
+    setError("Please fill all the fields before generating the paper.");
+    return;
+  }
+
+  try {
+    let res;
+
+    if (exam_type === "End Semester") {
+      res = await axios.get(
+        `http://localhost:7000/api/admin/generate-semester-qb?course_code=${course_code}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+    } else {
+      if (!from_unit || !to_unit) {
+        setError("Please select units for internal exams.");
+        return;
+      }
+
       const from = from_unit.replace("Unit ", "");
       const to = to_unit.replace("Unit ", "");
-  
-      const res = await axios.get(
+
+      res = await axios.get(
         `http://localhost:7000/api/admin/generate-qb?course_code=${course_code}&from_unit=${from}&to_unit=${to}`,
         {
           headers: {
@@ -103,46 +120,49 @@ useEffect(() => {
           }
         }
       );
-  
-      if (res.data.error) {
-        setError(res.data.error);
-        setPaperData(null);
-      } else {
-        const subject = subjectOptions.find(
-          (s) => s.course_code === course_code
-        );
-        await axios.post("http://localhost:7000/api/admin/generate-history", {
-          course_code: course_code,
-          subject_name: subject?.subject_name || "Subject Name",
-          exam_name: exam_type
-        }, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-        
-        setPaperData({
-          college: "Bannari Amman Institute of Technology",
-          exam_name: exam_type,
-          department: `IV Sem – B.E. / B.Tech. ${department}`,
-          course_code,
-          subject_name: subject?.subject_name || "Subject Name",
-          time: "1:30 hrs",
-          max_marks: 50,
-          instructions: [
-            "1.Students should not mark/write anything on the Question Paper other than the register number.",
-            "2.Section A of the Question Paper contains questions for 15 Marks. Sections B and C contain questions for 30 Marks each.",
-            "3.Section A: 10 marks, Section B: 20 marks, Section C: 20 marks.Students can attempt answering any two out of three subsections in each section. The maximum mark is limited to 10 in section A and 20 in section B&C.",
-          ],
-          paper: res.data,
-        });
-        setError("");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to generate question paper.");
     }
-  };
+
+    if (res.data.error) {
+      setError(res.data.error);
+      setPaperData(null);
+    } else {
+      const subject = subjectOptions.find(
+        (s) => s.course_code === course_code
+      );
+
+      await axios.post("http://localhost:7000/api/admin/generate-history", {
+        course_code: course_code,
+        subject_name: subject?.subject_name || "Subject Name",
+        exam_name: exam_type
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      setPaperData({
+        college: "Bannari Amman Institute of Technology",
+        exam_name: exam_type,
+        department: `IV Sem – B.E. / B.Tech. ${department}`,
+        course_code,
+        subject_name: subject?.subject_name || "Subject Name",
+        time: "1:30 hrs",
+        max_marks: 50,
+        instructions: [
+          "1. Students should not mark/write anything on the Question Paper other than the register number.",
+          "2. Section A of the Question Paper contains questions for 15 Marks. Sections B and C contain questions for 30 Marks each.",
+          "3. Section A: 10 marks, Section B: 20 marks, Section C: 20 marks. Students can attempt answering any two out of three subsections in each section. The maximum mark is limited to 10 in section A and 20 in section B & C.",
+        ],
+        paper: res.data,
+      });
+      setError("");
+    }
+  } catch (err) {
+    console.error(err);
+    setError("Failed to generate question paper.");
+  }
+};
+
   
 
   const exportToPDF = () => {

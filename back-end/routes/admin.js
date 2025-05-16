@@ -247,7 +247,7 @@ const sectionUnits = {
   E3: "Unit 5",
 };
 
-router.get("/generate-semester-qb", (req, res) => {
+router.get("/generate-semester-qb",verifyToken, (req, res) => {
   const { course_code } = req.query;
 
   if (!course_code) {

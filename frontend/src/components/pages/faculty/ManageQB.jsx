@@ -53,7 +53,7 @@ const ManageQB = () => {
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
-            facultyId: item.id,
+            facultyId: item.faculty_id,
             code: item.courseCode || courseCode,
             unit: item.unit,
             datetime: new Date(item.updated_at).toLocaleString(),
