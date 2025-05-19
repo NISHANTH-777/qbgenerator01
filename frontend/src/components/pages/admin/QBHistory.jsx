@@ -14,22 +14,27 @@ const QBHistory = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:7000/api/admin/generate-history", {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      }})
-      .then((res) => {
-        const formatted = res.data.map((item) => ({
-          id: item.id,
-          code: item.course_code,
-          subject: item.subject_name,
-          exam: item.exam_name,
-          datetime: new Date(item.date_time).toLocaleString(),
-        }));
-        setRows(formatted);
-      })
-      .catch((err) => console.error("Error fetching data:", err));
-  }, []);
+  axios.get("http://localhost:7000/api/admin/generate-history", {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    }
+  })
+  .then((res) => {
+    const sorted = res.data.sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+    
+    const formatted = sorted.map((item) => ({
+      id: item.id,
+      code: item.course_code,
+      subject: item.subject_name,
+      exam: item.exam_name,
+      datetime: new Date(item.date_time).toLocaleString(),
+    }));
+
+    setRows(formatted);
+  })
+  .catch((err) => console.error("Error fetching data:", err));
+}, []);
+
 
   const columns = [
     { field: 'code', headerName: 'Course Code', flex: 1 },

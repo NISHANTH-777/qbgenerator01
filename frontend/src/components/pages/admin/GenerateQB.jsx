@@ -413,34 +413,33 @@ return (
             styles={{
               control: (provided) => ({
                 ...provided,
-                backgroundColor: '#f0f0f0', 
-                borderColor: '#ccc', 
-                borderRadius: '8px', 
-                padding: '5px', // change padding
+                backgroundColor: 'white', 
+                borderColor: '#ccc',  
+                padding: '5px', 
               }),
               option: (provided) => ({
                 ...provided,
-                backgroundColor: '#fff', // option background color
-                color: '#333', // option text color
+                backgroundColor: 'white', 
+                color: 'black', 
                 ':hover': {
-                  backgroundColor: '#f5f5f5', // hover effect
-                  color: '#000',
+                  backgroundColor: '#f5f5f5', 
+                  color: 'black',
                 },
               }),
               multiValue: (provided) => ({
                 ...provided,
-                backgroundColor: 'white', // background for selected values
+                backgroundColor: 'white', 
                 color: 'black',
               }),
               multiValueLabel: (provided) => ({
                 ...provided,
-                color: 'black', // text color for selected items
+                color: 'black', 
               }),
               multiValueRemove: (provided) => ({
                 ...provided,
-                color: 'black', // close button color
+                color: 'black', 
                 ':hover': {
-                  backgroundColor: 'black', // close button hover color
+                  backgroundColor: 'black', 
                   color: 'white',
                 },
               }),

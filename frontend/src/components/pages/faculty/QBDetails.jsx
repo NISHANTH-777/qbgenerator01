@@ -42,7 +42,9 @@ const QBDetails = () => {
           },
         })
         .then((res) => {
-          const formattedRows = res.data.map((item, index) => ({
+          const acceptedQuestions = res.data
+          .filter((item) => item.status === 'accepted') 
+          .map((item, index) => ({
             id: index + 1,
             facultyId: item.faculty_id,
             code: item.courseCode || courseCode,
@@ -50,7 +52,9 @@ const QBDetails = () => {
             datetime: new Date(item.updated_at).toLocaleString(),
             status: item.status,
           }));
-          setQuestionRows(formattedRows);
+
+setQuestionRows(acceptedQuestions);
+
         })
         .catch((err) => {
           console.error("Error fetching question data:", err);

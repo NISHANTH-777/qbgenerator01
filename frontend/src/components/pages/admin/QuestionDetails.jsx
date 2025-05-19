@@ -19,24 +19,29 @@ const QuestionDetails = () => {
     navigate('/');
   };
 
-  useEffect(() => {
-    axios.get("http://localhost:7000/api/admin/question-history", {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      }})
-      .then((res) => {
-        const formatted = res.data.map((item, index) => ({
-          id: index + 1,
-          facultyId: item.faculty_id,
-          code: item.course_code,
-          unit: item.unit,
-          datetime: new Date(item.created_at).toLocaleString(),
-          status:item.status 
-        }));
-        setRows(formatted);
-      })
-      .catch((err) => console.error("Error fetching data:", err));
-  }, []);
+ useEffect(() => {
+  axios.get("http://localhost:7000/api/admin/question-history", {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    }
+  })
+  .then((res) => {
+    const sorted = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const formatted = sorted.map((item, index) => ({
+      id: index + 1,
+      facultyId: item.faculty_id,
+      code: item.course_code,
+      unit: item.unit,
+      datetime: new Date(item.created_at).toLocaleString(),
+      status: item.status,
+    }));
+
+    setRows(formatted);
+  })
+  .catch((err) => console.error("Error fetching data:", err));
+}, []);
+
 
   const columns = [
     { field: 'facultyId', headerName: 'Faculty ID', flex: 1 },
