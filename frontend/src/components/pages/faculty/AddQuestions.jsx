@@ -94,6 +94,40 @@ const AddQuestions = () => {
     setFile(selectedFile);
   };
 
+  // Handle figure upload
+  const [figureFile, setFigureFile] = useState(null);
+  const [figurePath, setFigurePath] = useState("");
+  
+  const handleFigureChange = (e) => {
+    setFigureFile(e.target.files[0]);
+  };
+
+  const uploadFigure = async () => {
+    if (!figureFile) return null;
+    
+    try {
+      const figureFormData = new FormData();
+      figureFormData.append("figure", figureFile);
+      
+      const response = await axios.post(
+        "http://localhost:7000/api/faculty/upload-figure",
+        figureFormData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      return response.data.figurePath;
+    } catch (error) {
+      console.error("Error uploading figure:", error);
+      toast.error("Failed to upload figure");
+      return null;
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,11 +195,22 @@ const AddQuestions = () => {
 
         toast.success("File uploaded successfully!");
       } else {
+        // First upload figure if present
+        let uploadedFigurePath = null;
+        if (figureFile) {
+          uploadedFigurePath = await uploadFigure();
+          if (!uploadedFigurePath) {
+            toast.error("Failed to upload figure. Please try again.");
+            return;
+          }
+        }
+
         // Handle question form submission
         const submissionData = {
           ...formData,
           vetting_id: formData.vetting_id || vettingId,
           faculty_id: formData.faculty_id || facultyId,
+          figure: uploadedFigurePath // Add the figure path to submission data
         };
 
         await axios.post("http://localhost:7000/api/faculty/add-question", submissionData, {
@@ -198,6 +243,8 @@ const AddQuestions = () => {
         faculty_id: facultyId,
       });
       setFile(null);
+      setFigureFile(null);
+      setFigurePath("");
     } catch (error) {
       toast.error("Error adding question: " + (error.response?.data?.message || error.message));
       console.error(error);
@@ -360,14 +407,20 @@ const AddQuestions = () => {
 
                 <div className="space-y-1">
                   <label className="font-medium text-gray-700 flex items-center gap-2">
-                    <ListChecks size={18} /> Component
+                    <ListChecks size={18} /> Figure
                   </label>
                   <input
                     type="file"
-                    name="component"
-                    onChange={handleFileChange}
+                    name="figure"
+                    onChange={handleFigureChange}
+                    accept="image/*"
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  {figureFile && (
+                    <p className="text-sm text-green-600 mt-1">
+                      Selected: {figureFile.name}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1">

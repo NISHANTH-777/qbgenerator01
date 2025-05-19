@@ -6,16 +6,22 @@ const csv = require("csv-parser");
 const fs = require("fs");
 const db = require("../db"); 
 const verifyToken = require('./jwtMiddleware');
+const app = express()
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, path.join(__dirname, "../uploads/"));
-    },
-    filename: (req, file, cb) => {
-      cb(null, file.originalname);
-    },
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads')); // relative to this file
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
 });
-  
+
+router.get('/test-dir', (req, res) => {
+  res.send(`__dirname is: ${__dirname}`);
+});
+
+
 const upload = multer({ storage: storage });
   
 router.get("/get-course-code",verifyToken, (req, res) => {

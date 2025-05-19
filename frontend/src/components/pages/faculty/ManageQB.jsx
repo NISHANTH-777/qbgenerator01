@@ -53,6 +53,7 @@ const ManageQB = () => {
         .then((res) => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
+            questionId: item.question_id,
             facultyId: item.faculty_id,
             question : item.question,
             // code: item.courseCode || courseCode,
@@ -69,11 +70,12 @@ const ManageQB = () => {
   }, [courseCode]);
   
   const handleView = (rowId) => {
-    const selected = questionRows.find(row => row.id === rowId);
+    const selected = questionRows.find(row => row.questionId === rowId);
+    // console.log(selected)
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.id}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.questionId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -87,12 +89,12 @@ const ManageQB = () => {
   };
   
   const handleEdit = (rowId) => {
-    const selected = questionRows.find(row => row.id === rowId);
+    const selected = questionRows.find(row => row.questionId === rowId);
     console.log(selected)
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.id}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.questionId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +113,7 @@ const ManageQB = () => {
   
     axios
       .put(
-        `http://localhost:7000/api/faculty/question-edit/${id}`,
+        `http://localhost:7000/api/faculty/question-edit/${selectedQuestion.id}`,
         { exam_name, unit, topic, mark, question, answer },
         {
           headers: {
@@ -161,13 +163,13 @@ const ManageQB = () => {
       filterable: false,
       renderCell: (params) => (
         <div className="flex gap-4 items-center">
-          <button onClick={() => handleView(params.row.id)} title="View">
+          <button onClick={() => handleView(params.row.questionId)} title="View">
             <Eye className="text-blue-500 hover:scale-110 transition-transform" size={20} />
           </button>
-          <button onClick={() => handleEdit(params.row.id)} title="Edit">
+          <button onClick={() => handleEdit(params.row.questionId)} title="Edit">
             <Pencil className="text-green-500 hover:scale-110 transition-transform" size={20} />
           </button>
-          <button onClick={() => handleDelete(params.row.id)} title="Delete">
+          <button onClick={() => handleDelete(params.row.questionId)} title="Delete">
             <Trash className="text-red-500 hover:scale-110 transition-transform" size={20} />
           </button>
         </div>
@@ -204,7 +206,7 @@ const ManageQB = () => {
             >
               <Menu size={28} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800">Manage Question Bank</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Manage Question</h2>
           </div>
           <Imagecomp />
         </div>
@@ -256,6 +258,16 @@ const ManageQB = () => {
               <p><strong>Marks:</strong> {selectedQuestion.mark}</p>
               <p><strong>Question:</strong> {selectedQuestion.question}</p>
               <p><strong>Answer:</strong> {selectedQuestion.answer}</p>
+              {selectedQuestion.figure && (
+                <div className="mt-4">
+                  <p><strong>Figure:</strong></p>
+                  <img 
+                    src={`http://localhost:7000${selectedQuestion.figure}`} 
+                    alt="Question Figure" 
+                    className="mt-2 max-w-full h-auto border rounded"
+                  />
+                </div>
+              )}
               <button
                 onClick={() => setViewModalOpen(false)}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -277,6 +289,16 @@ const ManageQB = () => {
                 <input type="number" value={selectedQuestion.mark} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, mark: e.target.value })} placeholder="Marks" className="border p-2 rounded" />
                 <textarea value={selectedQuestion.question} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, question: e.target.value })} placeholder="Question" className="border p-2 rounded" />
                 <textarea value={selectedQuestion.answer} onChange={(e) => setSelectedQuestion({ ...selectedQuestion, answer: e.target.value })} placeholder="Answer" className="border p-2 rounded" />
+                {selectedQuestion.figure && (
+                  <div className="mt-3">
+                    <p className="mb-2"><strong>Current Figure:</strong></p>
+                    <img 
+                      src={`http://localhost:7000${selectedQuestion.figure}`} 
+                      alt="Question Figure" 
+                      className="max-w-full h-auto max-h-[200px] border rounded mb-2"
+                    />
+                  </div>
+                )}
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button onClick={() => setEditModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
