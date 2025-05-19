@@ -8,14 +8,25 @@ const db = require("../db");
 const verifyToken = require('./jwtMiddleware');
 const app = express()
 
+// Serve uploaded files statically
+router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads')); // relative to this file
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
+    destination: (req, file, cb) => {
+      cb(null, path.join(__dirname, "../uploads/"));
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const extension = path.extname(file.originalname);
+      cb(null, uniqueSuffix + extension);
+    },
 });
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "../uploads/");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 router.get('/test-dir', (req, res) => {
   res.send(`__dirname is: ${__dirname}`);
@@ -24,6 +35,17 @@ router.get('/test-dir', (req, res) => {
 
 const upload = multer({ storage: storage });
   
+
+router.post("/upload-figure", verifyToken, upload.single("figure"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  
+  // Return the file path that will be stored in the database
+  const figurePath = `/uploads/${req.file.filename}`;
+  res.status(200).json({ figurePath });
+});
+
 router.get("/get-course-code",verifyToken, (req, res) => {
     const { email } = req.query;
     if (!email) return res.status(400).send("Missing email");
