@@ -72,7 +72,7 @@ const ManageQB = () => {
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,16 +86,18 @@ const ManageQB = () => {
   
   const handleEdit = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
+    console.log(selected)
     const token = localStorage.getItem("token");
   
     axios
-      .get(`http://localhost:7000/api/faculty/question-view/${selected.facultyId}`, {
+      .get(`http://localhost:7000/api/faculty/question-view/${selected.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .then((res) => {
         setSelectedQuestion(res.data[0]);
+        console.log(selectedQuestion)
         setEditModalOpen(true);
       })
       .catch((err) => console.error("Error fetching for edit:", err));
