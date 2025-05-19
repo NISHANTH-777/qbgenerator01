@@ -54,7 +54,8 @@ const ManageQB = () => {
           const formattedRows = res.data.map((item, index) => ({
             id: index + 1,
             facultyId: item.faculty_id,
-            code: item.courseCode || courseCode,
+            question : item.question,
+            // code: item.courseCode || courseCode,
             unit: item.unit,
             datetime: new Date(item.updated_at).toLocaleString(),
             status: item.status,
@@ -79,6 +80,7 @@ const ManageQB = () => {
       })
       .then((res) => {
         setSelectedQuestion(res.data[0]);
+        console.log(selectedQuestion)
         setViewModalOpen(true);
       })
       .catch((err) => console.error("Error viewing question:", err));
@@ -147,8 +149,8 @@ const ManageQB = () => {
 
   const questionColumns = [
     { field: 'facultyId', headerName: 'Faculty ID', flex: 1 },
-    { field: 'code', headerName: 'Course Code', flex: 1 },
     { field: 'unit', headerName: 'Unit', flex: 1 },
+    { field: 'question', headerName: 'Question', flex: 1 },
     { field: 'datetime', headerName: 'Date & Time', flex: 1.2 },
      { field: 'status' , headerName: 'Status', flex: 1.0 },
     {
