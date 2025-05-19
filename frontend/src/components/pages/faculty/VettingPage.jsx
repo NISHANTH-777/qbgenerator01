@@ -5,6 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { useNavigate } from 'react-router-dom';
 import FacultyNavbar from '../../navbar/FacultyNavbar';
+import { Typography } from '@mui/material';
 import { Imagecomp } from '../../images/Imagecomp';
 import { useSelector } from 'react-redux';
 
@@ -204,6 +205,13 @@ const handleReject = async () => {
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
             rowHeight={60}
+            slots={{
+            noRowsOverlay: () => (
+            <Typography variant="body1" sx={{ mt: 22, textAlign: 'center', width: '100%' }}>
+              No Vetting Task Assigned
+            </Typography>
+                )
+              }}
             sx={{
                  border: 0,
                 '& .MuiDataGrid-row:nth-of-type(odd)': {

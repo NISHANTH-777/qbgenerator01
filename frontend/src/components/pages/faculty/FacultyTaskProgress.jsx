@@ -82,6 +82,13 @@ const FacultyTaskProgress = () => {
             disableRowSelectionOnClick
             hideFooterSelectedRowCount
             rowHeight={60}
+            slots={{
+            noRowsOverlay: () => (
+            <Typography variant="body1" sx={{ mt: 6, textAlign: 'center', width: '100%' }}>
+              No Task Assigned
+            </Typography>
+                )
+              }}
             sx={{
               border: 0,
               '& .MuiDataGrid-row:nth-of-type(odd)': {
