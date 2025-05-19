@@ -168,7 +168,6 @@ function shuffleArray(arr, seed) {
 
 function getPortionFilter(sectionName) {
   const index = sectionName[1]; // "1", "2", or "3"
-
   if (index === "1") return ["A"];
   if (index === "2") return ["A", "B"];
   if (index === "3") return ["B"];
@@ -178,7 +177,6 @@ function getPortionFilter(sectionName) {
 function isPortionAllowed(portion, allowedPortions) {
   if (!portion) return false;
   const normalized = portion.toUpperCase();
-
   if (normalized === "A&B" || normalized === "A AND B") {
     return allowedPortions.some((p) => ["A", "B"].includes(p));
   }
@@ -215,18 +213,15 @@ function groupQuestions(unit, questions, usedIds, sectionName) {
   };
 }
 
-function findSubsetForSum(questions, target) {
-  function helper(i, currentSum, path) {
-    if (currentSum === target) return path;
-    if (i >= questions.length || currentSum > target) return null;
-
-    let withCurrent = helper(i + 1, currentSum + questions[i].mark, [...path, questions[i]]);
-    if (withCurrent) return withCurrent;
-
-    return helper(i + 1, currentSum, path);
+function findPairForSum(questions, targetSum) {
+  for (let i = 0; i < questions.length; i++) {
+    for (let j = i + 1; j < questions.length; j++) {
+      if (questions[i].mark + questions[j].mark === targetSum) {
+        return [questions[i], questions[j]];
+      }
+    }
   }
-
-  return helper(0, 0, []);
+  return null;
 }
 
 const sectionUnits = {
@@ -247,7 +242,7 @@ const sectionUnits = {
   E3: "Unit 5",
 };
 
-router.get("/generate-semester-qb",verifyToken, (req, res) => {
+router.get("/generate-semester-qb", verifyToken, (req, res) => {
   const { course_code } = req.query;
 
   if (!course_code) {
@@ -286,17 +281,20 @@ router.get("/generate-semester-qb",verifyToken, (req, res) => {
         const selectedOneMarks = oneMarks.slice(0, 2);
         selectedOneMarks.forEach((q) => usedIds.add(q.id));
 
-        const subset = findSubsetForSum(otherMarks, 8);
+        const pair = findPairForSum(
+          otherMarks.filter((q) => !usedIds.has(q.id)),
+          8
+        );
 
-        if (!subset) {
+        if (!pair) {
           return res.status(400).json({
-            error: `Not enough valid questions in ${unit} to complete Section ${sectionName} (need 8 marks from other questions).`,
+            error: `Not enough valid question pairs in ${unit} to complete Section ${sectionName} (need 2 questions summing to 8 marks).`,
           });
         }
 
-        subset.forEach((q) => usedIds.add(q.id));
+        pair.forEach((q) => usedIds.add(q.id));
 
-        paper[sectionName] = [...selectedOneMarks, ...subset];
+        paper[sectionName] = [...selectedOneMarks, ...pair];
       }
 
       return res.json(paper);
@@ -305,12 +303,12 @@ router.get("/generate-semester-qb",verifyToken, (req, res) => {
 });
 
 function parseUnitPortion(unitStr) {
-  const match = unitStr.match(/(Unit \d+)([AB])?$/i);
+  const match = unitStr.match(/(Unit \d+)([AB])?/i);
   if (!match) {
     return { baseUnit: unitStr, portion: null };
   }
   return {
-    baseUnit: match[1],       
+    baseUnit: match[1],
     portion: match[2] ? match[2].toUpperCase() : null,
   };
 }
@@ -350,8 +348,8 @@ function pshuffleArray(arr, seed) {
 }
 
 function pgetPortionFilter(sectionName) {
-  const section = sectionName[0]; 
-  const index = sectionName[1];  
+  const section = sectionName[0];
+  const index = sectionName[1];
 
   if (section === "C") return ["A"];
   if (index === "1") return ["A"];
@@ -363,11 +361,9 @@ function pgetPortionFilter(sectionName) {
 function pisPortionAllowed(portion, allowedPortions) {
   if (!portion) return false;
   const normalized = portion.toUpperCase();
-
   if (normalized === "A&B") {
     return allowedPortions.includes("A") && allowedPortions.includes("B");
   }
-
   return allowedPortions.includes(normalized);
 }
 
@@ -409,6 +405,19 @@ function pgroupQuestions(baseUnit, questions, usedIds, sectionName, portionFilte
   };
 }
 
+function pickMarkCombination(questions, target = 8) {
+  for (let i = 0; i < questions.length; i++) {
+    for (let j = i + 1; j < questions.length; j++) {
+      const sum = questions[i].mark + questions[j].mark;
+      if (sum === target) {
+        return [questions[i], questions[j]];
+      }
+    }
+  }
+  return null;
+}
+
+// ROUTE STARTS HERE
 router.get("/generate-qb", (req, res) => {
   const { course_code, from_unit, to_unit } = req.query;
 
@@ -416,7 +425,6 @@ router.get("/generate-qb", (req, res) => {
     return res.status(400).json({ error: "Missing course_code, from_unit, or to_unit" });
   }
 
-  // Only allow two specific ranges (with possible suffixes)
   const validRange1 =
     pcompareUnits(from_unit, "Unit 1") === 0 &&
     pcompareUnits(to_unit, "Unit 3A") === 0;
@@ -429,18 +437,15 @@ router.get("/generate-qb", (req, res) => {
     return res.status(400).json({ error: "Only Unit 1–3A or Unit 3B–5 are allowed" });
   }
 
-  // Define raw section units as strings (with suffixes allowed)
   const rawSectionUnits = validRange1
     ? { A: "Unit 1", B: "Unit 2", C: "Unit 3A" }
     : { A: "Unit 4", B: "Unit 5", C: "Unit 3B" };
 
-  // Parse units to separate base unit and portion
   const sectionUnits = {};
   for (const [section, unitStr] of Object.entries(rawSectionUnits)) {
     sectionUnits[section] = parseUnitPortion(unitStr);
   }
 
-  // Query all questions for the course_code
   db.query(
     "SELECT * FROM question_status WHERE course_code = ?",
     [course_code],
@@ -454,7 +459,7 @@ router.get("/generate-qb", (req, res) => {
       const paper = {};
       const usedIds = new Set();
 
-      // Handle sections A1–A3 and B1–B3
+      // Section A1–A3 and B1–B3
       for (const section of ["A", "B"]) {
         const { baseUnit, portion } = sectionUnits[section];
         for (let i = 1; i <= 3; i++) {
@@ -467,23 +472,28 @@ router.get("/generate-qb", (req, res) => {
             portion
           );
 
-          if (oneMarks.length < 2 || otherMarks.length < 2) {
+          if (oneMarks.length < 2) {
             return res.status(400).json({
-              error: `Not enough valid questions in ${baseUnit} portion ${portion || "Any"} for Section ${sectionKey}`,
+              error: `Not enough 1-mark MCQs in ${baseUnit} portion ${portion || "Any"} for ${sectionKey}`,
             });
           }
 
           const selectedOneMarks = oneMarks.splice(0, 2);
-          const selectedOtherMarks = otherMarks.splice(0, 2);
+          const selectedOtherMarks = pickMarkCombination(otherMarks, 8);
+
+          if (!selectedOtherMarks) {
+            return res.status(400).json({
+              error: `Not enough valid 2-question combination summing to 8 marks in ${baseUnit} portion ${portion || "Any"} for ${sectionKey}`,
+            });
+          }
 
           paper[sectionKey] = [...selectedOneMarks, ...selectedOtherMarks];
-
           selectedOneMarks.forEach((q) => usedIds.add(q.id));
           selectedOtherMarks.forEach((q) => usedIds.add(q.id));
         }
       }
 
-      // Handle sections C1–C3
+      // Section C1–C3
       const { baseUnit: baseUnitC, portion: portionC } = sectionUnits.C;
       for (let i = 1; i <= 3; i++) {
         const sectionKey = `C${i}`;
@@ -497,7 +507,7 @@ router.get("/generate-qb", (req, res) => {
 
         if (oneMarks.length < 1 || fourMarks.length < 1) {
           return res.status(400).json({
-            error: `Not enough valid questions in ${baseUnitC} portion ${portionC || "Any"} for Section ${sectionKey}`,
+            error: `Not enough valid MCQ + 4-mark in ${baseUnitC} portion ${portionC || "Any"} for ${sectionKey}`,
           });
         }
 
@@ -505,7 +515,6 @@ router.get("/generate-qb", (req, res) => {
         const four = fourMarks.shift();
 
         paper[sectionKey] = [one, four];
-
         usedIds.add(one.id);
         usedIds.add(four.id);
       }
