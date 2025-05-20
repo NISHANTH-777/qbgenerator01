@@ -576,6 +576,11 @@ const AddQuestions = () => {
                   required
                   className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+                {file && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Selected: {file.name}
+                  </p>
+                )}
               </div>
             )}
 

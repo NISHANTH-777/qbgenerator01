@@ -21,6 +21,8 @@ const VettingPage = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const token = localStorage.getItem('token');
   const [refreshTrigger, setRefreshTrigger] = useState(false);
+  const [faculty, setFaculty] = useState(null);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);
@@ -65,6 +67,33 @@ const VettingPage = () => {
   }, [vFacultyId]);
 
   console.log("Vetting Email"+vettingEmail)
+
+   useEffect(() => {
+    if (!vettingEmail) return; 
+
+    const fetchFaculty = async () => {
+      try {
+        const response = await axios.get("http://localhost:7000/api/faculty/faculty-data", {
+          params: { email:vettingEmail},
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.data.length === 0) {
+          setError("No faculty found with this email.");
+          setFaculty(null);
+        } else {
+          setFaculty(response.data[0]);
+          console.log("fd" + response.data[0])
+          setError("");
+        }
+      } catch (err) {
+        setError("Failed to fetch data: " + err.message);
+        setFaculty(null);
+      }
+    };
+
+    fetchFaculty();
+  }, [vettingEmail, token]);
 
   useEffect(() => {
     if (!vettingEmail || !token) return;
@@ -248,13 +277,24 @@ const handleReject = async () => {
               <p><strong>Marks:</strong> {selectedQuestion.mark}</p>
               <p><strong>Question:</strong> {selectedQuestion.question}</p>
               <p><strong>Answer:</strong> {selectedQuestion.answer}</p>
+                {selectedQuestion.figure && (
+                <div className="mt-4">
+                  <p><strong>Figure:</strong></p>
+                  <img 
+                    src={`http://localhost:7000${selectedQuestion.figure}`} 
+                    alt="Question Figure" 
+                    className="mt-2 max-w-full h-auto border rounded"
+                  />
+                </div>
+              )}
+
             </div>
 
             <div className="flex-1 flex flex-col justify-between border-l border-black p-6">
                   <div>
                 <h1 className='text-center text-xl font-bold mb-6'>Process Of Vetting</h1>
                   <div className="text-sm font-semibold my-1 mb-4">COURSE CODE : {courseCode}</div>
-                  <div className="text-sm font-semibold my-1 mb-4">FACULTY ID : {vettingId}</div>
+                  <div className="text-sm font-semibold my-1 mb-4">FACULTY ID : {faculty.faculty_id}</div>
 
                 <div className='flex flex-col gap-4'>
                     <label className="font-medium text-gray-700 flex items-center gap-2">

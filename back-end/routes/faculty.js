@@ -202,12 +202,21 @@ router.get('/faculty-recently-added',verifyToken, (req, res) => {
     });
 });
 
-router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
-   const filePath = path.join(__dirname, "../uploads", req.file.filename);
+router.post("/upload", upload.single("file"), verifyToken, (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  const filePath = path.join(__dirname, "../uploads", req.file.filename);
   const courseCode = req.body.course_code;
-  const results = [];
+  const facultyId = req.body.faculty_id;
+  const vettingId = req.body.vetting_id;
 
   if (!courseCode) return res.status(400).send("Missing course_code in request");
+  if (!facultyId) return res.status(400).send("Missing faculty_id in request");
+  if (!vettingId) return res.status(400).send("Missing vetting_id in request");
+
+  const results = [];
 
   fs.createReadStream(filePath)
     .pipe(csv())
@@ -223,43 +232,61 @@ router.post("/upload", upload.single("file"),verifyToken, (req, res) => {
       }
     })
     .on("end", () => {
-      results.forEach((row) => {
-        const query = `
-          INSERT INTO question_status 
-          (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
-          faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-        `;
+      // Step 1: Get max existing ID
+      db.query("SELECT MAX(id) AS maxId FROM question_status", (err, result) => {
+        if (err) {
+          console.error("Error fetching max ID:", err);
+          return res.status(500).send("Error while preparing insertion");
+        }
 
-        db.query(query, [
-            row.unit,
-            row.topic,
-            parseInt(row.mark),
-            row.question,
-            row.answer,
-            courseCode,
-            row.option_a || null,
-            row.option_b || null,
-            row.option_c || null,
-            row.option_d || null,
-            row.faculty_id || null,
-            row.vetting_id || null,  // ← Add this line
-            row.cognitive_dimension || null,
-            row.knowledge_dimension || null,
-            row.portion || null,
-            row.figure || null
-          ], (err) => {
-          if (err) console.error("Insert error:", err);
+        let currentId = (result[0].maxId || 0) + 1;
+
+        // Step 2: Insert each row with a custom ID
+        results.forEach((row) => {
+          const query = `
+            INSERT INTO question_status 
+            (id, unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+            faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+          `;
+
+          db.query(
+            query,
+            [
+              currentId++,
+              row.unit,
+              row.topic,
+              parseInt(row.mark),
+              row.question,
+              row.answer,
+              courseCode,
+              row.option_a || null,
+              row.option_b || null,
+              row.option_c || null,
+              row.option_d || null,
+              facultyId || row.faculty_id || null,
+              vettingId || row.vetting_id || null,
+              row.cognitive_dimension || null,
+              row.knowledge_dimension || null,
+              row.portion || null,
+              row.figure || null
+            ],
+            (err) => {
+              if (err) console.error("Insert error:", err);
+            }
+          );
         });
-      });
 
-      fs.unlink(filePath, (err) => {
-        if (err) console.error("Failed to delete uploaded file:", err);
-      });
+        // Delete uploaded CSV
+        fs.unlink(filePath, (err) => {
+          if (err) console.error("Failed to delete uploaded file:", err);
+        });
 
-      res.send("File uploaded and data inserted successfully");
+        res.send("File uploaded and questions inserted with custom IDs");
+      });
     });
 });
+
 
 router.get("/faculty-task-progress/:faculty_id",verifyToken, (req, res) => {
     const facultyId = req.params.faculty_id;
@@ -353,34 +380,47 @@ router.post("/add-question", verifyToken, (req, res) => {
       return res.status(400).send("MCQ options are required for 1-mark questions");
     }
   } else {
-    // Set options to null for non-1-mark questions
+    // Set options to empty string for non-1-mark questions
     option_a = "";
     option_b = "";
     option_c = "";
     option_d = "";
   }
 
-  const query = `
-    INSERT INTO question_status 
-    (unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
-     faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-  `;
-
-  db.query(
-    query,
-    [unit, topic, markInt, question, answer, course_code, option_a, option_b, option_c, option_d,
-     faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
-    (err, result) => {
-      if (err) {
-        console.error("Error inserting question status:", err);
-        return res.status(500).send("Failed to insert question");
-      }
-
-      res.status(200).send("Question submitted for review");
+  // 🔁 Step 1: Get the latest ID
+  const getIdQuery = "SELECT MAX(id) AS maxId FROM question_status";
+  db.query(getIdQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching latest ID:", err);
+      return res.status(500).send("Failed to generate question ID");
     }
-  );
+
+    const newId = (results[0].maxId || 0) + 1;
+
+    // 🔁 Step 2: Insert with manually computed ID
+    const insertQuery = `
+      INSERT INTO question_status 
+      (id, unit, topic, mark, question, answer, course_code, option_a, option_b, option_c, option_d,
+       faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    `;
+
+    db.query(
+      insertQuery,
+      [newId, unit, topic, markInt, question, answer, course_code, option_a, option_b, option_c, option_d,
+       faculty_id, vetting_id, cognitive_dimension, knowledge_dimension, portion, figure],
+      (err, result) => {
+        if (err) {
+          console.error("Error inserting question:", err);
+          return res.status(500).send("Failed to insert question");
+        }
+
+        res.status(200).json({ message: "Question submitted for review", id: newId });
+      }
+    );
+  });
 });
+
 
 router.put("/review-question/:question_id", verifyToken, (req, res) => {
   const { question_id } = req.params;
