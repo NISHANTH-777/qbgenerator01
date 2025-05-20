@@ -71,7 +71,7 @@ const ManageQB = () => {
   
   const handleView = (rowId) => {
     const selected = questionRows.find(row => row.questionId === rowId);
-    // console.log(selected)
+    console.log(selected)
     const token = localStorage.getItem("token");
   
     axios

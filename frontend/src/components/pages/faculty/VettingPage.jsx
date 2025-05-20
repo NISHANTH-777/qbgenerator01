@@ -119,7 +119,7 @@ const handleAccept = async () => {
   const status = 'accepted';
   try {
     await axios.put(
-      `http://localhost:7000/api/faculty/review-question/${selectedQuestion.id}`,
+      `http://localhost:7000/api/faculty/review-question/${selectedQuestion.question_id}`,
       { status, remarks: approvalRemark, email },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -134,7 +134,7 @@ const handleReject = async () => {
   const status = 'rejected';
   try {
     await axios.put(
-      `http://localhost:7000/api/faculty/review-question/${selectedQuestion.id}`,
+      `http://localhost:7000/api/faculty/review-question/${selectedQuestion.question_id}`,
       { status, remarks: rejectionReason },
       { headers: { Authorization: `Bearer ${token}` } }
     );

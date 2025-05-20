@@ -185,6 +185,13 @@ const AddQuestions = () => {
         uploadFormData.append("file", file);
         uploadFormData.append("course_code", courseCode);
         if (vettingId) uploadFormData.append("vetting_id", vettingId);
+        if (facultyId) uploadFormData.append("faculty_id", facultyId);
+        
+        // Log FormData contents properly
+        console.log("File being uploaded:", file.name);
+        console.log("Course code:", courseCode);
+        console.log("Vetting ID:", vettingId);
+        console.log("Faculty ID:", facultyId);
 
         await axios.post("http://localhost:7000/api/faculty/upload", uploadFormData, {
           headers: {
@@ -192,6 +199,8 @@ const AddQuestions = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        // console.log(uploadFormData) - This doesn't work for FormData objects
 
         toast.success("File uploaded successfully!");
       } else {
