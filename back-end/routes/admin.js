@@ -242,7 +242,7 @@ const sectionUnits = {
   E3: "Unit 5",
 };
 
-router.get("/generate-semester-qb", verifyToken, (req, res) => {
+router.get("/generate-semester-qb",verifyToken, (req, res) => {
   const { course_code } = req.query;
 
   if (!course_code) {
@@ -250,7 +250,7 @@ router.get("/generate-semester-qb", verifyToken, (req, res) => {
   }
 
   db.query(
-    "SELECT * FROM question_status WHERE course_code = ?",
+    "SELECT * FROM questions WHERE course_code = ? ",
     [course_code],
     (err, results) => {
       if (err) return res.status(500).json({ error: "Database error" });
@@ -418,7 +418,7 @@ function pickMarkCombination(questions, target = 8) {
 }
 
 // ROUTE STARTS HERE
-router.get("/generate-qb", (req, res) => {
+router.get("/generate-qb", verifyToken,(req, res) => {
   const { course_code, from_unit, to_unit } = req.query;
 
   if (!course_code || !from_unit || !to_unit) {
@@ -447,7 +447,7 @@ router.get("/generate-qb", (req, res) => {
   }
 
   db.query(
-    "SELECT * FROM question_status WHERE course_code = ?",
+    "SELECT * FROM questions WHERE course_code = ?",
     [course_code],
     (err, results) => {
       if (err) return res.status(500).json({ error: "Database error" });
