@@ -41,33 +41,33 @@ const ManageQB = () => {
   
 
   useEffect(() => {
-    if (courseCode) {
-      
-  
-      axios
-        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          const formattedRows = res.data.map((item, index) => ({
-            id: index + 1,
-            questionId: item.question_id,
-            facultyId: item.faculty_id,
-            question : item.question,
-            // code: item.courseCode || courseCode,
-            unit: item.unit,
-            datetime: new Date(item.updated_at).toLocaleString(),
-            status: item.status,
-          }));
-          setQuestionRows(formattedRows);
-        })
-        .catch((err) => {
-          console.error("Error fetching question data:", err);
-        });
-    }
-  }, [courseCode]);
+  if (courseCode) {
+    axios
+      .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        const sorted = res.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+        const formattedRows = sorted.map((item, index) => ({
+          id: index + 1,
+          questionId: item.question_id,
+          facultyId: item.faculty_id,
+          question: item.question,
+          unit: item.unit,
+          datetime: new Date(item.updated_at).toLocaleString(),
+          status: item.status,
+        }));
+
+        setQuestionRows(formattedRows);
+      })
+      .catch((err) => {
+        console.error("Error fetching question data:", err);
+      });
+  }
+}, [courseCode]);
   
   const handleView = (rowId) => {
     const selected = questionRows.find(row => row.questionId === rowId);

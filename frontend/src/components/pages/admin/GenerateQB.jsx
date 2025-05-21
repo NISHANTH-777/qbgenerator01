@@ -19,7 +19,7 @@ const GenerateQuestion = () => {
     to_unit: "",
     department: [], 
     exam_type: "",
-    exam_month: "",
+    exam_month: ""
   });
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [error, setError] = useState("");
@@ -147,7 +147,7 @@ useEffect(() => {
         course_code,
         subject_name: subject?.subject_name || "Subject Name",
         time: "1:30 hrs",
-        max_marks: 50,
+        max_marks: exam_type.toLowerCase() === "end semester" ? 100 : 50,
         instructions: [
           "1. Students should not mark/write anything on the Question Paper other than the register number.",
           "2. Section A of the Question Paper contains questions for 15 Marks. Sections B and C contain questions for 30 Marks each.",
@@ -221,7 +221,7 @@ useEffect(() => {
                     <div>iv) {q.option_d}</div>
                   </div>
                 )}
-                <div className="text-right mt-2">({q.mark} Mark)</div>
+                <div className="text-right mt-2">({q.mark} Mark - [ {q.cognitive_dimension}/{q.knowledge_dimension} ])</div>
               </td>
             </tr>
           ))}

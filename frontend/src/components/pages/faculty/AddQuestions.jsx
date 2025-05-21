@@ -7,6 +7,9 @@ import { Drawer } from "@mui/material";
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css'; 
 import { useSelector } from 'react-redux';
+import 'katex/dist/katex.min.css';
+import { BlockMath } from 'react-katex';
+
 
 const AddQuestions = () => {
   const token = localStorage.getItem("token");
@@ -409,9 +412,12 @@ const AddQuestions = () => {
                     name="question"
                     value={formData.question}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm"
                   />
+
+                  <div className="mt-2">
+                    <BlockMath>{formData.question}</BlockMath>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -444,12 +450,12 @@ const AddQuestions = () => {
                         className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="">-- Select Option --</option>
-                        <option value="Remember">Remember - R</option>
-                        <option value="Analyse">Analyse - An</option>
-                        <option value="Understand">Understand - U</option>
-                        <option value="Apply">Apply - Ap</option>
-                        <option value="Create">Create - C</option>
-                        <option value="Evaluate">Evaluate - E</option>
+                        <option value="R">Remember - R</option>
+                        <option value="An">Analyse - An</option>
+                        <option value="U">Understand - U</option>
+                        <option value="Ap">Apply - Ap</option>
+                        <option value="C">Create - C</option>
+                        <option value="E">Evaluate - E</option>
                       </select>
                     </div>
 
@@ -465,10 +471,10 @@ const AddQuestions = () => {
                         className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       >
                         <option value="">-- Select Option --</option>
-                        <option value="Factual">Factual - F</option>
-                        <option value="Conceptual">Conceptual - C</option>
-                        <option value="Procedual">Procedual - P</option>
-                        <option value="Metacognitive">Metacognitive - M</option>
+                        <option value="F">Factual - F</option>
+                        <option value="C">Conceptual - C</option>
+                        <option value="P">Procedual - P</option>
+                        <option value="M">Metacognitive - M</option>
                       </select>
                     </div>
               
@@ -520,6 +526,9 @@ const AddQuestions = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  <div className="mt-2">
+                    <BlockMath>{formData.option_a}</BlockMath>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -533,6 +542,9 @@ const AddQuestions = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  <div className="mt-2">
+                    <BlockMath>{formData.option_b}</BlockMath>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -546,6 +558,9 @@ const AddQuestions = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  <div className="mt-2">
+                    <BlockMath>{formData.option_c}</BlockMath>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -559,6 +574,10 @@ const AddQuestions = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  <div className="mt-2">
+                    <BlockMath>{formData.option_d}</BlockMath>
+                  </div>
+              
                 </div>
                   </>
                 )}

@@ -108,27 +108,32 @@ const VettingPage = () => {
 
   console.log("Course code" + courseCode)
   useEffect(() => {
-    if (!courseCode) return;
-    axios
-      .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const formattedRows = res.data.map((item, index) => ({
-          id: index + 1,
-          facultyId: item.faculty_id,
-          questionId: item.question_id,
-          code: item.courseCode || courseCode,
-          unit: item.unit,
-          status: item.status || 'pending',
-          datetime: new Date(item.updated_at).toLocaleString(),
-        }));
-        setQuestionRows(formattedRows);
-      })
-      .catch((err) => {
-        console.error("Error fetching question data:", err);
-      });
-  }, [courseCode, refreshTrigger]);
+  if (!courseCode) return;
+  axios
+    .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => {
+      const sortedData = res.data
+        .slice() // copy array to avoid mutating original
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)); // sort descending
+
+      const formattedRows = sortedData.map((item, index) => ({
+        id: index + 1,
+        facultyId: item.faculty_id,
+        questionId: item.question_id,
+        code: item.courseCode || courseCode,
+        unit: item.unit,
+        status: item.status || 'pending',
+        datetime: new Date(item.updated_at).toLocaleString(),
+      }));
+      setQuestionRows(formattedRows);
+    })
+    .catch((err) => {
+      console.error("Error fetching question data:", err);
+    });
+}, [courseCode, refreshTrigger]);
+
 
   const handleView = (rowId) => {
     const selected = questionRows.find(row => row.id === rowId);
@@ -270,7 +275,8 @@ const handleReject = async () => {
         {viewModalOpen && selectedQuestion && (
           <div className="absolute top-0 left-0 w-full h-full bg-white z-10 shadow-lg rounded-lg p-6 overflow-y-auto">
               <div className="flex flex-col md:flex-row gap-6 h-full border border-black rounded-md">
-                <div className="flex-1 rounded-lg flex flex-col gap-6 bg-white p-6">
+                <div className="flex-1 rounded-lg flex flex-col gap-6 bg-white p-6 overflow-x-auto whitespace-nowrap">
+
               <h2 className="text-xl font-semibold mb-4 text-center">Question Details</h2>
               <p><strong>Unit:</strong> {selectedQuestion.unit}</p>
               <p><strong>Topic:</strong> {selectedQuestion.topic}</p>

@@ -33,17 +33,18 @@ const QBDetails = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (courseCode) {
-      axios
-        .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-        })
-        .then((res) => {
-          const acceptedQuestions = res.data
-          .filter((item) => item.status === 'accepted') 
+ useEffect(() => {
+  if (courseCode) {
+    axios
+      .get(`http://localhost:7000/api/admin/faculty-question-list?course_code=${courseCode}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+      })
+      .then((res) => {
+        const acceptedQuestions = res.data
+          .filter((item) => item.status === 'accepted')
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)) 
           .map((item, index) => ({
             id: index + 1,
             facultyId: item.faculty_id,
@@ -53,14 +54,14 @@ const QBDetails = () => {
             status: item.status,
           }));
 
-setQuestionRows(acceptedQuestions);
-
-        })
-        .catch((err) => {
-          console.error("Error fetching question data:", err);
-        });
-    }
-  }, [courseCode, token]);  
+        setQuestionRows(acceptedQuestions);
+      })
+      .catch((err) => {
+        console.error("Error fetching question data:", err);
+      });
+  }
+}, [courseCode, token]);
+  
   
 
   const questionColumns = [
